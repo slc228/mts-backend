@@ -1,0 +1,49 @@
+package com.sjtu.mts.Entity;
+
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import org.springframework.context.annotation.Profile;
+import org.springframework.data.annotation.Id;
+import org.springframework.data.elasticsearch.annotations.Document;
+import org.springframework.data.elasticsearch.annotations.Field;
+import org.springframework.data.elasticsearch.annotations.FieldType;
+
+@Document(indexName="yuqing")
+@AllArgsConstructor
+@NoArgsConstructor
+@Getter
+public class Data {
+    @Id
+    private String id;
+
+    @Field(type = FieldType.Text)
+    private String content;
+
+    @Field(type = FieldType.Text)
+    private String cflag;
+
+    @Field(type = FieldType.Text)
+    private String publishedDay;
+
+    @Field(type = FieldType.Text)
+    private String resourse;
+
+    @Field(type = FieldType.Text)
+    private String title;
+
+    @Field(type = FieldType.Text)
+    private String webpageUrl;
+
+    @Field(type = FieldType.Text)
+    private String fromType;
+
+    @Field(type = FieldType.Text)
+    private String captureTime;
+
+    @Field(type = FieldType.Text)
+    private String published;
+
+    @Field(type = FieldType.Long)
+    private Long _version_;
+}
