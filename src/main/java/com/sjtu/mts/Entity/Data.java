@@ -27,7 +27,7 @@ public class Data {
     private String publishedDay;
 
     @Field(type = FieldType.Text)
-        private String resourse;
+    private String resourse;
 
     @Field(type = FieldType.Text)
     private String title;
