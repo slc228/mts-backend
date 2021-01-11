@@ -7,6 +7,7 @@ import com.sjtu.mts.service.SearchService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.Date;
 import java.util.List;
 
 
@@ -27,10 +28,15 @@ public class DataController {
         return result;
     }
 
-    @PostMapping("/search")
+    @GetMapping("/search")
     @ResponseBody
-    public List<Data> findByCflagAndPublishedDayAndResourse(@RequestBody JSONObject js) {
-        List<Data> result = searchService.Search(js);
+    public List<Data> findByCflagAndPublishedDayAndResourse(
+            @RequestParam("cflag") String cflag,
+            @RequestParam("startPublishedDay") String startPublishedDay,
+            @RequestParam("endPublishedDay") String endPublishedDay,
+            @RequestParam("fromType") String fromType
+    ) {
+        List<Data> result = searchService.Search(cflag, startPublishedDay, endPublishedDay, fromType);
         return result;
     }
 }
