@@ -9,6 +9,8 @@ import org.springframework.data.elasticsearch.annotations.Document;
 import org.springframework.data.elasticsearch.annotations.Field;
 import org.springframework.data.elasticsearch.annotations.FieldType;
 
+import java.util.Date;
+
 @Document(indexName = "yuqing")
 @AllArgsConstructor
 @NoArgsConstructor
@@ -23,7 +25,7 @@ public class Data {
     @Field(type = FieldType.Text)
     private String cflag;
 
-    @Field(type = FieldType.Text)
+    @Field(type = FieldType.Date)
     private String publishedDay;
 
     @Field(type = FieldType.Text)
@@ -38,10 +40,10 @@ public class Data {
     @Field(type = FieldType.Text)
     private String fromType;
 
-    @Field(type = FieldType.Text)
+    @Field(type = FieldType.Date)
     private String captureTime;
 
-    @Field(type = FieldType.Text)
+    @Field(type = FieldType.Date)
     private String published;
 
     @Field(type = FieldType.Long)
