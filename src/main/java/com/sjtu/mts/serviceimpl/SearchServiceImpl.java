@@ -13,7 +13,10 @@ import org.springframework.data.elasticsearch.core.query.CriteriaQuery;
 import org.springframework.stereotype.Service;
 
 import javax.management.Query;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 
 @Service
@@ -26,20 +29,27 @@ public class SearchServiceImpl implements SearchService {
         this.elasticsearchOperations = elasticsearchOperations;
     }
 
-    public List<Data> Search(JSONObject jsonObject)
+    public List<Data> Search(String cflag, String startPublishedDay, String endPublishedDay, String fromType)
     {
         Criteria criteria = new Criteria();
-        if (jsonObject.containsKey("cflag"))
+        if (!cflag.isEmpty())
         {
-            criteria.subCriteria(new Criteria().and("cflag").is(jsonObject.getString("cflag")));
+            criteria.subCriteria(new Criteria().and("cflag").is(cflag));
         }
-        if (jsonObject.containsKey("publishedDay"))
+        if (!startPublishedDay.isEmpty() && !endPublishedDay.isEmpty())
         {
-            criteria.subCriteria(new Criteria().and("publishedDay").is(jsonObject.getString("publishedDay")));
+            SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
+            try {
+                Date startDate = sdf.parse(startPublishedDay);
+                Date endDate = sdf.parse(endPublishedDay);
+                criteria.subCriteria(new Criteria().and("publishedDay").between(startDate, endDate));
+            } catch (ParseException e) {
+                e.printStackTrace();
+            }
         }
-        if (jsonObject.containsKey("resourse"))
+        if (!fromType.isEmpty())
         {
-            criteria.subCriteria(new Criteria().and("resourse").is(jsonObject.getString("resourse")));
+            criteria.subCriteria(new Criteria().and("fromType").is(fromType));
         }
         CriteriaQuery query = new CriteriaQuery(criteria);
         SearchHits<Data> searchHits = this.elasticsearchOperations.search(query, Data.class);
