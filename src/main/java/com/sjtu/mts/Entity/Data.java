@@ -1,9 +1,7 @@
 package com.sjtu.mts.Entity;
-
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
-import org.springframework.context.annotation.Profile;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.elasticsearch.annotations.Document;
 import org.springframework.data.elasticsearch.annotations.Field;
@@ -49,3 +47,4 @@ public class Data {
     @Field(type = FieldType.Long)
     private Long _version_;
 }
+
