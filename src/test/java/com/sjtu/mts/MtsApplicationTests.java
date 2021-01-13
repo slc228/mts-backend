@@ -6,8 +6,8 @@ package com.sjtu.mts;
 @SpringBootTest
 class MtsApplicationTests {
 
-	@Test
-	void contextLoads() {
-	}
+    @Test
+    void contextLoads() {
+    }
 
 }
