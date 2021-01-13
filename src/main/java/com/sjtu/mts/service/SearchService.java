@@ -6,5 +6,5 @@ import java.util.List;
 
 public interface SearchService {
 
-    public List<Data> Search(String cflag, String startPublishedDay, String endPublishedDay, String fromType);
+    public List<Data> Search(String keyword, String cflag, String startPublishedDay, String endPublishedDay, String fromType);
 }

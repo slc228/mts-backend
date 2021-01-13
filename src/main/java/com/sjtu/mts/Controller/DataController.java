@@ -26,15 +26,16 @@ public class DataController {
         return result;
     }
 
-    @GetMapping("/search")
+    @GetMapping("/globalSearch")
     @ResponseBody
-    public List<Data> findByCflagAndPublishedDayAndResourse(
+    public List<Data> findByKeywordAndCflagAndPublishedDayAndResourse(
+            @RequestParam("keyword") String keyword,
             @RequestParam("cflag") String cflag,
             @RequestParam("startPublishedDay") String startPublishedDay,
             @RequestParam("endPublishedDay") String endPublishedDay,
             @RequestParam("fromType") String fromType
     ) {
-        List<Data> result = searchService.Search(cflag, startPublishedDay, endPublishedDay, fromType);
+        List<Data> result = searchService.Search(keyword, cflag, startPublishedDay, endPublishedDay, fromType);
         return result;
     }
 }
