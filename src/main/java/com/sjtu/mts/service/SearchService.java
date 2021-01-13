@@ -1,9 +1,7 @@
-package com.sjtu.mts.service;
+package com.sjtu.mts.Service;
 
-import com.alibaba.fastjson.JSONObject;
 import com.sjtu.mts.Entity.Data;
 
-import java.util.Date;
 import java.util.List;
 
 public interface SearchService {
