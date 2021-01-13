@@ -6,7 +6,7 @@ spring:
   datasource:
     url: jdbc:Mysql://localhost:3306/mtsdata?useUnicode=true&characterEncoding=utf-8&serverTimezone=GMT%2B8
     username: root
-    password: mabaowei
+    password: root
     driver-class-name: com.mysql.cj.jdbc.Driver
   jpa:
     show-sql: true
@@ -30,7 +30,7 @@ spring:
 
 # server monitor port
 server:
-  port: 8080
+  port: 8082
 
 ## eureka server cluster
 #eureka:
