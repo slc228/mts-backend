@@ -29,9 +29,13 @@ public class SearchServiceImpl implements SearchService {
         this.elasticsearchOperations = elasticsearchOperations;
     }
 
-    public List<Data> Search(String cflag, String startPublishedDay, String endPublishedDay, String fromType)
+    public List<Data> Search(String keyword, String cflag, String startPublishedDay, String endPublishedDay, String fromType)
     {
         Criteria criteria = new Criteria();
+        if (!keyword.isEmpty())
+        {
+            criteria.subCriteria(new Criteria().and("content").contains(keyword).or("title").contains(keyword));
+        }
         if (!cflag.isEmpty())
         {
             criteria.subCriteria(new Criteria().and("cflag").is(cflag));
@@ -53,6 +57,7 @@ public class SearchServiceImpl implements SearchService {
         }
         CriteriaQuery query = new CriteriaQuery(criteria);
         SearchHits<Data> searchHits = this.elasticsearchOperations.search(query, Data.class);
+        System.out.println(this.elasticsearchOperations.count(query, Data.class));
 
         List<Data> result = new ArrayList<>();
         for (SearchHit<Data> hit : searchHits)
