@@ -1,9 +1,10 @@
 package com.sjtu.mts.Service;
 
 import com.sjtu.mts.Entity.Data;
-import org.springframework.data.elasticsearch.core.ElasticsearchOperations;
-import org.springframework.data.elasticsearch.core.SearchHit;
-import org.springframework.data.elasticsearch.core.SearchHits;
+import com.sjtu.mts.Entity.DataResponse;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.elasticsearch.core.*;
 import org.springframework.data.elasticsearch.core.query.Criteria;
 import org.springframework.data.elasticsearch.core.query.CriteriaQuery;
 import org.springframework.stereotype.Service;
@@ -24,7 +25,8 @@ public class SearchServiceImpl implements SearchService {
         this.elasticsearchOperations = elasticsearchOperations;
     }
 
-    public List<Data> Search(String keyword, String cflag, String startPublishedDay, String endPublishedDay, String fromType)
+    public DataResponse Search(String keyword, String cflag, String startPublishedDay, String endPublishedDay,
+                               String fromType, int page, int pageSize, int timeOrder)
     {
         Criteria criteria = new Criteria();
         if (!keyword.isEmpty())
@@ -51,14 +53,26 @@ public class SearchServiceImpl implements SearchService {
             criteria.subCriteria(new Criteria().and("fromType").is(fromType));
         }
         CriteriaQuery query = new CriteriaQuery(criteria);
-        SearchHits<Data> searchHits = this.elasticsearchOperations.search(query, Data.class);
-        System.out.println(this.elasticsearchOperations.count(query, Data.class));
-
-        List<Data> result = new ArrayList<>();
-        for (SearchHit<Data> hit : searchHits)
-        {
-            result.add(hit.getContent());
+        if (timeOrder == 0) {
+            query.setPageable(PageRequest.of(page, pageSize, Sort.by(Sort.Direction.DESC, "publishedDay")));
         }
+        else {
+            query.setPageable(PageRequest.of(page, pageSize, Sort.by(Sort.Direction.ASC, "publishedDay")));
+        }
+
+        SearchHits<Data> searchHits = this.elasticsearchOperations.search(query, Data.class);
+        SearchPage<Data> searchPage = SearchHitSupport.searchPageFor(searchHits, query.getPageable());
+        long hitNumber = this.elasticsearchOperations.count(query, Data.class);
+
+        List<Data> pageDataContent = new ArrayList<>();
+        for (SearchHit<Data> hit : searchPage.getSearchHits())
+        {
+            pageDataContent.add(hit.getContent());
+        }
+
+        DataResponse result = new DataResponse();
+        result.setHitNumber(hitNumber);
+        result.setDataContent(pageDataContent);
 
         return result;
     }
