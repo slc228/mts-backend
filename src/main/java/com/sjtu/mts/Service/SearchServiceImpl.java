@@ -1,7 +1,7 @@
 package com.sjtu.mts.Service;
 
 import com.sjtu.mts.Entity.Data;
-import com.sjtu.mts.Entity.DataResponse;
+import com.sjtu.mts.Response.DataResponse;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.elasticsearch.core.*;
@@ -39,7 +39,7 @@ public class SearchServiceImpl implements SearchService {
         }
         if (!startPublishedDay.isEmpty() && !endPublishedDay.isEmpty())
         {
-            SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
+            SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
             try {
                 Date startDate = sdf.parse(startPublishedDay);
                 Date endDate = sdf.parse(endPublishedDay);

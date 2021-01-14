@@ -1,4 +1,6 @@
-package com.sjtu.mts.Entity;
+package com.sjtu.mts.Response;
+
+import com.sjtu.mts.Entity.Data;
 
 import java.util.List;
 

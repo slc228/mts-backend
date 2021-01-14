@@ -1,9 +1,6 @@
 package com.sjtu.mts.Service;
 
-import com.sjtu.mts.Entity.Data;
-import com.sjtu.mts.Entity.DataResponse;
-
-import java.util.List;
+import com.sjtu.mts.Response.DataResponse;
 
 public interface SearchService {
 

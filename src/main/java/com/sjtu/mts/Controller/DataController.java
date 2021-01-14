@@ -1,7 +1,7 @@
 package com.sjtu.mts.Controller;
 
 import com.sjtu.mts.Entity.Data;
-import com.sjtu.mts.Entity.DataResponse;
+import com.sjtu.mts.Response.DataResponse;
 import com.sjtu.mts.Repository.DataRepository;
 import com.sjtu.mts.Service.SearchService;
 import org.springframework.beans.factory.annotation.Autowired;
