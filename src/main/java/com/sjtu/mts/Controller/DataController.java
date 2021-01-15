@@ -1,6 +1,7 @@
 package com.sjtu.mts.Controller;
 
 import com.sjtu.mts.Entity.Data;
+import com.sjtu.mts.Response.DataResponse;
 import com.sjtu.mts.Repository.DataRepository;
 import com.sjtu.mts.Service.SearchService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -28,14 +29,18 @@ public class DataController {
 
     @GetMapping("/globalSearch")
     @ResponseBody
-    public List<Data> findByKeywordAndCflagAndPublishedDayAndResourse(
+    public DataResponse findByKeywordAndCflagAndPublishedDayAndResourse(
             @RequestParam("keyword") String keyword,
             @RequestParam("cflag") String cflag,
             @RequestParam("startPublishedDay") String startPublishedDay,
             @RequestParam("endPublishedDay") String endPublishedDay,
-            @RequestParam("fromType") String fromType
+            @RequestParam("fromType") String fromType,
+            @RequestParam("page") int page,
+            @RequestParam("pageSize") int pageSize,
+            @RequestParam("timeOrder") int timeOrder
     ) {
-        List<Data> result = searchService.Search(keyword, cflag, startPublishedDay, endPublishedDay, fromType);
+        DataResponse result = searchService.Search(keyword, cflag, startPublishedDay, endPublishedDay, fromType,
+                page, pageSize, timeOrder);
         return result;
     }
 }
