@@ -23,10 +23,10 @@ public class User implements Serializable{
     @Column(name = "email")
     private String email;
 
-    @Column(name = "projectNum")
+    @Column(name = "project_num")
     private Integer projectNum;
 
-    @Column(name = "validDate")
+    @Column(name = "valid_date")
     private String validDate;
 
     @Column(name = "role")

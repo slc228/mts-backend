@@ -28,7 +28,10 @@ public class UserServiceImp implements UserService {
             object.put("username", user.getUsername());
             object.put("phone", user.getPhone());
             object.put("email", user.getEmail());
-            object.put("status", user.getRole());
+            object.put("status", user.getState());
+            object.put("role", user.getRole());
+            object.put("project_num", user.getProjectNum());
+            object.put("valid_date", user.getValidDate());
             jsonArray.appendElement(object);
         }
         return jsonArray;
@@ -42,7 +45,10 @@ public class UserServiceImp implements UserService {
             object.put("username", manager.getUsername());
             object.put("phone", manager.getPhone());
             object.put("email", manager.getEmail());
-            object.put("status", manager.getRole());
+            object.put("status", manager.getState());
+            object.put("role", manager.getRole());
+            object.put("project_num", manager.getProjectNum());
+            object.put("valid_date", manager.getValidDate());
             jsonArray.appendElement(object);
         }
         return jsonArray;}
