@@ -1,6 +1,7 @@
 package com.sjtu.mts.Service;
 
 import com.sjtu.mts.Entity.Data;
+import com.sjtu.mts.Response.CflagCountResponse;
 import com.sjtu.mts.Response.DataResponse;
 import com.sjtu.mts.Response.ResourceCountResponse;
 import org.springframework.data.domain.PageRequest;
@@ -79,7 +80,7 @@ public class SearchServiceImpl implements SearchService {
 
     public ResourceCountResponse globalSearchResourceCount(String keyword, String startPublishedDay, String endPublishedDay) {
         List<Long> resultList = new ArrayList<>();
-        for (int fromType = 1; fromType <=7 ; fromType++) {
+        for (int fromType = 1; fromType <= 7 ; fromType++) {
             Criteria criteria = new Criteria();
             if (!keyword.isEmpty())
             {
@@ -103,6 +104,34 @@ public class SearchServiceImpl implements SearchService {
         }
         ResourceCountResponse result = new ResourceCountResponse(resultList.get(0), resultList.get(1), resultList.get(2),
                 resultList.get(3), resultList.get(4), resultList.get(5), resultList.get(6));
+        return result;
+    }
+
+    public CflagCountResponse globalSearchCflagCount(String keyword, String startPublishedDay, String endPublishedDay) {
+        List<Long> resultList = new ArrayList<>();
+        for (int cflag = 1; cflag <= 2 ; cflag++) {
+            Criteria criteria = new Criteria();
+            if (!keyword.isEmpty())
+            {
+                criteria.subCriteria(new Criteria().and("content").contains(keyword).or("title").contains(keyword));
+            }
+            if (!startPublishedDay.isEmpty() && !endPublishedDay.isEmpty())
+            {
+                SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+                try {
+                    Date startDate = sdf.parse(startPublishedDay);
+                    Date endDate = sdf.parse(endPublishedDay);
+                    criteria.subCriteria(new Criteria().and("publishedDay").between(startDate, endDate));
+                } catch (ParseException e) {
+                    e.printStackTrace();
+                }
+            }
+            criteria.subCriteria(new Criteria().and("cflag").is(cflag));
+            CriteriaQuery query = new CriteriaQuery(criteria);
+            long searchHitCount = this.elasticsearchOperations.count(query, Data.class);
+            resultList.add(searchHitCount);
+        }
+        CflagCountResponse result = new CflagCountResponse(resultList.get(0), resultList.get(1));
         return result;
     }
 }
