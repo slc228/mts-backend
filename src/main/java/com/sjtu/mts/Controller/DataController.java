@@ -1,6 +1,7 @@
 package com.sjtu.mts.Controller;
 
 import com.sjtu.mts.Entity.Data;
+import com.sjtu.mts.Response.AmountTrendResponse;
 import com.sjtu.mts.Response.CflagCountResponse;
 import com.sjtu.mts.Response.DataResponse;
 import com.sjtu.mts.Repository.DataRepository;
@@ -63,5 +64,15 @@ public class DataController {
             @RequestParam("endPublishedDay") String endPublishedDay
     ) {
         return searchService.globalSearchCflagCount(keyword, startPublishedDay, endPublishedDay);
+    }
+
+    @GetMapping("/globalSearch/amountTrendCount")
+    @ResponseBody
+    public AmountTrendResponse countAmountTrendByKeywordAndPublishedDay(
+            @RequestParam("keyword") String keyword,
+            @RequestParam("startPublishedDay") String startPublishedDay,
+            @RequestParam("endPublishedDay") String endPublishedDay
+    ) {
+        return searchService.globalSearchTrendCount(keyword, startPublishedDay, endPublishedDay);
     }
 }

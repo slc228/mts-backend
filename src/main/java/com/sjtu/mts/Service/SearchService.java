@@ -1,5 +1,6 @@
 package com.sjtu.mts.Service;
 
+import com.sjtu.mts.Response.AmountTrendResponse;
 import com.sjtu.mts.Response.CflagCountResponse;
 import com.sjtu.mts.Response.DataResponse;
 import com.sjtu.mts.Response.ResourceCountResponse;
@@ -13,4 +14,6 @@ public interface SearchService {
                                                            String endPublishedDay);
 
     public CflagCountResponse globalSearchCflagCount(String keyword, String startPublishedDay, String endPublishedDay);
+
+    public AmountTrendResponse globalSearchTrendCount(String keyword, String startPublishedDay, String endPublishedDay);
 }
