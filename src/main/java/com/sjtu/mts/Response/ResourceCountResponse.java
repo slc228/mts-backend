@@ -1,19 +1,26 @@
 package com.sjtu.mts.Response;
 
-import com.sjtu.mts.Entity.Data;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
-import java.util.List;
-
 @AllArgsConstructor
 @NoArgsConstructor
 @Getter
 @Setter
-public class DataResponse {
-    long hitNumber;
+public class ResourceCountResponse {
+    long fromType1;
 
-    List<Data> dataContent;
+    long fromType2;
+
+    long fromType3;
+
+    long fromType4;
+
+    long fromType5;
+
+    long fromType6;
+
+    long fromType7;
 }

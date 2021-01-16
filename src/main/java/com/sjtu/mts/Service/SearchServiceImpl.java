@@ -2,6 +2,7 @@ package com.sjtu.mts.Service;
 
 import com.sjtu.mts.Entity.Data;
 import com.sjtu.mts.Response.DataResponse;
+import com.sjtu.mts.Response.ResourceCountResponse;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.elasticsearch.core.*;
@@ -59,7 +60,6 @@ public class SearchServiceImpl implements SearchService {
         else {
             query.setPageable(PageRequest.of(page, pageSize, Sort.by(Sort.Direction.ASC, "publishedDay")));
         }
-
         SearchHits<Data> searchHits = this.elasticsearchOperations.search(query, Data.class);
         SearchPage<Data> searchPage = SearchHitSupport.searchPageFor(searchHits, query.getPageable());
         long hitNumber = this.elasticsearchOperations.count(query, Data.class);
@@ -74,6 +74,35 @@ public class SearchServiceImpl implements SearchService {
         result.setHitNumber(hitNumber);
         result.setDataContent(pageDataContent);
 
+        return result;
+    }
+
+    public ResourceCountResponse globalSearchResourceCount(String keyword, String startPublishedDay, String endPublishedDay) {
+        List<Long> resultList = new ArrayList<>();
+        for (int fromType = 1; fromType <=7 ; fromType++) {
+            Criteria criteria = new Criteria();
+            if (!keyword.isEmpty())
+            {
+                criteria.subCriteria(new Criteria().and("content").contains(keyword).or("title").contains(keyword));
+            }
+            if (!startPublishedDay.isEmpty() && !endPublishedDay.isEmpty())
+            {
+                SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+                try {
+                    Date startDate = sdf.parse(startPublishedDay);
+                    Date endDate = sdf.parse(endPublishedDay);
+                    criteria.subCriteria(new Criteria().and("publishedDay").between(startDate, endDate));
+                } catch (ParseException e) {
+                    e.printStackTrace();
+                }
+            }
+            criteria.subCriteria(new Criteria().and("fromType").is(fromType));
+            CriteriaQuery query = new CriteriaQuery(criteria);
+            long searchHitCount = this.elasticsearchOperations.count(query, Data.class);
+            resultList.add(searchHitCount);
+        }
+        ResourceCountResponse result = new ResourceCountResponse(resultList.get(0), resultList.get(1), resultList.get(2),
+                resultList.get(3), resultList.get(4), resultList.get(5), resultList.get(6));
         return result;
     }
 }

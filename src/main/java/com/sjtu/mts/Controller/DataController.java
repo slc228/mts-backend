@@ -3,6 +3,7 @@ package com.sjtu.mts.Controller;
 import com.sjtu.mts.Entity.Data;
 import com.sjtu.mts.Response.DataResponse;
 import com.sjtu.mts.Repository.DataRepository;
+import com.sjtu.mts.Response.ResourceCountResponse;
 import com.sjtu.mts.Service.SearchService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
@@ -23,13 +24,12 @@ public class DataController {
     @GetMapping("/findByCflag/{cflag}")
     @ResponseBody
     public List<Data> findById(@PathVariable("cflag") int cflag) {
-        List<Data> result = dataRepository.findByCflag(String.valueOf(cflag));
-        return result;
+        return dataRepository.findByCflag(String.valueOf(cflag));
     }
 
     @GetMapping("/globalSearch")
     @ResponseBody
-    public DataResponse findByKeywordAndCflagAndPublishedDayAndResourse(
+    public DataResponse findByKeywordAndCflagAndPublishedDayAndFromType(
             @RequestParam("keyword") String keyword,
             @RequestParam("cflag") String cflag,
             @RequestParam("startPublishedDay") String startPublishedDay,
@@ -39,8 +39,18 @@ public class DataController {
             @RequestParam("pageSize") int pageSize,
             @RequestParam("timeOrder") int timeOrder
     ) {
-        DataResponse result = searchService.Search(keyword, cflag, startPublishedDay, endPublishedDay, fromType,
+        return searchService.Search(keyword, cflag, startPublishedDay, endPublishedDay, fromType,
                 page, pageSize, timeOrder);
-        return result;
+    }
+
+    @GetMapping("/globalSearch/resourceCount")
+    @ResponseBody
+    public ResourceCountResponse countByKeywordAndPublishedDayAndFromType(
+            @RequestParam("keyword") String keyword,
+            @RequestParam("startPublishedDay") String startPublishedDay,
+            @RequestParam("endPublishedDay") String endPublishedDay
+    ) {
+        return searchService.globalSearchResourceCount(keyword, startPublishedDay,
+                endPublishedDay);
     }
 }
