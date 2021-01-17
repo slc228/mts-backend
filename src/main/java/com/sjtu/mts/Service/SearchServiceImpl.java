@@ -34,7 +34,11 @@ public class SearchServiceImpl implements SearchService {
         Criteria criteria = new Criteria();
         if (!keyword.isEmpty())
         {
-            criteria.subCriteria(new Criteria().and("content").contains(keyword).or("title").contains(keyword));
+            String[] searchSplitArray = keyword.trim().split("\\s+");;
+            for (String searchString : searchSplitArray) {
+                criteria.subCriteria(new Criteria().and("content").contains(searchString).
+                        or("title").contains(searchString));
+            }
         }
         if (!cflag.isEmpty())
         {
@@ -85,7 +89,11 @@ public class SearchServiceImpl implements SearchService {
             Criteria criteria = new Criteria();
             if (!keyword.isEmpty())
             {
-                criteria.subCriteria(new Criteria().and("content").contains(keyword).or("title").contains(keyword));
+                String[] searchSplitArray = keyword.trim().split("\\s+");;
+                for (String searchString : searchSplitArray) {
+                    criteria.subCriteria(new Criteria().and("content").contains(searchString).
+                            or("title").contains(searchString));
+                }
             }
             if (!startPublishedDay.isEmpty() && !endPublishedDay.isEmpty())
             {
@@ -113,7 +121,11 @@ public class SearchServiceImpl implements SearchService {
             Criteria criteria = new Criteria();
             if (!keyword.isEmpty())
             {
-                criteria.subCriteria(new Criteria().and("content").contains(keyword).or("title").contains(keyword));
+                String[] searchSplitArray = keyword.trim().split("\\s+");;
+                for (String searchString : searchSplitArray) {
+                    criteria.subCriteria(new Criteria().and("content").contains(searchString).
+                            or("title").contains(searchString));
+                }
             }
             if (!startPublishedDay.isEmpty() && !endPublishedDay.isEmpty())
             {
@@ -155,8 +167,13 @@ public class SearchServiceImpl implements SearchService {
             List<Long> resultList = new ArrayList<>();
             for (int j = 0; j < pointNum; j++) {
                 Criteria criteria = new Criteria();
-                if (!keyword.isEmpty()) {
-                    criteria.subCriteria(new Criteria().and("content").contains(keyword).or("title").contains(keyword));
+                if (!keyword.isEmpty())
+                {
+                    String[] searchSplitArray = keyword.trim().split("\\s+");;
+                    for (String searchString : searchSplitArray) {
+                        criteria.subCriteria(new Criteria().and("content").contains(searchString).
+                                or("title").contains(searchString));
+                    }
                 }
                 // fromType 0 indicates searching all fromTypes
                 if (fromType != 0) {
