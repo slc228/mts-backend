@@ -30,7 +30,7 @@ public class DataController {
         return dataRepository.findByCflag(String.valueOf(cflag));
     }
 
-    @GetMapping("/globalSearch")
+    @GetMapping("/globalSearch/dataSearch")
     @ResponseBody
     public DataResponse findByKeywordAndCflagAndPublishedDayAndFromType(
             @RequestParam("keyword") String keyword,
