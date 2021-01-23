@@ -16,17 +16,17 @@ public class AmountTrendResponse {
 
     List<Long> totalAmountTrend;
 
-    List<Long> fromType1AmountTrend;
+    List<Long> fromTypeAmountTrend1;
 
-    List<Long> fromType2AmountTrend;
+    List<Long> fromTypeAmountTrend2;
 
-    List<Long> fromType3AmountTrend;
+    List<Long> fromTypeAmountTrend3;
 
-    List<Long> fromType4AmountTrend;
+    List<Long> fromTypeAmountTrend4;
 
-    List<Long> fromType5AmountTrend;
+    List<Long> fromTypeAmountTrend5;
 
-    List<Long> fromType6AmountTrend;
+    List<Long> fromTypeAmountTrend6;
 
-    List<Long> fromType7AmountTrend;
+    List<Long> fromTypeAmountTrend7;
 }
