@@ -4,9 +4,9 @@ spring:
     name: mts-backend
   # Mysql jpa config
   datasource:
-    url: jdbc:Mysql://localhost:3306/mtsdata?useUnicode=true&characterEncoding=utf-8&serverTimezone=GMT%2B8
+    url: jdbc:Mysql://202.120.40.69:11111/newyuqing_schema?useUnicode=true&characterEncoding=utf-8&serverTimezone=GMT%2B8
     username: root
-    password: root
+    password: 35013501
     driver-class-name: com.mysql.cj.jdbc.Driver
   jpa:
     show-sql: true
