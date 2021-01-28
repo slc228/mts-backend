@@ -19,6 +19,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 public class SearchServiceImpl implements SearchService {
@@ -205,38 +206,29 @@ public class SearchServiceImpl implements SearchService {
         {
             String[] searchSplitArray = keyword.trim().split("\\s+");;
             for (String searchString : searchSplitArray) {
+
                 criteria.subCriteria(new Criteria().and("content").contains(searchString).
                         or("title").contains(searchString));
             }
         }
+
         if (!area.isEmpty())
         {
 
             List<Integer> codeid  = areaRepository.findCodeidByCityName(area);
-            List<Integer> codeids =  new ArrayList<>();
-            List<String> citys = new ArrayList<>();
-            codeids.addAll(codeid);
-            while(!codeids.isEmpty()){
-                Integer tmp = codeids.get(0);
-                String city = areaRepository.findCityByCodeid(tmp);
-                if(!citys.contains(city)&&!city.contains("市辖")&&!city.contains("县辖")){
-                                        citys.add(city.replaceAll("\\s*", ""));
-
+            if(!codeid.isEmpty()){
+                List<String> citys;
+                citys = areaRepository.findCityNameByCodeid(codeid.get(0));
+                for(int i=0;i<citys.size();i++){
+                    citys.set(i,citys.get(i).replaceAll("\\s*", ""));
+                    if(citys.get(i).contains("市辖")||citys.get(i).contains("县辖")){
+                        citys.remove(i);
+                    }
                 }
-                List<Integer> tmps = areaRepository.findCodeidByParentid(tmp);
-                codeids.remove(0);
-                codeids.addAll(tmps);
-
+                citys = (List) citys.stream().distinct().collect(Collectors.toList());//去重
+                System.out.println(Arrays.toString(citys.toArray()));
+                criteria.subCriteria(new Criteria("content").in(citys).or("title").in(citys));
             }
-            System.out.println(Arrays.toString(citys.toArray()));
-//            String[] strings = new String[citys.size()];
-//            citys.toArray(strings);
-            for(String searchArea : citys){
-
-                criteria.subCriteria(new Criteria().and("content").contains(searchArea).
-                        or("title").contains(searchArea));
-            }
-
         }
         if (!startPublishedDay.isEmpty() && !endPublishedDay.isEmpty())
         {
