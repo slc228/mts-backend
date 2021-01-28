@@ -75,4 +75,20 @@ public class DataController {
     ) {
         return searchService.globalSearchTrendCount(keyword, startPublishedDay, endPublishedDay);
     }
+    /*
+        某事件某地区发文
+     */
+    @GetMapping("/globalSearch/areaSearch")
+    @ResponseBody
+    public DataResponse countAreaByKeywordAndPublishedDay(
+            @RequestParam("keyword") String keyword,
+            @RequestParam("area") String area,
+            @RequestParam("startPublishedDay") String startPublishedDay,
+            @RequestParam("endPublishedDay") String endPublishedDay,
+            @RequestParam("page") int page,
+            @RequestParam("pageSize") int pageSize,
+            @RequestParam("timeOrder") int timeOrder
+    ) {
+        return searchService.AreaSearch(keyword,area, startPublishedDay, endPublishedDay,page,pageSize,timeOrder);
+    }
 }
