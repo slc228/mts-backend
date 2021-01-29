@@ -1,11 +1,8 @@
 package com.sjtu.mts.Controller;
 
 import com.sjtu.mts.Entity.Data;
-import com.sjtu.mts.Response.AmountTrendResponse;
-import com.sjtu.mts.Response.CflagCountResponse;
-import com.sjtu.mts.Response.DataResponse;
+import com.sjtu.mts.Response.*;
 import com.sjtu.mts.Repository.DataRepository;
-import com.sjtu.mts.Response.ResourceCountResponse;
 import com.sjtu.mts.Service.SearchService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
@@ -80,7 +77,7 @@ public class DataController {
      */
     @GetMapping("/globalSearch/areaSearch")
     @ResponseBody
-    public DataResponse countAreaByKeywordAndPublishedDay(
+    public DataResponse AreaSearch(
             @RequestParam("keyword") String keyword,
             @RequestParam("area") String area,
             @RequestParam("startPublishedDay") String startPublishedDay,
@@ -90,5 +87,15 @@ public class DataController {
             @RequestParam("timeOrder") int timeOrder
     ) {
         return searchService.AreaSearch(keyword,area, startPublishedDay, endPublishedDay,page,pageSize,timeOrder);
+    }
+    //某事件各地区发文
+    @GetMapping("/globalSearch/areaCount")
+    @ResponseBody
+    public AreaAnalysisResponse countAreaByKeywordAndPublishedDay(
+            @RequestParam("keyword") String keyword,
+            @RequestParam("startPublishedDay") String startPublishedDay,
+            @RequestParam("endPublishedDay") String endPublishedDay
+    ) {
+        return searchService.countArea(keyword,startPublishedDay,endPublishedDay);
     }
 }
