@@ -9,6 +9,8 @@ public interface SearchService {
 
     public DataResponse Search(String keyword, String cflag, String startPublishedDay, String endPublishedDay,
                                String fromType, int page, int pageSize, int timeOrder);
+    public DataResponse AreaSearch(String keyword, String Area, String startPublishedDay, String endPublishedDay,
+                                int page, int pageSize, int timeOrder);
 
     public ResourceCountResponse globalSearchResourceCount(String keyword, String startPublishedDay,
                                                            String endPublishedDay);
