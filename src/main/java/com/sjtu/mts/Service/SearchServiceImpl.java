@@ -2,10 +2,7 @@ package com.sjtu.mts.Service;
 
 import com.sjtu.mts.Entity.Data;
 import com.sjtu.mts.Repository.AreaRepository;
-import com.sjtu.mts.Response.AmountTrendResponse;
-import com.sjtu.mts.Response.CflagCountResponse;
-import com.sjtu.mts.Response.DataResponse;
-import com.sjtu.mts.Response.ResourceCountResponse;
+import com.sjtu.mts.Response.*;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.elasticsearch.core.*;
@@ -217,14 +214,18 @@ public class SearchServiceImpl implements SearchService {
 
             List<Integer> codeid  = areaRepository.findCodeidByCityName(area);
             if(!codeid.isEmpty()){
-                List<String> citys;
-                citys = areaRepository.findCityNameByCodeid(codeid.get(0));
-                for(int i=0;i<citys.size();i++){
-                    citys.set(i,citys.get(i).replaceAll("\\s*", ""));
-                    if(citys.get(i).contains("市辖")||citys.get(i).contains("县辖")){
-                        citys.remove(i);
+                List<String> citys = new ArrayList<>();
+                for (Integer co:codeid){
+                    List<String> tmp = areaRepository.findCityNameByCodeid(co) ;
+                    for(int i=0;i<tmp.size();i++){
+                        tmp.set(i,tmp.get(i).replaceAll("\\s*", ""));
+                        if(tmp.get(i).contains("市辖")||tmp.get(i).contains("县辖")){
+                            tmp.remove(i);
+                        }
                     }
+                    citys.addAll(tmp);
                 }
+
                 citys = (List) citys.stream().distinct().collect(Collectors.toList());//去重
                 System.out.println(Arrays.toString(citys.toArray()));
                 criteria.subCriteria(new Criteria("content").in(citys).or("title").in(citys));
@@ -263,5 +264,53 @@ public class SearchServiceImpl implements SearchService {
         result.setDataContent(pageDataContent);
 
         return result;
+    }
+
+    public AreaAnalysisResponse countArea(String keyword, String startPublishedDay, String endPublishedDay){
+        List<Long> resultList = new ArrayList<>();
+        List<Integer> codeids = Arrays.asList(11,12,13,14,15,21,22,23,31,32,33,34,35,36,37,41,42,43,44,45,46,50,51,52,53,54,61,62,63,64,65,71,81,91);
+        for(int i =0;i<codeids.size();i++){
+            Criteria criteria = new Criteria();
+            if (!keyword.isEmpty())
+            {
+                String[] searchSplitArray = keyword.trim().split("\\s+");;
+                for (String searchString : searchSplitArray) {
+                    criteria.subCriteria(new Criteria().and("content").contains(searchString).
+                            or("title").contains(searchString));
+                }
+            }
+            if (!startPublishedDay.isEmpty() && !endPublishedDay.isEmpty())
+            {
+                SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+                try {
+                    Date startDate = sdf.parse(startPublishedDay);
+                    Date endDate = sdf.parse(endPublishedDay);
+                    criteria.subCriteria(new Criteria().and("publishedDay").between(startDate, endDate));
+                } catch (ParseException e) {
+                    e.printStackTrace();
+                }
+            }
+            List<String> citys;
+            citys = areaRepository.findCityNameByCodeid(codeids.get(i));
+            for(int j=0;j<citys.size();j++){
+                citys.set(j,citys.get(j).replaceAll("\\s*", ""));
+                if(citys.get(j).contains("市辖")||citys.get(j).contains("县辖")){
+                    citys.remove(j);
+                }
+            }
+            citys = (List) citys.stream().distinct().collect(Collectors.toList());//去重
+            //System.out.println(Arrays.toString(citys.toArray()));
+            criteria.subCriteria(new Criteria("content").in(citys).or("title").in(citys));
+            CriteriaQuery query = new CriteriaQuery(criteria);
+            long searchHitCount = this.elasticsearchOperations.count(query, Data.class);
+            resultList.add(searchHitCount);
+
+        }
+        return new AreaAnalysisResponse(resultList.get(0),resultList.get(1),resultList.get(2),resultList.get(3),resultList.get(4),
+                resultList.get(5),resultList.get(6),resultList.get(7),resultList.get(8),resultList.get(9),resultList.get(10),resultList.get(11),
+                resultList.get(12),resultList.get(13),resultList.get(14),resultList.get(15),resultList.get(16),resultList.get(17),
+                resultList.get(18),resultList.get(19),resultList.get(20),resultList.get(21),resultList.get(22),resultList.get(23),
+                resultList.get(24),resultList.get(25),resultList.get(26),resultList.get(27),resultList.get(28),resultList.get(29),
+                resultList.get(30),resultList.get(31),resultList.get(32),resultList.get(33));
     }
 }
