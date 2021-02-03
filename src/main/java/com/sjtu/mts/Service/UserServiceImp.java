@@ -38,7 +38,9 @@ public class UserServiceImp implements UserService {
     }
 
     @Override
-    public JSONArray getAllManager() { JSONArray jsonArray = new JSONArray();
+    public JSONArray getAllManager()
+    {
+        JSONArray jsonArray = new JSONArray();
         List<Manager> managerList = managerDao.getAllManager();
         for(Manager manager : managerList){
             JSONObject object = new JSONObject();

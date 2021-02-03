@@ -1,5 +1,7 @@
 package com.sjtu.mts.Controller;
 
+import com.sjtu.mts.Entity.FangAn;
+import com.sjtu.mts.Service.FangAnService;
 import com.sjtu.mts.Service.UserService;
 import net.minidev.json.JSONArray;
 import net.minidev.json.JSONObject;
@@ -9,6 +11,7 @@ import org.springframework.web.bind.annotation.*;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpSession;
+import java.util.List;
 
 @RequestMapping(path="/User")
 @RestController
@@ -16,6 +19,8 @@ public class UserController {
 
     @Autowired
     private UserService userService;
+    @Autowired
+    private FangAnService fangAnService;
 
     @GetMapping(path="/allUsers")
     @ResponseBody
@@ -104,6 +109,19 @@ public class UserController {
             result.put("logout", 1);
         }
         return result;
+    }
+
+    @PostMapping(path = "/saveFangAn")
+    @ResponseBody
+    public JSONObject saveFangAn(@RequestParam String username, @RequestParam String fangAnname, @RequestParam String fangAn
+                                      ) {
+        return fangAnService.saveFangAn(username,fangAnname,fangAn);
+    }
+
+    @GetMapping(path = "/findFangAn")
+    @ResponseBody
+    public List<FangAn> findFangAnByusername(String username){
+        return fangAnService.findAllByUsername(username);
     }
 }
 
