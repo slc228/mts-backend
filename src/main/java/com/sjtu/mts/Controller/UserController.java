@@ -12,6 +12,7 @@ import org.springframework.web.bind.annotation.*;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpSession;
 import java.util.List;
+import java.util.Map;
 
 @RequestMapping(path="/User")
 @RestController
@@ -69,23 +70,23 @@ public class UserController {
         return userService.registerManager(username, password, phone, email);
     }
 
-    @PostMapping(path = "/login")
+    @RequestMapping(path = "/login")
     @ResponseBody
-    public JSONObject login(HttpServletRequest request, @RequestParam String username, @RequestParam String password, @RequestParam String role) {
-        JSONObject result = ("0".equals(role)) ? userService.loginManager(username, password) : userService.login(username, password,"1");
+    public JSONObject login(HttpServletRequest request, @RequestBody Map<String,String> userinfo) {
+        JSONObject result = ("0".equals(userinfo.get("role"))) ? userService.loginManager(userinfo.get("username"), userinfo.get("password")) : userService.login(userinfo.get("username"), userinfo.get("password"),"1");
         if ("1".equals(result.getAsString("login"))) {
             HttpSession session = request.getSession();
             System.out.println(session);
             String name = (String) session.getAttribute("username");
             if (StringUtils.isEmpty(name)) {
-                session.setAttribute("username", username);
+                session.setAttribute("username", userinfo.get("username"));
                 if ("0".equals(result.getAsString("final"))) {
                     session.setAttribute("role", "0");
                     session.setAttribute("final", "0");
                 } else {
                     session.setAttribute("role", "1");
                 }
-            } else if (!(name.equals(username))) {
+            } else if (!(name.equals(userinfo.get("username")))) {
                 JSONObject err = new JSONObject();
                 err.put("login", -1);
                 return err;

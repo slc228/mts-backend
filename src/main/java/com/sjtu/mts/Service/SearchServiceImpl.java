@@ -29,7 +29,7 @@ public class SearchServiceImpl implements SearchService {
         this.elasticsearchOperations = elasticsearchOperations;
         this.areaRepository = areaRepository;
     }
-
+    @Override
     public DataResponse Search(String keyword, String cflag, String startPublishedDay, String endPublishedDay,
                                String fromType, int page, int pageSize, int timeOrder)
     {
@@ -84,6 +84,7 @@ public class SearchServiceImpl implements SearchService {
 
         return result;
     }
+    @Override
     public ResourceCountResponse globalSearchResourceCount(String keyword, String startPublishedDay, String endPublishedDay) {
         List<Long> resultList = new ArrayList<>();
         for (int fromType = 1; fromType <= 7 ; fromType++) {
@@ -115,7 +116,7 @@ public class SearchServiceImpl implements SearchService {
         return new ResourceCountResponse(resultList.get(0), resultList.get(1), resultList.get(2),
                 resultList.get(3), resultList.get(4), resultList.get(5), resultList.get(6));
     }
-
+    @Override
     public CflagCountResponse globalSearchCflagCount(String keyword, String startPublishedDay, String endPublishedDay) {
         List<Long> resultList = new ArrayList<>();
         for (int cflag = 1; cflag <= 2 ; cflag++) {
@@ -146,7 +147,7 @@ public class SearchServiceImpl implements SearchService {
         }
         return new CflagCountResponse(resultList.get(0), resultList.get(1));
     }
-
+    @Override
     public AmountTrendResponse globalSearchTrendCount(String keyword, String startPublishedDay, String endPublishedDay) {
         int pointNum = 6;
         SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
@@ -196,6 +197,7 @@ public class SearchServiceImpl implements SearchService {
                 fromTypeResultList.get(4), fromTypeResultList.get(5), fromTypeResultList.get(6),
                 fromTypeResultList.get(7));
     }
+    @Override
     public DataResponse AreaSearch(String keyword, String area, String startPublishedDay, String endPublishedDay,
                                    int page, int pageSize, int timeOrder){
         Criteria criteria = new Criteria();
@@ -265,7 +267,7 @@ public class SearchServiceImpl implements SearchService {
 
         return result;
     }
-
+    @Override
     public AreaAnalysisResponse countArea(String keyword, String startPublishedDay, String endPublishedDay){
         List<Long> resultList = new ArrayList<>();
         List<Integer> codeids = Arrays.asList(11,12,13,14,15,21,22,23,31,32,33,34,35,36,37,41,42,43,44,45,46,50,51,52,53,54,61,62,63,64,65,71,81,91);
