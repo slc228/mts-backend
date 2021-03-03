@@ -8,5 +8,5 @@ import java.util.List;
 public interface FangAnService {
     List<FangAn> findAllByUsername(String username);
     JSONObject saveFangAn(String username,String fangAnname,String guanjianci,String laiyuan,String diyu);
-    List<FangAn> findByFangAnName(String fangAnName);
+
 }

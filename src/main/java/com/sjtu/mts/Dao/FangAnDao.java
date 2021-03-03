@@ -8,5 +8,5 @@ public interface FangAnDao {
     FangAn save(FangAn fangAn);
     List<FangAn> findAllByUsername(String username);
 
-    List<FangAn> findByFangAnName(String fangAnName);
+    Boolean existsByUsernameAndFangAnname(String username,String fangAnname);
 }

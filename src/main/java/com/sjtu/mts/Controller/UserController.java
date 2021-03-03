@@ -129,21 +129,6 @@ public class UserController {
         return fangAnService.findAllByUsername(username);
     }
 
-    @GetMapping(path = "/findFangAnByName")
-    @ResponseBody
-    public JSONObject findFangAnByName(@RequestParam String fangAnname){
-        JSONObject result = new JSONObject();
-        List<FangAn> fangAn =  fangAnService.findByFangAnName(fangAnname);
-        if(fangAn.isEmpty()){
-            result.put("findFangAnByName","0");
-        }else{
-            result.put("keyword",fangAn.get(0).getKeyword());
-            result.put("fromType",fangAn.get(0).getFromType());
-            result.put("area",fangAn.get(0).getArea());
-        }
-        return result;
-
-    }
 
 
 }

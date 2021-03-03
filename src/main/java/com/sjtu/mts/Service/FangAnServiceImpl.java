@@ -24,6 +24,12 @@ public class FangAnServiceImpl implements FangAnService {
     public JSONObject saveFangAn(String username, String fangAnname,String guanjianci,String laiyuan,String diyu){
         JSONObject result = new JSONObject();
         result.put("saveFangAn", 0);
+        Boolean ifExist = fangAnDao.existsByUsernameAndFangAnname(username,fangAnname);
+        if(ifExist){
+            result.put("saveFangAn", 0);
+            result.put("方案名重复", 1);
+            return result;
+        }
         try {
             FangAn fangAn1 = new FangAn(username,fangAnname,guanjianci,laiyuan,diyu);
             fangAnDao.save(fangAn1);
@@ -35,10 +41,6 @@ public class FangAnServiceImpl implements FangAnService {
         return result;
     }
 
-    @Override
-    public List<FangAn> findByFangAnName(String fangAnName){
-        return fangAnDao.findByFangAnName(fangAnName);
-    }
 
 
 }
