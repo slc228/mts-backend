@@ -1,2 +1,13 @@
-package com.sjtu.mts.WeiboTrack;public class WeiboRepostTree {
+package com.sjtu.mts.WeiboTrack;
+
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
+
+@AllArgsConstructor
+@NoArgsConstructor
+@Getter
+@Setter
+public class WeiboRepostTree {
 }
