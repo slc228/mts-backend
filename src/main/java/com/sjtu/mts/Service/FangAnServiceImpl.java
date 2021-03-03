@@ -21,7 +21,7 @@ public class FangAnServiceImpl implements FangAnService {
     }
 
     @Override
-    public JSONObject saveFangAn(String username, String fangAnname,String guanjianci,String laiyuan,String diyu){
+    public JSONObject saveFangAn(String username,String fangAnname,String keyword,int kisAnd,String fromType,String area,int aisAnd){
         JSONObject result = new JSONObject();
         result.put("saveFangAn", 0);
         Boolean ifExist = fangAnDao.existsByUsernameAndFangAnname(username,fangAnname);
@@ -31,7 +31,7 @@ public class FangAnServiceImpl implements FangAnService {
             return result;
         }
         try {
-            FangAn fangAn1 = new FangAn(username,fangAnname,guanjianci,laiyuan,diyu);
+            FangAn fangAn1 = new FangAn(username,fangAnname,keyword,kisAnd,fromType,area,aisAnd);
             fangAnDao.save(fangAn1);
             result.put("saveFangAn", 1);
             return result;

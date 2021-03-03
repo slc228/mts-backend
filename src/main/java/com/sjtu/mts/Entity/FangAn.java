@@ -21,19 +21,29 @@ public class FangAn implements Serializable {
 
     @Column(name = "keyword")
     private String keyword;
+
+    @Column(name = "kisand")
+    private int kisAnd;
+
     @Column(name = "fromtype")
     private String fromType;
+
     @Column(name = "area")
     private String area;
 
+    @Column(name = "aisand")
+    private int aisAnd;
+
     public FangAn(){}
 
-    public FangAn(String username, String fangAnname,String keyword ,String fromType,String area){
+    public FangAn(String username, String fangAnname,String keyword ,int kisAnd,String fromType,String area,int aisAnd){
         this.username = username;
         this.fangAnname = fangAnname;
         this.keyword = keyword;
+        this.kisAnd = kisAnd;
         this.fromType  = fromType;
         this.area = area;
+        this.aisAnd = aisAnd;
     }
 
     public void setUsername(String username) {

@@ -197,76 +197,7 @@ public class SearchServiceImpl implements SearchService {
                 fromTypeResultList.get(4), fromTypeResultList.get(5), fromTypeResultList.get(6),
                 fromTypeResultList.get(7));
     }
-    @Override
-    public DataResponse AreaSearch(String keyword, String area, String startPublishedDay, String endPublishedDay,
-                                   int page, int pageSize, int timeOrder){
-        Criteria criteria = new Criteria();
-        if (!keyword.isEmpty())
-        {
-            String[] searchSplitArray = keyword.trim().split("\\s+");;
-            for (String searchString : searchSplitArray) {
 
-                criteria.subCriteria(new Criteria().and("content").contains(searchString).
-                        or("title").contains(searchString));
-            }
-        }
-
-        if (!area.isEmpty())
-        {
-
-            List<Integer> codeid  = areaRepository.findCodeidByCityName(area);
-            if(!codeid.isEmpty()){
-                List<String> citys = new ArrayList<>();
-                for (Integer co:codeid){
-                    List<String> tmp = areaRepository.findCityNameByCodeid(co) ;
-                    for(int i=0;i<tmp.size();i++){
-                        tmp.set(i,tmp.get(i).replaceAll("\\s*", ""));
-                        if(tmp.get(i).contains("市辖")||tmp.get(i).contains("县辖")){
-                            tmp.remove(i);
-                        }
-                    }
-                    citys.addAll(tmp);
-                }
-
-                citys = (List) citys.stream().distinct().collect(Collectors.toList());//去重
-                //System.out.println(Arrays.toString(citys.toArray()));
-                criteria.subCriteria(new Criteria("content").in(citys).or("title").in(citys));
-            }
-        }
-        if (!startPublishedDay.isEmpty() && !endPublishedDay.isEmpty())
-        {
-            SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
-            try {
-                Date startDate = sdf.parse(startPublishedDay);
-                Date endDate = sdf.parse(endPublishedDay);
-                criteria.subCriteria(new Criteria().and("publishedDay").between(startDate, endDate));
-            } catch (ParseException e) {
-                e.printStackTrace();
-            }
-        }
-        CriteriaQuery query = new CriteriaQuery(criteria);
-        if (timeOrder == 0) {
-            query.setPageable(PageRequest.of(page, pageSize, Sort.by(Sort.Direction.DESC, "publishedDay")));
-        }
-        else {
-            query.setPageable(PageRequest.of(page, pageSize, Sort.by(Sort.Direction.ASC, "publishedDay")));
-        }
-        SearchHits<Data> searchHits = this.elasticsearchOperations.search(query, Data.class);
-        SearchPage<Data> searchPage = SearchHitSupport.searchPageFor(searchHits, query.getPageable());
-        long hitNumber = this.elasticsearchOperations.count(query, Data.class);
-
-        List<Data> pageDataContent = new ArrayList<>();
-        for (SearchHit<Data> hit : searchPage.getSearchHits())
-        {
-            pageDataContent.add(hit.getContent());
-        }
-
-        DataResponse result = new DataResponse();
-        result.setHitNumber(hitNumber);
-        result.setDataContent(pageDataContent);
-
-        return result;
-    }
     @Override
     public AreaAnalysisResponse countArea(String keyword, String startPublishedDay, String endPublishedDay){
         List<Long> resultList = new ArrayList<>();
@@ -317,23 +248,38 @@ public class SearchServiceImpl implements SearchService {
     }
 
     @Override
-    public DataResponse fangAnSearch(String keyword,String fromType,String area,String startPublishedDay, String endPublishedDay,
+    public DataResponse fangAnSearch(String keyword,int kisAnd,String fromType,String area,int aisAnd,String startPublishedDay, String endPublishedDay,
                                      int page, int pageSize, int timeOrder){
         Criteria criteria = new Criteria();
         if (!keyword.isEmpty())
         {
-            String[] searchSplitArray = keyword.trim().split("\\s+");;
-            for (String searchString : searchSplitArray) {
+            String[] searchSplitArray1 = keyword.trim().split("\\s+");
+            List<String>searchSplitArray = Arrays.asList(searchSplitArray1);
+            System.out.println(searchSplitArray.size());
+            if(searchSplitArray.size()>1){
+                if(kisAnd==1){
+                    for (String searchString : searchSplitArray) {
 
-                criteria.subCriteria(new Criteria().and("content").contains(searchString).
-                        or("title").contains(searchString));
+                        criteria.subCriteria(new Criteria().and("content").contains(searchString).
+                                or("title").contains(searchString));
+                    }
+                }else {
+                    criteria.subCriteria(new Criteria("content").in(searchSplitArray).or("title").in(searchSplitArray));
+                }
+            }else {
+                criteria.subCriteria(new Criteria().and("content").contains(searchSplitArray.get(0)).
+                        or("title").contains(searchSplitArray.get(0)));
             }
+
+
         }
         if (!area.isEmpty())
         {
 
-            List<Integer> codeid  = areaRepository.findCodeidByCityName(area);
-            if(!codeid.isEmpty()){
+            String[] searchSplitArray1 = area.trim().split("\\s+");
+            List<String>searchSplitArray = Arrays.asList(searchSplitArray1);
+            if(searchSplitArray.size()==1 ){
+                List<Integer> codeid  = areaRepository.findCodeidByCityName(searchSplitArray.get(0));
                 List<String> citys = new ArrayList<>();
                 for (Integer co:codeid){
                     List<String> tmp = areaRepository.findCityNameByCodeid(co) ;
@@ -349,7 +295,48 @@ public class SearchServiceImpl implements SearchService {
                 citys = (List) citys.stream().distinct().collect(Collectors.toList());//去重
                 //System.out.println(Arrays.toString(citys.toArray()));
                 criteria.subCriteria(new Criteria("content").in(citys).or("title").in(citys));
+            }else if(searchSplitArray.size()>1 && aisAnd == 1){
+                for (String searchString : searchSplitArray){
+                    List<Integer> codeid  = areaRepository.findCodeidByCityName(searchString);
+                    List<String> citys = new ArrayList<>();
+                    for (Integer co:codeid){
+                        List<String> tmp = areaRepository.findCityNameByCodeid(co) ;
+                        for(int i=0;i<tmp.size();i++){
+                            tmp.set(i,tmp.get(i).replaceAll("\\s*", ""));
+                            if(tmp.get(i).contains("市辖")||tmp.get(i).contains("县辖")){
+                                tmp.remove(i);
+                            }
+                        }
+                        citys.addAll(tmp);
+                    }
+
+                    citys = (List) citys.stream().distinct().collect(Collectors.toList());//去重
+                    //System.out.println(Arrays.toString(citys.toArray()));
+                    criteria.subCriteria(new Criteria("content").in(citys).or("title").in(citys));
+                }
             }
+            else if(searchSplitArray.size()>1 && aisAnd ==0){
+                List<String> citys = new ArrayList<>();
+                for (String searchString : searchSplitArray){
+                    List<Integer> codeid  = areaRepository.findCodeidByCityName(searchString);
+                    for (Integer co:codeid){
+                        List<String> tmp = areaRepository.findCityNameByCodeid(co) ;
+                        for(int i=0;i<tmp.size();i++){
+                            tmp.set(i,tmp.get(i).replaceAll("\\s*", ""));
+                            if(tmp.get(i).contains("市辖")||tmp.get(i).contains("县辖")){
+                                tmp.remove(i);
+                            }
+                        }
+                        citys.addAll(tmp);
+                    }
+                    citys = (List) citys.stream().distinct().collect(Collectors.toList());//去重
+
+                }
+                //System.out.println(Arrays.toString(citys.toArray()));
+                criteria.subCriteria(new Criteria("content").in(citys).or("title").in(citys));
+            }
+
+
         }
         if (!startPublishedDay.isEmpty() && !endPublishedDay.isEmpty())
         {
@@ -364,7 +351,15 @@ public class SearchServiceImpl implements SearchService {
         }
         if (!fromType.isEmpty())
         {
-            criteria.subCriteria(new Criteria().and("fromType").is(fromType));
+            String[] searchSplitArray1 = fromType.trim().split("\\s+");
+            List<String>searchSplitArray = Arrays.asList(searchSplitArray1);
+
+            if(searchSplitArray.size()>1){
+                criteria.subCriteria(new Criteria().and("fromType").in(searchSplitArray));
+            }else {
+                criteria.subCriteria(new Criteria().and("fromType").is(searchSplitArray.get(0)));
+            }
+
         }
         CriteriaQuery query = new CriteriaQuery(criteria);
         if (timeOrder == 0) {

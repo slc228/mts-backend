@@ -118,9 +118,9 @@ public class UserController {
 
     @PostMapping(path = "/saveFangAn")
     @ResponseBody
-    public JSONObject saveFangAn(@RequestParam String username, @RequestParam String fangAnname, @RequestParam String keyword, @RequestParam String fromType,@RequestParam String area
-                                      ) {
-        return fangAnService.saveFangAn(username,fangAnname,keyword,fromType,area);
+    public JSONObject saveFangAn(@RequestParam String username, @RequestParam String fangAnname, @RequestParam String keyword, @RequestParam int kisAnd,@RequestParam String fromType,@RequestParam String area,
+                                  @RequestParam int aisAnd    ) {
+        return fangAnService.saveFangAn(username,fangAnname,keyword,kisAnd,fromType,area,aisAnd);
     }
 
     @GetMapping(path = "/findFangAn")
