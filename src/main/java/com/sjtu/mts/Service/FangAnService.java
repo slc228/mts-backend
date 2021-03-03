@@ -7,5 +7,6 @@ import java.util.List;
 
 public interface FangAnService {
     List<FangAn> findAllByUsername(String username);
-    JSONObject saveFangAn(String username,String fangAnname,String fangAn);
+    JSONObject saveFangAn(String username,String fangAnname,String keyword,int kisAnd,String fromType,String area,int aisAnd);
+
 }

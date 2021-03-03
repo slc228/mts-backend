@@ -1,4 +1,4 @@
-package com.sjtu.mts.Config;
+package com.sjtu.mts.config;
 
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.annotation.web.builders.WebSecurity;

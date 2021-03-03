@@ -2,7 +2,6 @@ package com.sjtu.mts.Service;
 
 import com.sjtu.mts.Dao.FangAnDao;
 import com.sjtu.mts.Entity.FangAn;
-import net.minidev.json.JSONArray;
 import net.minidev.json.JSONObject;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -17,16 +16,22 @@ public class FangAnServiceImpl implements FangAnService {
 
     @Override
     public List<FangAn> findAllByUsername(String username){
-        JSONArray jsonArray = new JSONArray();
+
         return  fangAnDao.findAllByUsername(username);
     }
 
     @Override
-    public JSONObject saveFangAn(String username, String fangAnname,String fangAn){
+    public JSONObject saveFangAn(String username,String fangAnname,String keyword,int kisAnd,String fromType,String area,int aisAnd){
         JSONObject result = new JSONObject();
         result.put("saveFangAn", 0);
+        Boolean ifExist = fangAnDao.existsByUsernameAndFangAnname(username,fangAnname);
+        if(ifExist){
+            result.put("saveFangAn", 0);
+            result.put("方案名重复", 1);
+            return result;
+        }
         try {
-            FangAn fangAn1 = new FangAn(username,fangAnname,fangAn);
+            FangAn fangAn1 = new FangAn(username,fangAnname,keyword,kisAnd,fromType,area,aisAnd);
             fangAnDao.save(fangAn1);
             result.put("saveFangAn", 1);
             return result;
@@ -35,6 +40,7 @@ public class FangAnServiceImpl implements FangAnService {
         }
         return result;
     }
+
 
 
 }

@@ -72,23 +72,10 @@ public class DataController {
     ) {
         return searchService.globalSearchTrendCount(keyword, startPublishedDay, endPublishedDay);
     }
-    /*
-        某事件某地区发文
+
+    /*某事件各地区发文
+    @author FYR
      */
-    @GetMapping("/globalSearch/areaSearch")
-    @ResponseBody
-    public DataResponse AreaSearch(
-            @RequestParam("keyword") String keyword,
-            @RequestParam("area") String area,
-            @RequestParam("startPublishedDay") String startPublishedDay,
-            @RequestParam("endPublishedDay") String endPublishedDay,
-            @RequestParam("page") int page,
-            @RequestParam("pageSize") int pageSize,
-            @RequestParam("timeOrder") int timeOrder
-    ) {
-        return searchService.AreaSearch(keyword,area, startPublishedDay, endPublishedDay,page,pageSize,timeOrder);
-    }
-    //某事件各地区发文
     @GetMapping("/globalSearch/areaCount")
     @ResponseBody
     public AreaAnalysisResponse countAreaByKeywordAndPublishedDay(
@@ -98,4 +85,27 @@ public class DataController {
     ) {
         return searchService.countArea(keyword,startPublishedDay,endPublishedDay);
     }
+
+    /*根据方案查找舆情
+    @author FYR
+     */
+    @GetMapping("/singleSearch/findByFangAn")
+    @ResponseBody
+    public DataResponse fangAnSearch(
+            @RequestParam("keyword") String keyword,
+            @RequestParam("kisAnd") int kisAns,
+            @RequestParam("fromType") String fromType,
+            @RequestParam("area") String area,
+            @RequestParam("aisAnd") int aisAnd,
+            @RequestParam("startPublishedDay") String startPublishedDay,
+            @RequestParam("endPublishedDay") String endPublishedDay,
+            @RequestParam("page") int page,
+            @RequestParam("pageSize") int pageSize,
+            @RequestParam("timeOrder") int timeOrder
+
+
+    ){
+        return searchService.fangAnSearch(keyword,kisAns,fromType,area,aisAnd,startPublishedDay,endPublishedDay,page,pageSize,timeOrder);
+    }
+
 }
