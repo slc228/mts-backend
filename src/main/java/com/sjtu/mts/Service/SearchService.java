@@ -17,4 +17,7 @@ public interface SearchService {
     public AmountTrendResponse globalSearchTrendCount(String keyword, String startPublishedDay, String endPublishedDay);
 
     public AreaAnalysisResponse countArea(String keyword, String startPublishedDay, String endPublishedDay);
+
+    public DataResponse fangAnSearch(String keyword,String fromType,String area,String startPublishedDay, String endPublishedDay,
+                                     int page, int pageSize, int timeOrder);
 }

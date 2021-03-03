@@ -145,7 +145,7 @@ public class UserServiceImp implements UserService {
             if (!user.getPassword().equals(password) || !user.getRole().equals(urole)) {
                 return result;
             } else {
-                result.put("role", user.getRole());
+                result.put("role", user.getRole().toString());
                 result.put("username", user.getUsername());
                 result.put("phone", user.getPhone());
                 result.put("email", user.getEmail());
@@ -171,6 +171,7 @@ public class UserServiceImp implements UserService {
                 result.put("username", manager.getUsername());
                 result.put("phone", manager.getPhone());
                 result.put("email", manager.getEmail());
+                result.put("role",manager.getRole().toString());
                 result.put("final", "0");
                 return result;
             }

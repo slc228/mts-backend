@@ -74,6 +74,7 @@ public class DataController {
     }
     /*
         某事件某地区发文
+        @author FYR
      */
     @GetMapping("/globalSearch/areaSearch")
     @ResponseBody
@@ -88,7 +89,9 @@ public class DataController {
     ) {
         return searchService.AreaSearch(keyword,area, startPublishedDay, endPublishedDay,page,pageSize,timeOrder);
     }
-    //某事件各地区发文
+    /*某事件各地区发文
+    @author FYR
+     */
     @GetMapping("/globalSearch/areaCount")
     @ResponseBody
     public AreaAnalysisResponse countAreaByKeywordAndPublishedDay(
@@ -98,4 +101,25 @@ public class DataController {
     ) {
         return searchService.countArea(keyword,startPublishedDay,endPublishedDay);
     }
+
+    /*根据方案查找舆情
+    @author FYR
+     */
+    @GetMapping("/singleSearch/findByFangAn")
+    @ResponseBody
+    public DataResponse fangAnSearch(
+            @RequestParam("keyword") String keyword,
+            @RequestParam("fromType") String fromType,
+            @RequestParam("area") String area,
+            @RequestParam("startPublishedDay") String startPublishedDay,
+            @RequestParam("endPublishedDay") String endPublishedDay,
+            @RequestParam("page") int page,
+            @RequestParam("pageSize") int pageSize,
+            @RequestParam("timeOrder") int timeOrder
+
+
+    ){
+        return searchService.fangAnSearch(keyword,fromType,area,startPublishedDay,endPublishedDay,page,pageSize,timeOrder);
+    }
+
 }

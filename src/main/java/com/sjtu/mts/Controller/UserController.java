@@ -76,7 +76,11 @@ public class UserController {
         JSONObject result = ("0".equals(userinfo.get("role"))) ? userService.loginManager(userinfo.get("username"), userinfo.get("password")) : userService.login(userinfo.get("username"), userinfo.get("password"),"1");
         if ("1".equals(result.getAsString("login"))) {
             HttpSession session = request.getSession();
-            System.out.println(session);
+            //System.out.println("此时的sessionid为：");
+            System.out.println(session.getId());
+            //System.out.println("此时的session attributions为：");
+            //System.out.println(session.getAttributeNames());
+            //System.out.println(session.isNew());
             String name = (String) session.getAttribute("username");
             if (StringUtils.isEmpty(name)) {
                 session.setAttribute("username", userinfo.get("username"));
@@ -114,15 +118,33 @@ public class UserController {
 
     @PostMapping(path = "/saveFangAn")
     @ResponseBody
-    public JSONObject saveFangAn(@RequestParam String username, @RequestParam String fangAnname, @RequestParam String fangAn
+    public JSONObject saveFangAn(@RequestParam String username, @RequestParam String fangAnname, @RequestParam String keyword, @RequestParam String fromType,@RequestParam String area
                                       ) {
-        return fangAnService.saveFangAn(username,fangAnname,fangAn);
+        return fangAnService.saveFangAn(username,fangAnname,keyword,fromType,area);
     }
 
     @GetMapping(path = "/findFangAn")
     @ResponseBody
-    public List<FangAn> findFangAnByusername(String username){
+    public List<FangAn> findFangAnByusername(@RequestParam String username){
         return fangAnService.findAllByUsername(username);
     }
+
+    @GetMapping(path = "/findFangAnByName")
+    @ResponseBody
+    public JSONObject findFangAnByName(@RequestParam String fangAnname){
+        JSONObject result = new JSONObject();
+        List<FangAn> fangAn =  fangAnService.findByFangAnName(fangAnname);
+        if(fangAn.isEmpty()){
+            result.put("findFangAnByName","0");
+        }else{
+            result.put("keyword",fangAn.get(0).getKeyword());
+            result.put("fromType",fangAn.get(0).getFromType());
+            result.put("area",fangAn.get(0).getArea());
+        }
+        return result;
+
+    }
+
+
 }
 

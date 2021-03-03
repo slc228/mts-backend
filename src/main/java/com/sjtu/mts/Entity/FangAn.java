@@ -19,15 +19,21 @@ public class FangAn implements Serializable {
     @Column(name = "fanganname")
     private String fangAnname;
 
-    @Column(name = "fangan")
-    private String fangAn;
+    @Column(name = "keyword")
+    private String keyword;
+    @Column(name = "fromtype")
+    private String fromType;
+    @Column(name = "area")
+    private String area;
 
     public FangAn(){}
 
-    public FangAn(String username, String fangAnname,String fangAn ){
+    public FangAn(String username, String fangAnname,String keyword ,String fromType,String area){
         this.username = username;
         this.fangAnname = fangAnname;
-        this.fangAn = fangAn;
+        this.keyword = keyword;
+        this.fromType  = fromType;
+        this.area = area;
     }
 
     public void setUsername(String username) {
@@ -46,13 +52,6 @@ public class FangAn implements Serializable {
         return fangAnname;
     }
 
-    public void setFangAn(String fangAn) {
-        this.fangAn = fangAn;
-    }
-
-    public String getFangAn() {
-        return fangAn;
-    }
 
     public long getFid() {
         return fid;
@@ -60,5 +59,29 @@ public class FangAn implements Serializable {
 
     public void setFid(long fid) {
         this.fid = fid;
+    }
+
+    public void setKeyword(String keyword) {
+        this.keyword = keyword;
+    }
+
+    public String getKeyword() {
+        return keyword;
+    }
+
+    public void setFromType(String fromType) {
+        this.fromType = fromType;
+    }
+
+    public String getFromType() {
+        return fromType;
+    }
+
+    public void setArea(String area) {
+        this.area = area;
+    }
+
+    public String getArea() {
+        return area;
     }
 }

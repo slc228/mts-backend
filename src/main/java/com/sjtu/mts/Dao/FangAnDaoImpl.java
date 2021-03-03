@@ -21,4 +21,9 @@ public class FangAnDaoImpl implements FangAnDao {
     public List<FangAn> findAllByUsername(String username){
         return fangAnRepository.findAllByUsername(username);
     }
+
+    @Override
+    public List<FangAn> findByFangAnName(String fangAnName){
+        return fangAnRepository.findAllByFangAnname(fangAnName);
+    }
 }
