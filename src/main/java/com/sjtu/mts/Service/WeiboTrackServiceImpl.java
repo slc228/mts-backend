@@ -63,6 +63,9 @@ public class WeiboTrackServiceImpl implements WeiboTrackService {
             for (int i = 0; i < repostList.size(); i++){
                 String singleWeiboContent = repostList.get(i);
                 int colon = singleWeiboContent.indexOf(':');
+                if (colon == -1){
+                    break;
+                }
                 String author = singleWeiboContent.substring(0, colon);
                 String content = singleWeiboContent.substring(colon + 1);
                 if (i == repostList.size() - 1){
