@@ -4,6 +4,8 @@ import com.sjtu.mts.Entity.Data;
 import com.sjtu.mts.Response.*;
 import com.sjtu.mts.Repository.DataRepository;
 import com.sjtu.mts.Service.SearchService;
+import com.sjtu.mts.Service.WeiboTrackService;
+import com.sjtu.mts.WeiboTrack.WeiboRepostTree;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
@@ -19,6 +21,9 @@ public class DataController {
 
     @Autowired
     private SearchService searchService;
+
+    @Autowired
+    private WeiboTrackService weiboTrackService;
 
     @GetMapping("/findByCflag/{cflag}")
     @ResponseBody
@@ -106,6 +111,19 @@ public class DataController {
 
     ){
         return searchService.fangAnSearch(keyword,kisAns,fromType,area,aisAnd,startPublishedDay,endPublishedDay,page,pageSize,timeOrder);
+    }
+
+    /*溯源微博，生成并返回微博转发关系树
+    @author Ma Baowei
+     */
+    @GetMapping("/weiboTrack")
+    @ResponseBody
+    public WeiboRepostTree trackWeiboByKeywordAndPublishedDay(
+            @RequestParam("keyword") String keyword,
+            @RequestParam("startPublishedDay") String startPublishedDay,
+            @RequestParam("endPublishedDay") String endPublishedDay
+    ) {
+        return weiboTrackService.trackWeibo(keyword,startPublishedDay,endPublishedDay);
     }
 
 }

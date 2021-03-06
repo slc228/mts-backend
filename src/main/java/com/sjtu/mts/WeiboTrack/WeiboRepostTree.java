@@ -20,7 +20,7 @@ public class WeiboRepostTree {
         this.data = data;
     }
 
-    WeiboRepostTree findChild(WeiboData data) {
+    public WeiboRepostTree findChild(WeiboData data) {
         for (WeiboRepostTree child: children ) {
             if (child.data.isSameWeibo(data)) {
                 return child;
@@ -29,7 +29,7 @@ public class WeiboRepostTree {
         return addChild(new WeiboRepostTree(data));
     }
 
-    WeiboRepostTree addChild(WeiboRepostTree child) {
+    public WeiboRepostTree addChild(WeiboRepostTree child) {
         children.add(child);
         return child;
     }
