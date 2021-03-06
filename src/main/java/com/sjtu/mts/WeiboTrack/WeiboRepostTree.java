@@ -29,6 +29,19 @@ public class WeiboRepostTree {
         return addChild(new WeiboRepostTree(data));
     }
 
+    public WeiboRepostTree findChildAndAddInfo(WeiboData data) {
+        for (WeiboRepostTree child: children ) {
+            if (child.data.isSameWeibo(data)) {
+                if (child.data.getCflag().equals("0")){
+                    child.data.setCflag(data.getCflag());
+                    child.data.setPublishedDay(data.getPublishedDay());
+                }
+                return child;
+            }
+        }
+        return addChild(new WeiboRepostTree(data));
+    }
+
     public WeiboRepostTree addChild(WeiboRepostTree child) {
         children.add(child);
         return child;

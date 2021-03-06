@@ -62,14 +62,21 @@ public class WeiboTrackServiceImpl implements WeiboTrackService {
             Collections.reverse(repostList);
             for (int i = 0; i < repostList.size(); i++){
                 String singleWeiboContent = repostList.get(i);
-                int maohao = singleWeiboContent.indexOf(':');
-                String author = singleWeiboContent.substring(0, maohao);
-                String content = singleWeiboContent.substring(maohao+1);
-                WeiboData weiboData = new WeiboData(author, content, "0", "unknown");
-                current = current.findChild(weiboData);
+                int colon = singleWeiboContent.indexOf(':');
+                String author = singleWeiboContent.substring(0, colon);
+                String content = singleWeiboContent.substring(colon + 1);
+                if (i == repostList.size() - 1){
+                    String cflag = weiboOriginData.getCflag();
+                    String publishedDay = weiboOriginData.getPublishedDay();
+                    WeiboData weiboData = new WeiboData(author, content, cflag, publishedDay);
+                    current = current.findChildAndAddInfo(weiboData);
+                }
+                else{
+                    WeiboData weiboData = new WeiboData(author, content, "0", "unknown");
+                    current = current.findChild(weiboData);
+                }
             }
         }
-
         return root;
     }
 }
