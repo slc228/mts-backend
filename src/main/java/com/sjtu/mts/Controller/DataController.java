@@ -93,7 +93,7 @@ public class DataController {
     @ResponseBody
     public DataResponse fangAnSearch(
             @RequestParam("keyword") String keyword,
-            @RequestParam("kisAnd") int kisAns,
+            @RequestParam("kisAnd") int kisAnd,
             @RequestParam("fromType") String fromType,
             @RequestParam("area") String area,
             @RequestParam("aisAnd") int aisAnd,
@@ -105,7 +105,7 @@ public class DataController {
 
 
     ){
-        return searchService.fangAnSearch(keyword,kisAns,fromType,area,aisAnd,startPublishedDay,endPublishedDay,page,pageSize,timeOrder);
+        return searchService.fangAnSearch(keyword,kisAnd,fromType,area,aisAnd,startPublishedDay,endPublishedDay,page,pageSize,timeOrder);
     }
 
 }
