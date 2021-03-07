@@ -29,6 +29,7 @@ public class SearchServiceImpl implements SearchService {
         this.elasticsearchOperations = elasticsearchOperations;
         this.areaRepository = areaRepository;
     }
+
     @Override
     public DataResponse Search(String keyword, String cflag, String startPublishedDay, String endPublishedDay,
                                String fromType, int page, int pageSize, int timeOrder)
