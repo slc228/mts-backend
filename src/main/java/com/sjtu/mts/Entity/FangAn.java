@@ -22,24 +22,24 @@ public class FangAn implements Serializable {
     @Column(name = "match_type")
     private int matchType;
 
-    @Column(name = "region_keyword")
+    @Column(name = "rekeyword")
     private String regionKeyword;
 
-    @Column(name = "region_keyword_match")
+    @Column(name = "rekeymatch")
     private int regionKeywordMatch;
 
 
 
-    @Column(name = "role_keyword")
+    @Column(name = "rokeyword")
     private String roleKeyword;
 
-    @Column(name = "role_keyword_match")
+    @Column(name = "rokeymatch")
     private int roleKeywordMatch;
 
-    @Column(name = "event_keyword")
+    @Column(name = "ekeyword")
     private String eventKeyword;
 
-    @Column(name = "event_keyword_match")
+    @Column(name = "ekeymatch")
     private int eventKeywordMatch;
 
     @Column(name = "enable_alert")
