@@ -97,20 +97,18 @@ public class DataController {
     @GetMapping("/singleSearch/findByFangAn")
     @ResponseBody
     public DataResponse fangAnSearch(
-            @RequestParam("keyword") String keyword,
-            @RequestParam("kisAnd") int kisAnd,
-            @RequestParam("fromType") String fromType,
-            @RequestParam("area") String area,
-            @RequestParam("aisAnd") int aisAnd,
+            @RequestParam("fid") long fid,
+            @RequestParam("cflag") String cflag,
             @RequestParam("startPublishedDay") String startPublishedDay,
             @RequestParam("endPublishedDay") String endPublishedDay,
+            @RequestParam("fromType") String fromType,
             @RequestParam("page") int page,
             @RequestParam("pageSize") int pageSize,
             @RequestParam("timeOrder") int timeOrder
 
 
     ){
-        return searchService.fangAnSearch(keyword,kisAnd,fromType,area,aisAnd,startPublishedDay,endPublishedDay,page,pageSize,timeOrder);
+        return searchService.fangAnSearch(fid,cflag,startPublishedDay,endPublishedDay,fromType,page,pageSize,timeOrder);
     }
 
     /*溯源微博，生成并返回微博转发关系树

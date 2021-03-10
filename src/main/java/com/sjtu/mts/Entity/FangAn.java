@@ -16,34 +16,59 @@ public class FangAn implements Serializable {
     @Column(name = "username")
     private String username;
 
-    @Column(name = "fanganname")
-    private String fangAnname;
+    @Column(name = "programme_name")
+    private String programmeName;
 
-    @Column(name = "keyword")
-    private String keyword;
+    @Column(name = "match_type")
+    private int matchType;
 
-    @Column(name = "kisand")
-    private int kisAnd;
+    @Column(name = "region_keyword")
+    private String regionKeyword;
 
-    @Column(name = "fromtype")
-    private String fromType;
+    @Column(name = "region_keyword_match")
+    private int regionKeywordMatch;
 
-    @Column(name = "area")
-    private String area;
 
-    @Column(name = "aisand")
-    private int aisAnd;
+
+    @Column(name = "role_keyword")
+    private String roleKeyword;
+
+    @Column(name = "role_keyword_match")
+    private int roleKeywordMatch;
+
+    @Column(name = "event_keyword")
+    private String eventKeyword;
+
+    @Column(name = "event_keyword_match")
+    private int eventKeywordMatch;
+
+    @Column(name = "enable_alert")
+    private boolean enableAlert;
 
     public FangAn(){}
 
-    public FangAn(String username, String fangAnname,String keyword ,int kisAnd,String fromType,String area,int aisAnd){
+    public FangAn(
+            String username,
+            String programmeName,
+            int matchType ,
+            String regionKeyword,
+            int regionKeywordMatch,
+            String roleKeyword,
+            int roleKeywordMatch,
+            String eventKeyword,
+            int eventKeywordMatch,
+            boolean enableAlert){
         this.username = username;
-        this.fangAnname = fangAnname;
-        this.keyword = keyword;
-        this.kisAnd = kisAnd;
-        this.fromType  = fromType;
-        this.area = area;
-        this.aisAnd = aisAnd;
+        this.programmeName = programmeName;
+        this.matchType = matchType;
+        this.regionKeyword = regionKeyword;
+        this.regionKeywordMatch = regionKeywordMatch;
+        this.roleKeyword = roleKeyword;
+        this.roleKeywordMatch = roleKeywordMatch;
+        this.eventKeyword = eventKeyword;
+        this.eventKeywordMatch = eventKeywordMatch;
+        this.enableAlert = enableAlert;
+
     }
 
     public void setUsername(String username) {
@@ -54,44 +79,79 @@ public class FangAn implements Serializable {
         return username;
     }
 
-    public void setFangAnname(String fangAnname) {
-        this.fangAnname = fangAnname;
-    }
-
-    public String getFangAnname() {
-        return fangAnname;
-    }
-
-
     public long getFid() {
         return fid;
     }
 
-    public void setFid(long fid) {
-        this.fid = fid;
+    public int getMatchType() {
+        return matchType;
     }
 
-    public void setKeyword(String keyword) {
-        this.keyword = keyword;
+    public void setMatchType(int matchType) {
+        this.matchType = matchType;
     }
 
-    public String getKeyword() {
-        return keyword;
+    public String getProgrammeName() {
+        return programmeName;
     }
 
-    public void setFromType(String fromType) {
-        this.fromType = fromType;
+    public void setProgrammeName(String programmeName) {
+        this.programmeName = programmeName;
     }
 
-    public String getFromType() {
-        return fromType;
+    public String getRegionKeyword() {
+        return regionKeyword;
     }
 
-    public void setArea(String area) {
-        this.area = area;
+    public void setRegionKeyword(String regionKeyword) {
+        this.regionKeyword = regionKeyword;
     }
 
-    public String getArea() {
-        return area;
+    public int getRegionKeywordMatch() {
+        return regionKeywordMatch;
+    }
+
+    public void setRegionKeywordMatch(int regionKeywordMatch) {
+        this.regionKeywordMatch = regionKeywordMatch;
+    }
+
+    public String getRoleKeyword() {
+        return roleKeyword;
+    }
+
+    public void setRoleKeyword(String roleKeyword) {
+        this.roleKeyword = roleKeyword;
+    }
+
+    public int getRoleKeywordMatch() {
+        return roleKeywordMatch;
+    }
+
+    public void setRoleKeywordMatch(int roleKeywordMatch) {
+        this.roleKeywordMatch = roleKeywordMatch;
+    }
+
+    public String getEventKeyword() {
+        return eventKeyword;
+    }
+
+    public void setEventKeyword(String eventKeyword) {
+        this.eventKeyword = eventKeyword;
+    }
+
+    public int getEventKeywordMatch() {
+        return eventKeywordMatch;
+    }
+
+    public void setEventKeywordMatch(int eventKeywordMatch) {
+        this.eventKeywordMatch = eventKeywordMatch;
+    }
+
+    public boolean getEnableAlert(){
+        return enableAlert;
+    }
+
+    public void setEnableAlert(boolean enableAlert) {
+        this.enableAlert = enableAlert;
     }
 }

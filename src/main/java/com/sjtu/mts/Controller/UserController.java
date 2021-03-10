@@ -1,6 +1,5 @@
 package com.sjtu.mts.Controller;
 
-import com.sjtu.mts.Entity.FangAn;
 import com.sjtu.mts.Service.FangAnService;
 import com.sjtu.mts.Service.UserService;
 import net.minidev.json.JSONArray;
@@ -11,7 +10,6 @@ import org.springframework.web.bind.annotation.*;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpSession;
-import java.util.List;
 import java.util.Map;
 
 @RequestMapping(path="/User")
@@ -118,17 +116,59 @@ public class UserController {
 
     @PostMapping(path = "/saveFangAn")
     @ResponseBody
-    public JSONObject saveFangAn(@RequestParam String username, @RequestParam String fangAnname, @RequestParam String keyword, @RequestParam int kisAnd,@RequestParam String fromType,@RequestParam String area,
-                                  @RequestParam int aisAnd    ) {
-        return fangAnService.saveFangAn(username,fangAnname,keyword,kisAnd,fromType,area,aisAnd);
-    }
+    public JSONObject saveFangAn(@RequestBody Map<String,String> fangAnInfo ) {
 
+        return fangAnService.saveFangAn(
+                fangAnInfo.get("username"),
+                fangAnInfo.get("programmeName"),
+                Integer.parseInt(fangAnInfo.get("matchType")),
+                fangAnInfo.get("regionKeyword"),
+                Integer.parseInt(fangAnInfo.get("regionKeywordMatch")),
+                fangAnInfo.get("roleKeyword"),
+                Integer.parseInt(fangAnInfo.get("roleKeywordMatch")),
+                fangAnInfo.get("eventKeyword"),
+                Integer.parseInt(fangAnInfo.get("eventKeywordMatch")),
+                Boolean.parseBoolean(fangAnInfo.get("enableAlert"))
+                );
+    }
+    @PostMapping(path = "/changeFangAn")
+    @ResponseBody
+    public JSONObject changeFangAn(@RequestBody Map<String,String> fangAnInfo ) {
+        return fangAnService.changeFangAn(
+                Long.parseLong(fangAnInfo.get("fid")),
+                fangAnInfo.get("username"),
+                fangAnInfo.get("programmeName"),
+                Integer.parseInt(fangAnInfo.get("matchType")),
+                fangAnInfo.get("regionKeyword"),
+                Integer.parseInt(fangAnInfo.get("regionKeywordMatch")),
+                fangAnInfo.get("roleKeyword"),
+                Integer.parseInt(fangAnInfo.get("roleKeywordMatch")),
+                fangAnInfo.get("eventKeyword"),
+                Integer.parseInt(fangAnInfo.get("eventKeywordMatch")),
+                Boolean.parseBoolean(fangAnInfo.get("enableAlert"))
+        );
+    }
+    @GetMapping(path = "/delFangAn")
+    @ResponseBody
+    public JSONObject delFangAn(@RequestParam("username") String username,
+                                 @RequestParam("fid") long fid
+
+                                ) {
+        return fangAnService.delFangAn(username,fid);
+    }
     @GetMapping(path = "/findFangAn")
     @ResponseBody
-    public List<FangAn> findFangAnByusername(@RequestParam String username){
+    public JSONArray findFangAnByusername(@RequestParam String username){
         return fangAnService.findAllByUsername(username);
     }
+    @GetMapping(path = "/findFangAnByFid")
+    @ResponseBody
+    public JSONObject findFangAnByFid(@RequestParam("username") String username,
+                                @RequestParam("fid") long fid
 
+    ) {
+        return fangAnService.findFangAnByFid(username,fid);
+    }
 
 
 }

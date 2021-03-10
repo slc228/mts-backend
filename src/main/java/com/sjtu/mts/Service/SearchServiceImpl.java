@@ -1,7 +1,9 @@
 package com.sjtu.mts.Service;
 
 import com.sjtu.mts.Entity.Data;
+import com.sjtu.mts.Entity.FangAn;
 import com.sjtu.mts.Repository.AreaRepository;
+import com.sjtu.mts.Repository.FangAnRepository;
 import com.sjtu.mts.Response.*;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
@@ -23,11 +25,15 @@ public class SearchServiceImpl implements SearchService {
 
     private final ElasticsearchOperations elasticsearchOperations;
     private final AreaRepository areaRepository;
+    private final FangAnRepository fangAnRepository;
+//    @Autowired
+//    private FangAnDao fangAnDao;
 
-    public SearchServiceImpl(ElasticsearchOperations elasticsearchOperations,AreaRepository areaRepository)
+    public SearchServiceImpl(ElasticsearchOperations elasticsearchOperations,AreaRepository areaRepository,FangAnRepository fangAnRepository)
     {
         this.elasticsearchOperations = elasticsearchOperations;
         this.areaRepository = areaRepository;
+        this.fangAnRepository = fangAnRepository;
     }
 
     @Override
@@ -249,16 +255,28 @@ public class SearchServiceImpl implements SearchService {
     }
 
     @Override
-    public DataResponse fangAnSearch(String keyword,int kisAnd,String fromType,String area,int aisAnd,String startPublishedDay, String endPublishedDay,
-                                     int page, int pageSize, int timeOrder){
+    public DataResponse fangAnSearch(long fid,String cflag, String startPublishedDay, String endPublishedDay,
+                                     String fromType, int page, int pageSize, int timeOrder){
+        FangAn fangAn = fangAnRepository.findByFid(fid);
+        int matchType = fangAn.getMatchType();
+        String regionKeyword = fangAn.getRegionKeyword();
+        int regionKeywordMatch = fangAn.getRegionKeywordMatch();
+
+        String roleKeyword = fangAn.getRoleKeyword();
+        int roleKeywordMatch = fangAn.getRoleKeywordMatch();
+
+        String eventKeyword = fangAn.getEventKeyword();
+        int eventKeywordMatch = fangAn.getEventKeywordMatch();
         Criteria criteria = new Criteria();
-        if (!keyword.isEmpty())
+
+        if (!roleKeyword.isEmpty())
         {
-            String[] searchSplitArray1 = keyword.trim().split("\\s+");
+            String[] searchSplitArray1 = roleKeyword.trim().split("\\s+");
             List<String>searchSplitArray = Arrays.asList(searchSplitArray1);
             System.out.println(searchSplitArray.size());
+            System.out.println(searchSplitArray.get(0));
             if(searchSplitArray.size()>1){
-                if(kisAnd==1){
+                if(roleKeywordMatch==1){
                     for (String searchString : searchSplitArray) {
 
                         criteria.subCriteria(new Criteria().and("content").contains(searchString).
@@ -274,10 +292,32 @@ public class SearchServiceImpl implements SearchService {
 
 
         }
-        if (!area.isEmpty())
+        if (!eventKeyword.isEmpty())
+        {
+            String[] searchSplitArray1 = eventKeyword.trim().split("\\s+");
+            List<String>searchSplitArray = Arrays.asList(searchSplitArray1);
+            System.out.println(searchSplitArray.size());
+            if(searchSplitArray.size()>1){
+                if(eventKeywordMatch==1){
+                    for (String searchString : searchSplitArray) {
+
+                        criteria.subCriteria(new Criteria().and("content").contains(searchString).
+                                or("title").contains(searchString));
+                    }
+                }else {
+                    criteria.subCriteria(new Criteria("content").in(searchSplitArray).or("title").in(searchSplitArray));
+                }
+            }else {
+                criteria.subCriteria(new Criteria().and("content").contains(searchSplitArray.get(0)).
+                        or("title").contains(searchSplitArray.get(0)));
+            }
+
+
+        }
+        if (!regionKeyword.isEmpty())
         {
 
-            String[] searchSplitArray1 = area.trim().split("\\s+");
+            String[] searchSplitArray1 = regionKeyword.trim().split("\\s+");
             List<String>searchSplitArray = Arrays.asList(searchSplitArray1);
             if(searchSplitArray.size()==1 ){
                 List<Integer> codeid  = areaRepository.findCodeidByCityName(searchSplitArray.get(0));
@@ -296,7 +336,7 @@ public class SearchServiceImpl implements SearchService {
                 citys = (List) citys.stream().distinct().collect(Collectors.toList());//去重
                 //System.out.println(Arrays.toString(citys.toArray()));
                 criteria.subCriteria(new Criteria("content").in(citys).or("title").in(citys));
-            }else if(searchSplitArray.size()>1 && aisAnd == 1){
+            }else if(searchSplitArray.size()>1 && regionKeywordMatch == 1){
                 for (String searchString : searchSplitArray){
                     List<Integer> codeid  = areaRepository.findCodeidByCityName(searchString);
                     List<String> citys = new ArrayList<>();
@@ -316,7 +356,7 @@ public class SearchServiceImpl implements SearchService {
                     criteria.subCriteria(new Criteria("content").in(citys).or("title").in(citys));
                 }
             }
-            else if(searchSplitArray.size()>1 && aisAnd ==0){
+            else if(searchSplitArray.size()>1 && regionKeywordMatch ==0){
                 List<String> citys = new ArrayList<>();
                 for (String searchString : searchSplitArray){
                     List<Integer> codeid  = areaRepository.findCodeidByCityName(searchString);
@@ -338,6 +378,10 @@ public class SearchServiceImpl implements SearchService {
             }
 
 
+        }
+        if (!cflag.isEmpty())
+        {
+            criteria.subCriteria(new Criteria().and("cflag").is(cflag));
         }
         if (!startPublishedDay.isEmpty() && !endPublishedDay.isEmpty())
         {

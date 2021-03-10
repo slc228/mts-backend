@@ -17,6 +17,6 @@ public interface SearchService {
 
     public AreaAnalysisResponse countArea(String keyword, String startPublishedDay, String endPublishedDay);
 
-    public DataResponse fangAnSearch(String keyword,int kisAnd,String fromType,String area,int aisAnd,String startPublishedDay, String endPublishedDay,
-                                     int page, int pageSize, int timeOrder);
+    public DataResponse fangAnSearch(long fid,String cflag, String startPublishedDay, String endPublishedDay,
+                                     String fromType, int page, int pageSize, int timeOrder);
 }
