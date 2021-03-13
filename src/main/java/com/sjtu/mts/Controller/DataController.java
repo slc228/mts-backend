@@ -117,11 +117,11 @@ public class DataController {
     @GetMapping("/weiboTrack")
     @ResponseBody
     public WeiboRepostTree trackWeiboByKeywordAndPublishedDay(
-            @RequestParam("keyword") String keyword,
+            @RequestParam("fid") long fid,
             @RequestParam("startPublishedDay") String startPublishedDay,
             @RequestParam("endPublishedDay") String endPublishedDay
     ) {
-        return weiboTrackService.trackWeibo(keyword,startPublishedDay,endPublishedDay);
+        return weiboTrackService.trackWeibo(fid,startPublishedDay,endPublishedDay);
     }
 
 }
