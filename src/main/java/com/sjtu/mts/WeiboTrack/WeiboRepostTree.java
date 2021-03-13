@@ -15,9 +15,11 @@ import java.util.Set;
 public class WeiboRepostTree {
     private Set<WeiboRepostTree> children = new LinkedHashSet<>(); // LinkedHashSet preserves insertion order
     private WeiboData data;
+    private String name;
 
     public WeiboRepostTree(WeiboData data) {
         this.data = data;
+        this.name = data.getAuthor();
     }
 
     public WeiboRepostTree findChild(WeiboData data) {
