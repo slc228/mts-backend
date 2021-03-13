@@ -23,7 +23,16 @@ public class FangAnDaoImpl implements FangAnDao {
     }
 
     @Override
-    public Boolean existsByUsernameAndFangAnname(String username,String fangAnname){
-        return fangAnRepository.existsByUsernameAndFangAnname(username,fangAnname);
+    public Boolean existsByUsernameAndProgrammeName(String username,String programme){
+        return fangAnRepository.existsByUsernameAndProgrammeName(username,programme);
+    }
+    @Override
+    public FangAn findByFid(long fid){
+        return  fangAnRepository.findByFid(fid);
+    }
+
+    @Override
+    public void deleteByFid(long fid){
+        fangAnRepository.deleteByFid(fid);
     }
 }

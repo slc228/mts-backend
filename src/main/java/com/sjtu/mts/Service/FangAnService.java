@@ -1,12 +1,35 @@
 package com.sjtu.mts.Service;
 
-import com.sjtu.mts.Entity.FangAn;
+import net.minidev.json.JSONArray;
 import net.minidev.json.JSONObject;
 
-import java.util.List;
-
 public interface FangAnService {
-    List<FangAn> findAllByUsername(String username);
-    JSONObject saveFangAn(String username,String fangAnname,String keyword,int kisAnd,String fromType,String area,int aisAnd);
+    JSONArray findAllByUsername(String username);
+    JSONObject saveFangAn(String username,
+                          String programmeName,
+                          int matchType,
+                          String regionKeyword,
+                          int regionKeywordMatch,
+                          String roleKeyword,
+                          int roleKeywordMatch,
+                          String eventKeyword,
+                          int eventKeywordMatch,
+                          boolean enableAlert
+                          );
+    JSONObject changeFangAn(long fid,
+                            String username,
+                          String programmeName,
+                          int matchType,
+                          String regionKeyword,
+                          int regionKeywordMatch,
+                          String roleKeyword,
+                          int roleKeywordMatch,
+                          String eventKeyword,
+                          int eventKeywordMatch,
+                          boolean enableAlert
+    );
+    JSONObject delFangAn(String username,long fid);
+
+    JSONObject findFangAnByFid(String username,long fid);
 
 }

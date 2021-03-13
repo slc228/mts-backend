@@ -8,5 +8,9 @@ public interface FangAnDao {
     FangAn save(FangAn fangAn);
     List<FangAn> findAllByUsername(String username);
 
-    Boolean existsByUsernameAndFangAnname(String username,String fangAnname);
+    Boolean existsByUsernameAndProgrammeName(String username,String programme);
+
+    FangAn findByFid(long fid);
+    void deleteByFid(long fid);
+
 }
