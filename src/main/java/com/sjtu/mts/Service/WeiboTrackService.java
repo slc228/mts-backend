@@ -3,5 +3,5 @@ package com.sjtu.mts.Service;
 import com.sjtu.mts.WeiboTrack.WeiboRepostTree;
 
 public interface WeiboTrackService {
-    public WeiboRepostTree trackWeibo(String keyword, String startPublishedDay, String endPublishedDay);
+    public WeiboRepostTree trackWeibo(long fid, String startPublishedDay, String endPublishedDay);
 }
