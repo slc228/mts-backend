@@ -1,5 +1,6 @@
 package com.sjtu.mts.WeiboTrack;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -14,6 +15,7 @@ import java.util.Set;
 @Setter
 public class WeiboRepostTree {
     private Set<WeiboRepostTree> children = new LinkedHashSet<>(); // LinkedHashSet preserves insertion order
+    @JsonIgnore
     private WeiboData data;
     private String name;
 
