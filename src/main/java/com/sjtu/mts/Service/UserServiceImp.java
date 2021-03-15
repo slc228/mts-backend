@@ -172,7 +172,6 @@ public class UserServiceImp implements UserService {
                 result.put("phone", manager.getPhone());
                 result.put("email", manager.getEmail());
                 result.put("role",manager.getRole().toString());
-                result.put("final", "0");
                 return result;
             }
         }
