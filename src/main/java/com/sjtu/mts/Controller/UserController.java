@@ -26,7 +26,7 @@ public class UserController {
     public  JSONArray getAllUsers(HttpServletRequest request) {
         // This returns a JSON or XML with the users
         HttpSession session = request.getSession();
-        String matter = (String) session.getAttribute("final");
+        String matter = (String) session.getAttribute("role");
         if("0".equals(matter)){
             return userService.getAllUsers();
         }else {
@@ -43,7 +43,7 @@ public class UserController {
     public  JSONArray getAllManager(HttpServletRequest request) {
         // This returns a JSON or XML with the users
         HttpSession session = request.getSession();
-        String matter = (String) session.getAttribute("final");
+        String matter = (String) session.getAttribute("role");
         if("0".equals(matter)){
             return userService.getAllManager();
         } else {
@@ -82,9 +82,8 @@ public class UserController {
             String name = (String) session.getAttribute("username");
             if (StringUtils.isEmpty(name)) {
                 session.setAttribute("username", userinfo.get("username"));
-                if ("0".equals(result.getAsString("final"))) {
+                if ("0".equals(result.getAsString("role"))) {
                     session.setAttribute("role", "0");
-                    session.setAttribute("final", "0");
                 } else {
                     session.setAttribute("role", "1");
                 }
@@ -108,7 +107,6 @@ public class UserController {
         } else {
             session.removeAttribute("username");
             session.removeAttribute("role");
-            session.removeAttribute("final");
             result.put("logout", 1);
         }
         return result;
