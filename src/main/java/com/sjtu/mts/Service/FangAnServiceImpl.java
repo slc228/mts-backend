@@ -22,6 +22,7 @@ public class FangAnServiceImpl implements FangAnService {
         List<FangAn> fangAnList =   fangAnDao.findAllByUsername(username);
         for(FangAn fangAn : fangAnList){
             JSONObject object = new JSONObject();
+            object.put("fid", fangAn.getFid());
             object.put("username", fangAn.getUsername());
             object.put("programmeName", fangAn.getProgrammeName());
             object.put("matchType", fangAn.getMatchType());

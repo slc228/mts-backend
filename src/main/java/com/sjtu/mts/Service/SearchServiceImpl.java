@@ -1,9 +1,9 @@
 package com.sjtu.mts.Service;
 
-import com.sjtu.mts.Entity.Data;
-import com.sjtu.mts.Entity.FangAn;
+import com.sjtu.mts.Entity.*;
 import com.sjtu.mts.Repository.AreaRepository;
 import com.sjtu.mts.Repository.FangAnRepository;
+import com.sjtu.mts.Repository.SensitiveWordRepository;
 import com.sjtu.mts.Response.*;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
@@ -14,10 +14,7 @@ import org.springframework.stereotype.Service;
 
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Date;
-import java.util.List;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Service
@@ -26,14 +23,15 @@ public class SearchServiceImpl implements SearchService {
     private final ElasticsearchOperations elasticsearchOperations;
     private final AreaRepository areaRepository;
     private final FangAnRepository fangAnRepository;
-//    @Autowired
-//    private FangAnDao fangAnDao;
+    private final SensitiveWordRepository sensitiveWordRepository;
 
-    public SearchServiceImpl(ElasticsearchOperations elasticsearchOperations,AreaRepository areaRepository,FangAnRepository fangAnRepository)
+
+    public SearchServiceImpl(ElasticsearchOperations elasticsearchOperations,AreaRepository areaRepository,FangAnRepository fangAnRepository,SensitiveWordRepository sensitiveWordRepository)
     {
         this.elasticsearchOperations = elasticsearchOperations;
         this.areaRepository = areaRepository;
         this.fangAnRepository = fangAnRepository;
+        this.sensitiveWordRepository = sensitiveWordRepository;
     }
 
     @Override
@@ -428,5 +426,25 @@ public class SearchServiceImpl implements SearchService {
         result.setDataContent(pageDataContent);
 
         return result;
+    }
+
+    static  boolean flag = false;
+    @Override
+    public Set<String> sensitiveWordFiltering(String text){
+
+        if(false==flag){
+            // 初始化敏感词库对象
+            SensitiveWordInit sensitiveWordInit = new SensitiveWordInit();
+            // 从数据库中获取敏感词对象集合（调用的方法来自Dao层，此方法是service层的实现类）
+            List<SensitiveWord> sensitiveWords = sensitiveWordRepository.findAll();
+            // 构建敏感词库
+            Map sensitiveWordMap = sensitiveWordInit.initKeyWord(sensitiveWords);
+            // 传入SensitivewordEngine类中的敏感词库
+            SensitivewordEngine.sensitiveWordMap = sensitiveWordMap;
+            flag = true;
+        }
+        // 得到敏感词有哪些，传入2表示获取所有敏感词
+        Set<String> set = SensitivewordEngine.getSensitiveWord(text, 2);
+        return set;
     }
 }
