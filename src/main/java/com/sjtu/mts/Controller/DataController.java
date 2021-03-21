@@ -1,8 +1,8 @@
 package com.sjtu.mts.Controller;
 
 import com.sjtu.mts.Entity.Data;
-import com.sjtu.mts.Response.*;
 import com.sjtu.mts.Repository.DataRepository;
+import com.sjtu.mts.Response.*;
 import com.sjtu.mts.Service.SearchService;
 import com.sjtu.mts.Service.WeiboTrackService;
 import com.sjtu.mts.WeiboTrack.WeiboRepostTree;
@@ -10,6 +10,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Set;
 
 @RestController
 @RequestMapping("/data")
@@ -24,6 +25,10 @@ public class DataController {
 
     @Autowired
     private WeiboTrackService weiboTrackService;
+
+
+
+
 
     @GetMapping("/findByCflag/{cflag}")
     @ResponseBody
@@ -122,6 +127,17 @@ public class DataController {
             @RequestParam("endPublishedDay") String endPublishedDay
     ) {
         return weiboTrackService.trackWeibo(fid,startPublishedDay,endPublishedDay);
+    }
+
+    /*敏感词识别
+    @author Fu Yongrui
+     */
+
+    @RequestMapping(value = "/sensitiveFilter")
+    @ResponseBody
+    public Set<String>  sensitiveWordFiltering(@RequestParam("keyword")String text)
+    {
+        return searchService.sensitiveWordFiltering(text);
     }
 
 }

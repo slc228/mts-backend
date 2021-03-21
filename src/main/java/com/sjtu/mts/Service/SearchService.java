@@ -2,6 +2,8 @@ package com.sjtu.mts.Service;
 
 import com.sjtu.mts.Response.*;
 
+import java.util.Set;
+
 public interface SearchService {
 
     public DataResponse Search(String keyword, String cflag, String startPublishedDay, String endPublishedDay,
@@ -19,4 +21,6 @@ public interface SearchService {
 
     public DataResponse fangAnSearch(long fid,String cflag, String startPublishedDay, String endPublishedDay,
                                      String fromType, int page, int pageSize, int timeOrder);
+
+    public Set<String> sensitiveWordFiltering(String text);
 }

@@ -56,9 +56,8 @@ public class UserController {
     }
     @PostMapping(path = "/register")
     @ResponseBody
-    public JSONObject register(@RequestParam String username, @RequestParam String password, @RequestParam String phone,
-                                @RequestParam String email) {
-        return userService.registerUser(username, password, phone, email);
+    public JSONObject register(@RequestBody Map<String,String> registerinfo ) {
+        return userService.registerUser(registerinfo.get("username"), registerinfo.get("password"), registerinfo.get("phone"), registerinfo.get("email"));
     }
 
     @PostMapping(path = "/registerManager")
