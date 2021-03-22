@@ -151,4 +151,17 @@ public class DataController {
         return searchService.sensitiveWord(fid,startPublishedDay,endPublishedDay);
     }
 
+    /*关键词提取
+    @author Ma Baowei
+     */
+    @GetMapping("/keywordExtraction")
+    @ResponseBody
+    public List<String> extractKeyWordByFidAndPublishedDay(
+            @RequestParam("fid") long fid,
+            @RequestParam("startPublishedDay") String startPublishedDay,
+            @RequestParam("endPublishedDay") String endPublishedDay,
+            @RequestParam("keywordNumber") int keywordNumber
+    ) {
+        return searchService.extractKeyword(fid,startPublishedDay,endPublishedDay,keywordNumber);
+    }
 }

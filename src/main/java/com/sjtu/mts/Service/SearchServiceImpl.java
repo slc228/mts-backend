@@ -5,6 +5,7 @@ import com.sjtu.mts.Entity.Data;
 import com.sjtu.mts.Entity.SensitiveWord;
 import com.sjtu.mts.Entity.SensitiveWordInit;
 import com.sjtu.mts.Entity.SensitivewordEngine;
+import com.sjtu.mts.Keyword.MultipleThreadExtraction;
 import com.sjtu.mts.Repository.AreaRepository;
 import com.sjtu.mts.Repository.SensitiveWordRepository;
 import com.sjtu.mts.Response.*;
@@ -21,6 +22,8 @@ import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.*;
 import java.util.stream.Collectors;
+
+import static jdk.nashorn.internal.objects.NativeMath.min;
 
 @Service
 public class SearchServiceImpl implements SearchService {
@@ -349,5 +352,67 @@ public class SearchServiceImpl implements SearchService {
             flag = true;
         }
         return null;
+    }
+
+    @Override
+    public List<String> extractKeyword(long fid, String startPublishedDay, String endPublishedDay, int keywordNumber){
+        Criteria criteria = fangAnDao.criteriaByFid(fid);
+        if (!startPublishedDay.isEmpty() && !endPublishedDay.isEmpty())
+        {
+            SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+            try {
+                Date startDate = sdf.parse(startPublishedDay);
+                Date endDate = sdf.parse(endPublishedDay);
+                criteria.subCriteria(new Criteria().and("publishedDay").between(startDate, endDate));
+            } catch (ParseException e) {
+                e.printStackTrace();
+            }
+        }
+
+        CriteriaQuery query = new CriteriaQuery(criteria);
+        SearchHits<Data> searchHits = this.elasticsearchOperations.search(query, Data.class);
+
+        List<String> fileContents = new ArrayList<>();
+        for(SearchHit<Data> hit : searchHits){
+            Data data = hit.getContent();
+            fileContents.add(data.getContent());
+        }
+
+        //开始使用多线程提取关键词
+        int threadCounts = 8;//采用的线程数
+
+        long start=  System.currentTimeMillis();
+        MultipleThreadExtraction countListIntegerSum=new MultipleThreadExtraction(fileContents,threadCounts);
+
+        List<List<String>> sum=countListIntegerSum.getIntegerSum();
+        Map<String, Integer> wordScore = new HashMap<>();
+        for (List<String> singleDocList : sum)
+        {
+            for (int i=0; i<singleDocList.size(); i++){
+                if (!wordScore.containsKey(singleDocList.get(i))){
+                    wordScore.put(singleDocList.get(i), 0);
+                }
+                wordScore.put(singleDocList.get(i),wordScore.get(singleDocList.get(i))+(singleDocList.size()-i));
+            }
+        }
+        List<Map.Entry<String, Integer>> keywordList = new ArrayList<Map.Entry<String, Integer>>(wordScore.entrySet());
+        Collections.sort(keywordList, new Comparator<Map.Entry<String, Integer>>()
+        {
+            @Override
+            public int compare(Map.Entry<String, Integer> o1, Map.Entry<String, Integer> o2)
+            {
+                return Integer.compare(0, o1.getValue() - o2.getValue());
+            }
+        });
+
+        List<String> keywords = new ArrayList<>();
+        for(int i=0; i<min(keywordNumber, keywordList.size()); i++)
+        {
+            String toAdd = keywordList.get(i).getKey().replace(" ", "");
+            keywords.add(toAdd);
+        }
+        long end = System.currentTimeMillis();
+        System.out.println("关键词提取耗时：" + (end-start) + "ms");
+        return keywords;
     }
 }
