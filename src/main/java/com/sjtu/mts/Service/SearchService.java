@@ -1,8 +1,7 @@
 package com.sjtu.mts.Service;
 
 import com.sjtu.mts.Response.*;
-
-import java.util.Set;
+import net.minidev.json.JSONArray;
 
 public interface SearchService {
 
@@ -22,5 +21,6 @@ public interface SearchService {
     public DataResponse fangAnSearch(long fid,String cflag, String startPublishedDay, String endPublishedDay,
                                      String fromType, int page, int pageSize, int timeOrder);
 
-    public Set<String> sensitiveWordFiltering(String text);
+    public JSONArray sensitiveWordFiltering(String text);
+    public JSONArray sensitiveWord(long fid, String startPublishedDay, String endPublishedDay);
 }

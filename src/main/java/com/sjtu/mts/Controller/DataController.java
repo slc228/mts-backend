@@ -6,11 +6,11 @@ import com.sjtu.mts.Response.*;
 import com.sjtu.mts.Service.SearchService;
 import com.sjtu.mts.Service.WeiboTrackService;
 import com.sjtu.mts.WeiboTrack.WeiboRepostTree;
+import net.minidev.json.JSONArray;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
-import java.util.Set;
 
 @RestController
 @RequestMapping("/data")
@@ -132,12 +132,23 @@ public class DataController {
     /*敏感词识别
     @author Fu Yongrui
      */
-
     @RequestMapping(value = "/sensitiveFilter")
     @ResponseBody
-    public Set<String>  sensitiveWordFiltering(@RequestParam("keyword")String text)
+    public JSONArray sensitiveWordFiltering(@RequestParam("keyword")String text)
     {
         return searchService.sensitiveWordFiltering(text);
+    }
+
+    /*敏感词识别
+    @author Fu Yongrui
+     */
+    @RequestMapping(value = "/sensitive")
+    @ResponseBody
+    public JSONArray sensitiveWord(@RequestParam("fid") long fid,
+                                   @RequestParam("startPublishedDay") String startPublishedDay,
+                                   @RequestParam("endPublishedDay") String endPublishedDay)
+    {
+        return searchService.sensitiveWord(fid,startPublishedDay,endPublishedDay);
     }
 
 }

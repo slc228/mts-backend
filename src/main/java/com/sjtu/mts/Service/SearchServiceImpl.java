@@ -1,10 +1,15 @@
 package com.sjtu.mts.Service;
 
-import com.sjtu.mts.Entity.*;
+import com.sjtu.mts.Dao.FangAnDao;
+import com.sjtu.mts.Entity.Data;
+import com.sjtu.mts.Entity.SensitiveWord;
+import com.sjtu.mts.Entity.SensitiveWordInit;
+import com.sjtu.mts.Entity.SensitivewordEngine;
 import com.sjtu.mts.Repository.AreaRepository;
-import com.sjtu.mts.Repository.FangAnRepository;
 import com.sjtu.mts.Repository.SensitiveWordRepository;
 import com.sjtu.mts.Response.*;
+import net.minidev.json.JSONArray;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.elasticsearch.core.*;
@@ -22,15 +27,16 @@ public class SearchServiceImpl implements SearchService {
 
     private final ElasticsearchOperations elasticsearchOperations;
     private final AreaRepository areaRepository;
-    private final FangAnRepository fangAnRepository;
     private final SensitiveWordRepository sensitiveWordRepository;
 
+    @Autowired
+    private FangAnDao fangAnDao;
 
-    public SearchServiceImpl(ElasticsearchOperations elasticsearchOperations,AreaRepository areaRepository,FangAnRepository fangAnRepository,SensitiveWordRepository sensitiveWordRepository)
+
+    public SearchServiceImpl(ElasticsearchOperations elasticsearchOperations,AreaRepository areaRepository,SensitiveWordRepository sensitiveWordRepository)
     {
         this.elasticsearchOperations = elasticsearchOperations;
         this.areaRepository = areaRepository;
-        this.fangAnRepository = fangAnRepository;
         this.sensitiveWordRepository = sensitiveWordRepository;
     }
 
@@ -255,128 +261,7 @@ public class SearchServiceImpl implements SearchService {
     @Override
     public DataResponse fangAnSearch(long fid,String cflag, String startPublishedDay, String endPublishedDay,
                                      String fromType, int page, int pageSize, int timeOrder){
-        FangAn fangAn = fangAnRepository.findByFid(fid);
-        int matchType = fangAn.getMatchType();
-        String regionKeyword = fangAn.getRegionKeyword();
-        int regionKeywordMatch = fangAn.getRegionKeywordMatch();
-
-        String roleKeyword = fangAn.getRoleKeyword();
-        int roleKeywordMatch = fangAn.getRoleKeywordMatch();
-
-        String eventKeyword = fangAn.getEventKeyword();
-        int eventKeywordMatch = fangAn.getEventKeywordMatch();
-        Criteria criteria = new Criteria();
-
-        if (!roleKeyword.isEmpty())
-        {
-            String[] searchSplitArray1 = roleKeyword.trim().split("\\s+");
-            List<String>searchSplitArray = Arrays.asList(searchSplitArray1);
-            System.out.println(searchSplitArray.size());
-            System.out.println(searchSplitArray.get(0));
-            if(searchSplitArray.size()>1){
-                if(roleKeywordMatch==1){
-                    for (String searchString : searchSplitArray) {
-
-                        criteria.subCriteria(new Criteria().and("content").contains(searchString).
-                                or("title").contains(searchString));
-                    }
-                }else {
-                    criteria.subCriteria(new Criteria("content").in(searchSplitArray).or("title").in(searchSplitArray));
-                }
-            }else {
-                criteria.subCriteria(new Criteria().and("content").contains(searchSplitArray.get(0)).
-                        or("title").contains(searchSplitArray.get(0)));
-            }
-
-
-        }
-        if (!eventKeyword.isEmpty())
-        {
-            String[] searchSplitArray1 = eventKeyword.trim().split("\\s+");
-            List<String>searchSplitArray = Arrays.asList(searchSplitArray1);
-            System.out.println(searchSplitArray.size());
-            if(searchSplitArray.size()>1){
-                if(eventKeywordMatch==1){
-                    for (String searchString : searchSplitArray) {
-
-                        criteria.subCriteria(new Criteria().and("content").contains(searchString).
-                                or("title").contains(searchString));
-                    }
-                }else {
-                    criteria.subCriteria(new Criteria("content").in(searchSplitArray).or("title").in(searchSplitArray));
-                }
-            }else {
-                criteria.subCriteria(new Criteria().and("content").contains(searchSplitArray.get(0)).
-                        or("title").contains(searchSplitArray.get(0)));
-            }
-
-
-        }
-        if (!regionKeyword.isEmpty())
-        {
-
-            String[] searchSplitArray1 = regionKeyword.trim().split("\\s+");
-            List<String>searchSplitArray = Arrays.asList(searchSplitArray1);
-            if(searchSplitArray.size()==1 ){
-                List<Integer> codeid  = areaRepository.findCodeidByCityName(searchSplitArray.get(0));
-                List<String> citys = new ArrayList<>();
-                for (Integer co:codeid){
-                    List<String> tmp = areaRepository.findCityNameByCodeid(co) ;
-                    for(int i=0;i<tmp.size();i++){
-                        tmp.set(i,tmp.get(i).replaceAll("\\s*", ""));
-                        if(tmp.get(i).contains("市辖")||tmp.get(i).contains("县辖")){
-                            tmp.remove(i);
-                        }
-                    }
-                    citys.addAll(tmp);
-                }
-
-                citys = (List) citys.stream().distinct().collect(Collectors.toList());//去重
-                //System.out.println(Arrays.toString(citys.toArray()));
-                criteria.subCriteria(new Criteria("content").in(citys).or("title").in(citys));
-            }else if(searchSplitArray.size()>1 && regionKeywordMatch == 1){
-                for (String searchString : searchSplitArray){
-                    List<Integer> codeid  = areaRepository.findCodeidByCityName(searchString);
-                    List<String> citys = new ArrayList<>();
-                    for (Integer co:codeid){
-                        List<String> tmp = areaRepository.findCityNameByCodeid(co) ;
-                        for(int i=0;i<tmp.size();i++){
-                            tmp.set(i,tmp.get(i).replaceAll("\\s*", ""));
-                            if(tmp.get(i).contains("市辖")||tmp.get(i).contains("县辖")){
-                                tmp.remove(i);
-                            }
-                        }
-                        citys.addAll(tmp);
-                    }
-
-                    citys = (List) citys.stream().distinct().collect(Collectors.toList());//去重
-                    //System.out.println(Arrays.toString(citys.toArray()));
-                    criteria.subCriteria(new Criteria("content").in(citys).or("title").in(citys));
-                }
-            }
-            else if(searchSplitArray.size()>1 && regionKeywordMatch ==0){
-                List<String> citys = new ArrayList<>();
-                for (String searchString : searchSplitArray){
-                    List<Integer> codeid  = areaRepository.findCodeidByCityName(searchString);
-                    for (Integer co:codeid){
-                        List<String> tmp = areaRepository.findCityNameByCodeid(co) ;
-                        for(int i=0;i<tmp.size();i++){
-                            tmp.set(i,tmp.get(i).replaceAll("\\s*", ""));
-                            if(tmp.get(i).contains("市辖")||tmp.get(i).contains("县辖")){
-                                tmp.remove(i);
-                            }
-                        }
-                        citys.addAll(tmp);
-                    }
-                    citys = (List) citys.stream().distinct().collect(Collectors.toList());//去重
-
-                }
-                //System.out.println(Arrays.toString(citys.toArray()));
-                criteria.subCriteria(new Criteria("content").in(citys).or("title").in(citys));
-            }
-
-
-        }
+        Criteria criteria = fangAnDao.criteriaByFid(fid);
         if (!cflag.isEmpty())
         {
             criteria.subCriteria(new Criteria().and("cflag").is(cflag));
@@ -428,14 +313,16 @@ public class SearchServiceImpl implements SearchService {
         return result;
     }
 
+
+
     static  boolean flag = false;
     @Override
-    public Set<String> sensitiveWordFiltering(String text){
+    public JSONArray sensitiveWordFiltering(String text){
 
         if(false==flag){
             // 初始化敏感词库对象
             SensitiveWordInit sensitiveWordInit = new SensitiveWordInit();
-            // 从数据库中获取敏感词对象集合（调用的方法来自Dao层，此方法是service层的实现类）
+            // 从数据库中获取敏感词对象集合
             List<SensitiveWord> sensitiveWords = sensitiveWordRepository.findAll();
             // 构建敏感词库
             Map sensitiveWordMap = sensitiveWordInit.initKeyWord(sensitiveWords);
@@ -444,7 +331,23 @@ public class SearchServiceImpl implements SearchService {
             flag = true;
         }
         // 得到敏感词有哪些，传入2表示获取所有敏感词
-        Set<String> set = SensitivewordEngine.getSensitiveWord(text, 2);
-        return set;
+        JSONArray result = SensitivewordEngine.getSwAndpos(text, 2);
+        return result;
+    }
+
+    @Override
+    public JSONArray sensitiveWord(long fid, String startPublishedDay, String endPublishedDay){
+        if(false==flag){
+            // 初始化敏感词库对象
+            SensitiveWordInit sensitiveWordInit = new SensitiveWordInit();
+            // 从数据库中获取敏感词对象集合
+            List<SensitiveWord> sensitiveWords = sensitiveWordRepository.findAll();
+            // 构建敏感词库
+            Map sensitiveWordMap = sensitiveWordInit.initKeyWord(sensitiveWords);
+            // 传入SensitivewordEngine类中的敏感词库
+            SensitivewordEngine.sensitiveWordMap = sensitiveWordMap;
+            flag = true;
+        }
+        return null;
     }
 }

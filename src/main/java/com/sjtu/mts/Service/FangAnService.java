@@ -1,10 +1,9 @@
 package com.sjtu.mts.Service;
 
-import net.minidev.json.JSONArray;
 import net.minidev.json.JSONObject;
 
 public interface FangAnService {
-    JSONArray findAllByUsername(String username);
+    JSONObject findAllByUsername(String username);
     JSONObject saveFangAn(String username,
                           String programmeName,
                           int matchType,

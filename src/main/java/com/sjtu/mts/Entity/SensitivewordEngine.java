@@ -1,5 +1,8 @@
 package com.sjtu.mts.Entity;
 
+import net.minidev.json.JSONArray;
+import net.minidev.json.JSONObject;
+
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Map;
@@ -86,6 +89,31 @@ public class SensitivewordEngine
         }
 
         return sensitiveWordList;
+    }
+    /**
+     * 获取敏感词内容
+     *
+     * @param txt
+     * @param matchType
+     * @return 敏感词内容和位置
+     */
+    public static JSONArray getSwAndpos(String txt, int matchType){
+        JSONArray result = new JSONArray();
+        for (int i = 0; i < txt.length(); i++)
+        {
+            int length = checkSensitiveWord(txt, i, matchType);
+            if (length > 0)
+            {
+                JSONObject object = new JSONObject();
+                // 将检测出的敏感词保存到集合中
+                object.put("敏感词：",txt.substring(i, i + length));
+                object.put("startPosition",i);
+                object.put("endPosition",i+length);
+                result.appendElement(object);
+                i = i + length - 1;
+            }
+        }
+        return result;
     }
 
     /**

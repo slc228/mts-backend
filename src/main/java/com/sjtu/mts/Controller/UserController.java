@@ -155,7 +155,7 @@ public class UserController {
     }
     @GetMapping(path = "/findFangAn")
     @ResponseBody
-    public JSONArray findFangAnByusername(@RequestParam String username){
+    public JSONObject findFangAnByusername(@RequestParam String username){
         return fangAnService.findAllByUsername(username);
     }
     @GetMapping(path = "/findFangAnByFid")
