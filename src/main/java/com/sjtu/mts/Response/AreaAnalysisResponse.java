@@ -36,7 +36,7 @@ public class AreaAnalysisResponse {
     long from52;//贵州
     long from53;//云南
     long from54;//西藏
-    long from61;//山西
+    long from61;//陕西
     long from62;//甘肃
     long from63;//青海
     long from64;//宁夏回族自治区

@@ -16,7 +16,7 @@ public class FangAnServiceImpl implements FangAnService {
     private FangAnDao fangAnDao;
 
     @Override
-    public JSONArray findAllByUsername(String username){
+    public JSONObject findAllByUsername(String username){
 
         JSONArray jsonArray = new JSONArray();
         List<FangAn> fangAnList =   fangAnDao.findAllByUsername(username);
@@ -35,7 +35,9 @@ public class FangAnServiceImpl implements FangAnService {
             object.put("enableAlert", fangAn.getEnableAlert());
             jsonArray.appendElement(object);
         }
-        return  jsonArray;
+        JSONObject object = new JSONObject();
+        object.put("data:",jsonArray);
+        return  object;
 
     }
 
@@ -83,12 +85,6 @@ public class FangAnServiceImpl implements FangAnService {
     ){
         JSONObject result = new JSONObject();
         result.put("changeFangAn", 0);
-        Boolean ifExist = fangAnDao.existsByUsernameAndProgrammeName(username,programmeName);
-        if(ifExist){
-            result.put("changeFangAn", 0);
-            result.put("方案名重复", 1);
-            return result;
-        }
         try {
             FangAn oldFangAn = fangAnDao.findByFid(fid);
             if(!oldFangAn.getUsername().equals(username)){
@@ -105,6 +101,7 @@ public class FangAnServiceImpl implements FangAnService {
             oldFangAn.setEventKeyword(eventKeyword);
             oldFangAn.setEventKeywordMatch(eventKeywordMatch);
             oldFangAn.setEnableAlert(enableAlert);
+            //fangAnDao.deleteByFid(fid);
             fangAnDao.save(oldFangAn);
             result.put("changeFangAn", 1);
             return result;
