@@ -42,9 +42,9 @@ public class MultipleThreadExtraction {
         for (int i = 0; i < threadCounts; i++) {
             //创建线程任务
             if (i == threadCounts - 1) {//最后一个线程承担剩下的所有元素的计算
-                exec.execute(new SubIntegerSumTask(list.subList(i * len, list.size())));
+                exec.execute(new SubKeywordExtractionTask(list.subList(i * len, list.size())));
             } else {
-                exec.execute(new SubIntegerSumTask(list.subList(i * len, len * (i + 1) > list.size() ? list.size() : len * (i + 1))));
+                exec.execute(new SubKeywordExtractionTask(list.subList(i * len, len * (i + 1) > list.size() ? list.size() : len * (i + 1))));
             }
         }
         try {
@@ -59,12 +59,12 @@ public class MultipleThreadExtraction {
     }
 
     /**
-     * 分割计算List整数和的线程任务
+     * 分割提取关键词的线程任务
      */
-    public class SubIntegerSumTask implements Runnable {
+    public class SubKeywordExtractionTask implements Runnable {
         private List<String> subList;
 
-        public SubIntegerSumTask(List<String> subList) {
+        public SubKeywordExtractionTask(List<String> subList) {
             this.subList = subList;
         }
 
