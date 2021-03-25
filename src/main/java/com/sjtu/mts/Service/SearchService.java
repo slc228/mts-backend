@@ -3,6 +3,8 @@ package com.sjtu.mts.Service;
 import com.sjtu.mts.Response.*;
 import net.minidev.json.JSONArray;
 
+import java.util.List;
+
 public interface SearchService {
 
     public DataResponse Search(String keyword, String cflag, String startPublishedDay, String endPublishedDay,
@@ -24,5 +26,5 @@ public interface SearchService {
     public JSONArray sensitiveWordFiltering(String text);
     public JSONArray sensitiveWord(long fid, String startPublishedDay, String endPublishedDay);
 
-
+    public List<String> extractKeyword(long fid, String startPublishedDay, String endPublishedDay, int keywordNumber);
 }

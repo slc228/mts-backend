@@ -78,6 +78,7 @@
         <groupId>org.springframework.cloud</groupId>
         <artifactId>spring-cloud-commons</artifactId>
     </dependency>
+    <!-- eureka和feign  -->
     <dependency>
         <groupId>org.springframework.cloud</groupId>
         <artifactId>spring-cloud-commons</artifactId>
@@ -100,11 +101,11 @@
         <version>3.0.2</version>
     </dependency>
 
-    <!-- eureka和feign  -->
-
-
-
-
+    <dependency>
+        <groupId>com.hankcs</groupId>
+        <artifactId>hanlp</artifactId>
+        <version>portable-1.7.4</version>
+    </dependency>
 </dependencies>
 
 <build>
