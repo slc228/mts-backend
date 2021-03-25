@@ -2,6 +2,7 @@ package com.sjtu.mts.Controller;
 
 import com.sjtu.mts.Service.FangAnService;
 import com.sjtu.mts.Service.UserService;
+import com.sjtu.mts.rpc.TextclassRpc;
 import net.minidev.json.JSONArray;
 import net.minidev.json.JSONObject;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -20,6 +21,9 @@ public class UserController {
     private UserService userService;
     @Autowired
     private FangAnService fangAnService;
+
+    @Autowired
+    private TextclassRpc textclassRpc;
 
     @GetMapping(path="/allUsers")
     @ResponseBody
@@ -167,6 +171,10 @@ public class UserController {
         return fangAnService.findFangAnByFid(username,fid);
     }
 
+    @GetMapping(path = "/test")
+    public String test(){
+        return textclassRpc.sayHello();
+    }
 
 }
 

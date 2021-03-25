@@ -23,4 +23,6 @@ public interface SearchService {
 
     public JSONArray sensitiveWordFiltering(String text);
     public JSONArray sensitiveWord(long fid, String startPublishedDay, String endPublishedDay);
+
+
 }
