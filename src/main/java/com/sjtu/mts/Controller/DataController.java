@@ -4,6 +4,7 @@ import com.sjtu.mts.Entity.Data;
 import com.sjtu.mts.Repository.DataRepository;
 import com.sjtu.mts.Response.*;
 import com.sjtu.mts.Service.SearchService;
+import com.sjtu.mts.Service.TextClassService;
 import com.sjtu.mts.Service.WeiboTrackService;
 import com.sjtu.mts.WeiboTrack.WeiboRepostTree;
 import net.minidev.json.JSONArray;
@@ -26,7 +27,8 @@ public class DataController {
     @Autowired
     private WeiboTrackService weiboTrackService;
 
-
+    @Autowired
+    private TextClassService textClassService;
 
 
 
@@ -129,15 +131,6 @@ public class DataController {
         return weiboTrackService.trackWeibo(fid,startPublishedDay,endPublishedDay);
     }
 
-    /*敏感词识别
-    @author Fu Yongrui
-     */
-    @RequestMapping(value = "/sensitiveFilter")
-    @ResponseBody
-    public JSONArray sensitiveWordFiltering(@RequestParam("keyword")String text)
-    {
-        return searchService.sensitiveWordFiltering(text);
-    }
 
     /*敏感词识别
     @author Fu Yongrui
@@ -163,5 +156,17 @@ public class DataController {
             @RequestParam("keywordNumber") int keywordNumber
     ) {
         return searchService.extractKeyword(fid,startPublishedDay,endPublishedDay,keywordNumber);
+    }
+
+    /*文本分类
+    @author Fu Yongrui
+     */
+    @RequestMapping(value = "/textClass")
+    @ResponseBody
+    public JSONArray textClass(@RequestParam("fid") long fid,
+                               @RequestParam("startPublishedDay") String startPublishedDay,
+                               @RequestParam("endPublishedDay") String endPublishedDay)
+    {
+        return textClassService.textClass(fid,startPublishedDay,endPublishedDay);
     }
 }

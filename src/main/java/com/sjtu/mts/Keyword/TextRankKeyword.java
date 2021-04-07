@@ -6,7 +6,8 @@ import com.hankcs.hanlp.seg.common.Term;
 
 import java.util.*;
 
-import static jdk.nashorn.internal.objects.NativeMath.min;
+import static com.sjtu.mts.Keyword.Wrapper.min;
+
 
 /**
  * TextRank关键词提取

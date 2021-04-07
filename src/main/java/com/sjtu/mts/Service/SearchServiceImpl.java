@@ -23,7 +23,8 @@ import java.text.SimpleDateFormat;
 import java.util.*;
 import java.util.stream.Collectors;
 
-import static jdk.nashorn.internal.objects.NativeMath.min;
+import static com.sjtu.mts.Keyword.Wrapper.min;
+
 
 @Service
 public class SearchServiceImpl implements SearchService {
@@ -351,7 +352,36 @@ public class SearchServiceImpl implements SearchService {
             SensitivewordEngine.sensitiveWordMap = sensitiveWordMap;
             flag = true;
         }
-        return null;
+        long start=  System.currentTimeMillis();
+        Criteria criteria = fangAnDao.criteriaByFid(fid);
+        if (!startPublishedDay.isEmpty() && !endPublishedDay.isEmpty())
+        {
+            SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+            try {
+                Date startDate = sdf.parse(startPublishedDay);
+                Date endDate = sdf.parse(endPublishedDay);
+                criteria.subCriteria(new Criteria().and("publishedDay").between(startDate, endDate));
+            } catch (ParseException e) {
+                e.printStackTrace();
+            }
+        }
+
+        CriteriaQuery query = new CriteriaQuery(criteria);
+        SearchHits<Data> searchHits = this.elasticsearchOperations.search(query, Data.class);
+
+        List<String> fileContents = new ArrayList<>();
+        JSONArray result = new JSONArray();
+
+        for(SearchHit<Data> hit : searchHits){
+            Data data = hit.getContent();
+            JSONArray r1 = sensitiveWordFiltering(data.getContent());
+            result.add(r1);
+            //fileContents.add(data.getContent());
+
+        }
+        long end = System.currentTimeMillis();
+        System.out.println("敏感词提取耗时：" + (end-start) + "ms");
+        return result;
     }
 
     @Override

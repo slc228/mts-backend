@@ -99,6 +99,9 @@ public class SensitivewordEngine
      */
     public static JSONArray getSwAndpos(String txt, int matchType){
         JSONArray result = new JSONArray();
+        JSONObject content = new JSONObject();
+        content.put("content:",txt);
+        result.add(content);
         for (int i = 0; i < txt.length(); i++)
         {
             int length = checkSensitiveWord(txt, i, matchType);
@@ -106,9 +109,10 @@ public class SensitivewordEngine
             {
                 JSONObject object = new JSONObject();
                 // 将检测出的敏感词保存到集合中
-                object.put("敏感词：",txt.substring(i, i + length));
-                object.put("startPosition",i);
-                object.put("endPosition",i+length);
+
+                object.put("sw：",txt.substring(i, i + length));
+                object.put("st",i);
+                object.put("ed",i+length);
                 result.appendElement(object);
                 i = i + length - 1;
             }
