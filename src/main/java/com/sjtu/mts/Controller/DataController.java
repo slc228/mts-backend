@@ -169,4 +169,16 @@ public class DataController {
     {
         return textClassService.textClass(fid,startPublishedDay,endPublishedDay);
     }
+
+    /*文本聚类
+    @author Fu Yongrui
+     */
+    @RequestMapping(value = "/textClustering")
+    @ResponseBody
+    public JSONArray textClustering(@RequestParam("fid") long fid,
+                               @RequestParam("startPublishedDay") String startPublishedDay,
+                               @RequestParam("endPublishedDay") String endPublishedDay)
+    {
+        return textClassService.clustering(fid,startPublishedDay,endPublishedDay);
+    }
 }
