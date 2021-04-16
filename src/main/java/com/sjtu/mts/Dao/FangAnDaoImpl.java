@@ -8,6 +8,7 @@ import org.springframework.stereotype.Repository;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -68,16 +69,15 @@ public class FangAnDaoImpl implements FangAnDao {
             if(searchSplitArray.size()>1){
                 if(roleKeywordMatch==1){
                     for (String searchString : searchSplitArray) {
-
-                        criteria.subCriteria(new Criteria().and("content").contains(searchString).
-                                or("title").contains(searchString));
+                        List<String> subArray = new LinkedList<>();
+                        subArray.add(searchString);
+                        criteria.subCriteria(new Criteria("content").in(subArray).or("title").in(subArray));
                     }
                 }else {
                     criteria.subCriteria(new Criteria("content").in(searchSplitArray).or("title").in(searchSplitArray));
                 }
             }else {
-                criteria.subCriteria(new Criteria().and("content").contains(searchSplitArray.get(0)).
-                        or("title").contains(searchSplitArray.get(0)));
+                criteria.subCriteria(new Criteria("content").in(searchSplitArray).or("title").in(searchSplitArray));
             }
 
 
@@ -87,19 +87,20 @@ public class FangAnDaoImpl implements FangAnDao {
             String[] searchSplitArray1 = eventKeyword.trim().split("\\s+");
             List<String>searchSplitArray = Arrays.asList(searchSplitArray1);
             System.out.println(searchSplitArray.size());
+            System.out.println(searchSplitArray.get(0));
             if(searchSplitArray.size()>1){
                 if(eventKeywordMatch==1){
                     for (String searchString : searchSplitArray) {
+                        List<String> subArray = new LinkedList<>();
+                        subArray.add(searchString);
+                        criteria.subCriteria(new Criteria("content").in(subArray).or("title").in(subArray));
 
-                        criteria.subCriteria(new Criteria().and("content").contains(searchString).
-                                or("title").contains(searchString));
                     }
                 }else {
                     criteria.subCriteria(new Criteria("content").in(searchSplitArray).or("title").in(searchSplitArray));
                 }
             }else {
-                criteria.subCriteria(new Criteria().and("content").contains(searchSplitArray.get(0)).
-                        or("title").contains(searchSplitArray.get(0)));
+                criteria.subCriteria(new Criteria("content").in(searchSplitArray).or("title").in(searchSplitArray));
             }
 
 

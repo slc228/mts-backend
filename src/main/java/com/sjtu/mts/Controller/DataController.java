@@ -1,5 +1,6 @@
 package com.sjtu.mts.Controller;
 
+import com.sjtu.mts.Entity.ClusteredData;
 import com.sjtu.mts.Entity.Data;
 import com.sjtu.mts.Repository.DataRepository;
 import com.sjtu.mts.Response.*;
@@ -202,5 +203,16 @@ public class DataController {
                                @RequestParam("endPublishedDay") String endPublishedDay)
     {
         return textClassService.clustering(fid,startPublishedDay,endPublishedDay);
+    }
+    /*文本聚类2
+    @author Fu Yongrui
+     */
+    @RequestMapping(value = "/clusteringData")
+    @ResponseBody
+    public List<ClusteredData> clusteringData(@RequestParam("fid") long fid,
+                                               @RequestParam("startPublishedDay") String startPublishedDay,
+                                               @RequestParam("endPublishedDay") String endPublishedDay)
+    {
+        return textClassService.clusteringData(fid,startPublishedDay,endPublishedDay);
     }
 }
