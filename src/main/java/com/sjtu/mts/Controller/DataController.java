@@ -1,5 +1,6 @@
 package com.sjtu.mts.Controller;
 
+import com.sjtu.mts.Entity.ClusteredData;
 import com.sjtu.mts.Entity.Data;
 import com.sjtu.mts.Repository.DataRepository;
 import com.sjtu.mts.Response.*;
@@ -8,10 +9,12 @@ import com.sjtu.mts.Service.TextClassService;
 import com.sjtu.mts.Service.WeiboTrackService;
 import com.sjtu.mts.WeiboTrack.WeiboRepostTree;
 import net.minidev.json.JSONArray;
+import net.minidev.json.JSONObject;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/data")
@@ -143,6 +146,26 @@ public class DataController {
     {
         return searchService.sensitiveWord(fid,startPublishedDay,endPublishedDay);
     }
+    /*添加敏感词
+        @author Fu Yongrui
+         */
+    @PostMapping(value = "/addSensitive")
+    @ResponseBody
+    public JSONObject addSensitiveWord(@RequestBody Map<String,String> sensitiveWordInfo)
+
+    {
+        return searchService.addSensitiveWord(sensitiveWordInfo.get("sensitiveWord"));
+    }
+    /*
+    * 删除敏感词
+    * @author Fu Yongrui
+    */
+    @RequestMapping(value = "/delSensitive")
+    @ResponseBody
+    public JSONObject delSensitiveWord(@RequestParam("sensitiveWord") String sensitiveWord)
+    {
+        return searchService.delSensitiveWord(sensitiveWord);
+    }
 
     /*关键词提取
     @author Ma Baowei
@@ -168,5 +191,28 @@ public class DataController {
                                @RequestParam("endPublishedDay") String endPublishedDay)
     {
         return textClassService.textClass(fid,startPublishedDay,endPublishedDay);
+    }
+
+    /*文本聚类
+    @author Fu Yongrui
+     */
+    @RequestMapping(value = "/textClustering")
+    @ResponseBody
+    public JSONArray textClustering(@RequestParam("fid") long fid,
+                               @RequestParam("startPublishedDay") String startPublishedDay,
+                               @RequestParam("endPublishedDay") String endPublishedDay)
+    {
+        return textClassService.clustering(fid,startPublishedDay,endPublishedDay);
+    }
+    /*文本聚类2
+    @author Fu Yongrui
+     */
+    @RequestMapping(value = "/clusteringData")
+    @ResponseBody
+    public List<ClusteredData> clusteringData(@RequestParam("fid") long fid,
+                                               @RequestParam("startPublishedDay") String startPublishedDay,
+                                               @RequestParam("endPublishedDay") String endPublishedDay)
+    {
+        return textClassService.clusteringData(fid,startPublishedDay,endPublishedDay);
     }
 }

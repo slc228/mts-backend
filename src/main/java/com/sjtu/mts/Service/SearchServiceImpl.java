@@ -10,6 +10,7 @@ import com.sjtu.mts.Repository.AreaRepository;
 import com.sjtu.mts.Repository.SensitiveWordRepository;
 import com.sjtu.mts.Response.*;
 import net.minidev.json.JSONArray;
+import net.minidev.json.JSONObject;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
@@ -316,8 +317,37 @@ public class SearchServiceImpl implements SearchService {
 
         return result;
     }
-
-
+    @Override
+    public JSONObject addSensitiveWord(String sensitiveWord){
+        JSONObject result = new JSONObject();
+        result.put("addSensitiveWord", 0);
+        if(sensitiveWordRepository.existsByContent(sensitiveWord)){
+            result.put("addSensitiveWord", 0);
+            result.put("敏感词已存在", 1);
+            return result;
+        }
+        try {
+            SensitiveWord sensitiveWord1 = new SensitiveWord(sensitiveWord);
+            sensitiveWordRepository.save(sensitiveWord1);
+            result.put("addSensitiveWord", 1);
+        }catch (Exception e){
+            result.put("addSensitiveWord", 0);
+        }
+        return result;
+    }
+    @Override
+    public JSONObject delSensitiveWord(String sensitiveWord){
+        JSONObject result = new JSONObject();
+        result.put("delSensitiveWord", 0);
+        try {
+            sensitiveWordRepository.deleteByContent(sensitiveWord);
+            result.put("delSensitiveWord", 1);
+            return result;
+        }catch (Exception e){
+            result.put("delSensitiveWord", 0);
+        }
+        return result;
+    }
 
     static  boolean flag = false;
     @Override
