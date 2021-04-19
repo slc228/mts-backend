@@ -55,7 +55,7 @@ public class TextClassServiceImpl implements TextClassService {
             fileContents.add(data.getContent());
         }
         //System.out.println(textclassRpc.sayHello());
-        String rpc = textclassRpc.textclass(fileTitles);
+        String rpc = textclassRpc.textclass(fileContents);
         JSONArray result = new JSONArray();
         JSONObject jsonObject = JSONObject.parseObject(rpc);
         Map<Integer, String> data =new HashMap<>();
@@ -165,12 +165,14 @@ public class TextClassServiceImpl implements TextClassService {
             Map.Entry<String, String> entry = (Map.Entry<String, String>) it.next();
             classData.put(Integer.parseInt(entry.getKey()), entry.getValue());
         }
+        //设置ClusteredData的聚类类别num
         for (int i =0;i<clusteredDataList.size();i++){
             ClusteredData clusteredData = clusteredDataList.get(i);
             clusteredData.setNum(classData.get(i));
             clusteredDataList.set(i,clusteredData);
             //System.out.println(clusteredData.toString());
         }
+        //现根据聚类类别排序，再根据发布时间排序
         Collections.sort(clusteredDataList, new Comparator<ClusteredData>() {
             @Override
             public int compare(ClusteredData front, ClusteredData behind) {
@@ -180,6 +182,7 @@ public class TextClassServiceImpl implements TextClassService {
                 {return front.getNum().compareTo(behind.getNum());}
             }
         });
+        //设置ClusteredData的time属性
         String earlyTime = clusteredDataList.get(0).getPublishedDay();
         for (int i =0;i<clusteredDataList.size();i++){
             if(i==0){
@@ -199,12 +202,14 @@ public class TextClassServiceImpl implements TextClassService {
             clusteredDataList.set(i,clusteredData);
             //System.out.println(clusteredData.toString());
         }
+        //根据time属性排序
         Collections.sort(clusteredDataList, new Comparator<ClusteredData>() {
             @Override
             public int compare(ClusteredData front, ClusteredData behind) {
                 return front.getTime().compareTo(behind.getTime());
             }
         });
+        //重新设置ClusteredData的聚类类别num
         int newNum = 1;
         for (int i =0;i<clusteredDataList.size();i++){
             if(i==0){
