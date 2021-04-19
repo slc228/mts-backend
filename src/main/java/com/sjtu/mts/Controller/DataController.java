@@ -2,6 +2,7 @@ package com.sjtu.mts.Controller;
 
 import com.sjtu.mts.Entity.ClusteredData;
 import com.sjtu.mts.Entity.Data;
+import com.sjtu.mts.Keyword.KeywordResponse;
 import com.sjtu.mts.Repository.DataRepository;
 import com.sjtu.mts.Response.*;
 import com.sjtu.mts.Service.SearchService;
@@ -172,7 +173,7 @@ public class DataController {
      */
     @GetMapping("/keywordExtraction")
     @ResponseBody
-    public List<String> extractKeyWordByFidAndPublishedDay(
+    public List<KeywordResponse> extractKeyWordByFidAndPublishedDay(
             @RequestParam("fid") long fid,
             @RequestParam("startPublishedDay") String startPublishedDay,
             @RequestParam("endPublishedDay") String endPublishedDay,

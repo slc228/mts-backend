@@ -5,6 +5,7 @@ import com.sjtu.mts.Entity.Data;
 import com.sjtu.mts.Entity.SensitiveWord;
 import com.sjtu.mts.Entity.SensitiveWordInit;
 import com.sjtu.mts.Entity.SensitivewordEngine;
+import com.sjtu.mts.Keyword.KeywordResponse;
 import com.sjtu.mts.Keyword.MultipleThreadExtraction;
 import com.sjtu.mts.Repository.AreaRepository;
 import com.sjtu.mts.Repository.SensitiveWordRepository;
@@ -415,7 +416,7 @@ public class SearchServiceImpl implements SearchService {
     }
 
     @Override
-    public List<String> extractKeyword(long fid, String startPublishedDay, String endPublishedDay, int keywordNumber){
+    public List<KeywordResponse> extractKeyword(long fid, String startPublishedDay, String endPublishedDay, int keywordNumber){
         Criteria criteria = fangAnDao.criteriaByFid(fid);
         if (!startPublishedDay.isEmpty() && !endPublishedDay.isEmpty())
         {
@@ -465,11 +466,12 @@ public class SearchServiceImpl implements SearchService {
             }
         });
 
-        List<String> keywords = new ArrayList<>();
+        List<KeywordResponse> keywords = new ArrayList<>();
         for(int i=0; i<min(keywordNumber, keywordList.size()); i++)
         {
-            String toAdd = keywordList.get(i).getKey().replace(" ", "");
-            keywords.add(toAdd);
+            String name = keywordList.get(i).getKey().replace(" ", "");
+            Integer value = keywordList.get(i).getValue();
+            keywords.add(new KeywordResponse(name, value));
         }
         long end = System.currentTimeMillis();
         System.out.println("关键词提取耗时：" + (end-start) + "ms");
