@@ -135,8 +135,16 @@ public class DataController {
         return weiboTrackService.trackWeibo(fid,startPublishedDay,endPublishedDay);
     }
 
-
-    /*敏感词识别
+    /*单个text敏感词识别
+    @author Fu Yongrui
+     */
+    @PostMapping(value = "/sensitiveWord")
+    @ResponseBody
+    public JSONArray sensitiveWord(@RequestBody Map<String,String> textinfo )
+    {
+        return searchService.sensitiveWordFiltering(textinfo.get("text"));
+    }
+    /*多个舆情文本敏感词识别
     @author Fu Yongrui
      */
     @RequestMapping(value = "/sensitive")
@@ -210,7 +218,7 @@ public class DataController {
      */
     @RequestMapping(value = "/clusteringData")
     @ResponseBody
-    public List<ClusteredData> clusteringData(@RequestParam("fid") long fid,
+    public List<List<ClusteredData>> clusteringData(@RequestParam("fid") long fid,
                                                @RequestParam("startPublishedDay") String startPublishedDay,
                                                @RequestParam("endPublishedDay") String endPublishedDay)
     {
