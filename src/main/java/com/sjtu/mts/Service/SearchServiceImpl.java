@@ -366,7 +366,7 @@ public class SearchServiceImpl implements SearchService {
             flag = true;
         }
         // 得到敏感词有哪些，传入2表示获取所有敏感词
-        JSONArray result = SensitivewordEngine.getSwAndpos(text, 2);
+        JSONArray result = SensitivewordEngine.getSwAndpos2(text, 2);
         return result;
     }
 

@@ -131,7 +131,7 @@ public class TextClassServiceImpl implements TextClassService {
     }
 
     @Override
-    public  List<ClusteredData> clusteringData(long fid, String startPublishedDay, String endPublishedDay){
+    public  List<List<ClusteredData>> clusteringData(long fid, String startPublishedDay, String endPublishedDay){
 
         Criteria criteria = fangAnDao.criteriaByFid(fid);
         if (!startPublishedDay.isEmpty() && !endPublishedDay.isEmpty())
@@ -209,6 +209,8 @@ public class TextClassServiceImpl implements TextClassService {
                 return front.getTime().compareTo(behind.getTime());
             }
         });
+        List<List<ClusteredData>> result = new LinkedList<>();
+        List<ClusteredData> tmp  = new LinkedList<>();
         //重新设置ClusteredData的聚类类别num
         int newNum = 1;
         for (int i =0;i<clusteredDataList.size();i++){
@@ -216,18 +218,26 @@ public class TextClassServiceImpl implements TextClassService {
                 ClusteredData clusteredData = clusteredDataList.get(i);
                 clusteredData.setNum(String.valueOf(newNum));
                 clusteredDataList.set(i,clusteredData);
+                tmp.add(clusteredData);
                 continue;
             }
             ClusteredData clusteredData = clusteredDataList.get(i);
             ClusteredData clusteredDataBefore = clusteredDataList.get(i-1);
             if (clusteredDataBefore.getTime().equals(clusteredData.getTime())){
                 clusteredData.setNum(String.valueOf(newNum));
+                clusteredDataList.set(i,clusteredData);
+                tmp.add(clusteredData);
             }else {
                 newNum = newNum+1;
                 clusteredData.setNum(String.valueOf(newNum));
+                clusteredDataList.set(i,clusteredData);
+                result.add(tmp);
+                tmp =  new LinkedList<>();
+                tmp.add(clusteredData);
             }
-            clusteredDataList.set(i,clusteredData);
+
         }
-       return clusteredDataList;
+        result.add(tmp);
+       return result;
     }
 }

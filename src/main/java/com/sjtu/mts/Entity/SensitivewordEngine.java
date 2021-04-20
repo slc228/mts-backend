@@ -119,7 +119,32 @@ public class SensitivewordEngine
         }
         return result;
     }
+    /**
+     * 获取敏感词内容
+     *
+     * @param txt
+     * @param matchType
+     * @return 敏感词内容和位置
+     */
+    public static JSONArray getSwAndpos2(String txt, int matchType){
+        JSONArray result = new JSONArray();
+        for (int i = 0; i < txt.length(); i++)
+        {
+            int length = checkSensitiveWord(txt, i, matchType);
+            if (length > 0)
+            {
+                JSONObject object = new JSONObject();
+                // 将检测出的敏感词保存到集合中
 
+                object.put("sw：",txt.substring(i, i + length));
+                object.put("st",i);
+                object.put("ed",i+length);
+                result.appendElement(object);
+                i = i + length - 1;
+            }
+        }
+        return result;
+    }
     /**
      * 替换敏感词
      *
