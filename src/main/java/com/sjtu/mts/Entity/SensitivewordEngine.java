@@ -110,7 +110,7 @@ public class SensitivewordEngine
                 JSONObject object = new JSONObject();
                 // 将检测出的敏感词保存到集合中
 
-                object.put("sw：",txt.substring(i, i + length));
+                object.put("sw",txt.substring(i, i + length));
                 object.put("st",i);
                 object.put("ed",i+length);
                 result.appendElement(object);
@@ -136,7 +136,7 @@ public class SensitivewordEngine
                 JSONObject object = new JSONObject();
                 // 将检测出的敏感词保存到集合中
 
-                object.put("sw：",txt.substring(i, i + length));
+                object.put("sw",txt.substring(i, i + length));
                 object.put("st",i);
                 object.put("ed",i+length);
                 result.appendElement(object);

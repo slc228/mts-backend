@@ -1,5 +1,6 @@
 package com.sjtu.mts.Controller;
 
+import com.sjtu.mts.Entity.Cluster;
 import com.sjtu.mts.Entity.ClusteredData;
 import com.sjtu.mts.Entity.Data;
 import com.sjtu.mts.Keyword.KeywordResponse;
@@ -218,9 +219,9 @@ public class DataController {
      */
     @RequestMapping(value = "/clusteringData")
     @ResponseBody
-    public List<List<ClusteredData>> clusteringData(@RequestParam("fid") long fid,
-                                               @RequestParam("startPublishedDay") String startPublishedDay,
-                                               @RequestParam("endPublishedDay") String endPublishedDay)
+    public List<Cluster> clusteringData(@RequestParam("fid") long fid,
+                                        @RequestParam("startPublishedDay") String startPublishedDay,
+                                        @RequestParam("endPublishedDay") String endPublishedDay)
     {
         return textClassService.clusteringData(fid,startPublishedDay,endPublishedDay);
     }
