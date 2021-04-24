@@ -34,7 +34,7 @@ public class TextclassRpc {
         Map<String, Object> requestParam = new HashMap<String, Object>();
         requestParam.put("textList", json);
         HttpEntity entity = new HttpEntity(requestParam, headers);
-        //System.out.println(entity);
+//        System.out.println(entity);
         return  restTemplate.postForObject("http://python-service/predict",entity,String.class);
         //return  restTemplate.getForObject("http://python-service/predict?textList={1}", String.class,json);
     }

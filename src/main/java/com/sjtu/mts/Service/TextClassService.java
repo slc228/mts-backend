@@ -10,6 +10,7 @@ import java.util.List;
 public interface TextClassService {
 
     JSONArray textClass(long fid, String startPublishedDay, String endPublishedDay);
+    com.alibaba.fastjson.JSONObject textClass2(List<String> textList);
     JSONArray clustering(long fid, String startPublishedDay, String endPublishedDay);
 
     /*
