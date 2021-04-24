@@ -8,10 +8,9 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 import java.math.BigDecimal;
-import java.util.ArrayList;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Vector;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.util.*;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 
@@ -21,6 +20,7 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 @Setter
 public class EventTreeNode {
     private int clusterNum;
+    @JsonIgnore
     private int hit;
     private String time;
     private String summary;
@@ -33,7 +33,14 @@ public class EventTreeNode {
     public EventTreeNode(Cluster cluster){
         this.clusterNum = cluster.getClusterNum();
         this.hit = cluster.getHit();
-        this.time = cluster.getTime();
+        SimpleDateFormat sdf1 = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+        SimpleDateFormat sdf2 = new SimpleDateFormat("yyyy-MM-dd");
+        try {
+            Date date = sdf1.parse(cluster.getTime().replace("T", " ").replace("Z", " "));
+            this.time = sdf2.format(date);
+        } catch (ParseException e) {
+            e.printStackTrace();
+        }
         this.summary = cluster.getSummary();
         this.center = cluster.getCenter();
         this.clusterDatas = cluster.getClusterDatas();

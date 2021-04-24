@@ -1,7 +1,12 @@
 package com.sjtu.mts.EventTrack;
 
+import org.springframework.data.elasticsearch.core.query.Criteria;
+
 import javax.persistence.criteria.CriteriaBuilder;
 import java.math.BigDecimal;
+import java.text.DateFormat;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.*;
 
 public class IteratorNodeTool {
@@ -26,6 +31,20 @@ public class IteratorNodeTool {
         BigDecimal temp4 = (center_a.get(3).subtract(center_b.get(3))).multiply((center_a.get(3).subtract(center_b.get(3))));
         BigDecimal temp5 = (center_a.get(4).subtract(center_b.get(4))).multiply((center_a.get(4).subtract(center_b.get(4))));
         return Math.sqrt((temp1.add(temp2).add(temp3).add(temp4).add(temp5)).doubleValue());
+    }
+
+    public double timePenalty(EventTreeNode a, EventTreeNode b) {
+        SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
+        try {
+            Date date_a = sdf.parse(a.getTime());
+            Date date_b = sdf.parse(b.getTime());
+            long diff = date_a.getTime() - date_b.getTime();
+            double days = diff / (1000.0 * 60 * 60 * 24);
+            return Math.exp(days/365);
+        } catch (ParseException e) {
+            e.printStackTrace();
+            return 1;
+        }
     }
 
     public void iteratorNode(EventTreeNode n, Stack<EventTreeNode> pathstack) {
@@ -77,17 +96,20 @@ public class IteratorNodeTool {
             entry.getValue().add(newNode);
             double sum = 0;
             double compatibility = 0;
+            double timePenalty = 0;
             for (int i = 0; i < entry.getValue().size() - 1; i++) {
                 sum += tool.compatibility(entry.getValue().get(i), entry.getValue().get(i + 1));
                 if (i == entry.getValue().size() - 2) {
                     compatibility = tool.compatibility(entry.getValue().get(i), entry.getValue().get(i + 1));
+                    timePenalty = tool.timePenalty(entry.getValue().get(i), entry.getValue().get(i + 1));
                 }
             }
             tool.print(entry.getValue());
             double coherence = (1 / (double) (entry.getValue().size() - 1)) * sum;
-            double connectionStrength = compatibility * coherence;
+            double connectionStrength = compatibility * coherence * timePenalty;
             System.out.println("compatibility: " + compatibility);
             System.out.println("coherence: " + coherence);
+            System.out.println("time penalty: " + timePenalty);
             System.out.println("connection strength: " + connectionStrength);
             if (connectionStrength > maxConnectionStrength) {
                 maxConnectionStrength = connectionStrength;
