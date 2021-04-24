@@ -1,7 +1,6 @@
 package com.sjtu.mts.Controller;
 
 import com.sjtu.mts.Entity.Cluster;
-import com.sjtu.mts.Entity.ClusteredData;
 import com.sjtu.mts.Entity.Data;
 import com.sjtu.mts.Keyword.KeywordResponse;
 import com.sjtu.mts.Repository.DataRepository;
@@ -202,7 +201,15 @@ public class DataController {
     {
         return textClassService.textClass(fid,startPublishedDay,endPublishedDay);
     }
-
+    /*文本分类2
+    @author Fu Yongrui
+     */
+    @PostMapping(value = "/textClass2")
+    @ResponseBody
+    public com.alibaba.fastjson.JSONObject textClass2(@RequestBody Map<String,List<String>> textInfo)
+    {
+        return textClassService.textClass2(textInfo.get("textList"));
+    }
     /*文本聚类
     @author Fu Yongrui
      */
@@ -225,4 +232,5 @@ public class DataController {
     {
         return textClassService.clusteringData(fid,startPublishedDay,endPublishedDay);
     }
+
 }

@@ -83,6 +83,13 @@ public class TextClassServiceImpl implements TextClassService {
     }
 
     @Override
+    public com.alibaba.fastjson.JSONObject textClass2(List<String> textList){
+        String rpc = textclassRpc.textclass(textList);
+
+        JSONObject jsonObject = JSONObject.parseObject(rpc);
+        return jsonObject;
+    }
+    @Override
     public  JSONArray clustering(long fid, String startPublishedDay, String endPublishedDay){
         long start=  System.currentTimeMillis();
         Criteria criteria = fangAnDao.criteriaByFid(fid);
