@@ -2,9 +2,11 @@ package com.sjtu.mts.Controller;
 
 import com.sjtu.mts.Entity.Cluster;
 import com.sjtu.mts.Entity.Data;
+import com.sjtu.mts.EventTrack.EventTreeNode;
 import com.sjtu.mts.Keyword.KeywordResponse;
 import com.sjtu.mts.Repository.DataRepository;
 import com.sjtu.mts.Response.*;
+import com.sjtu.mts.Service.EventTrackService;
 import com.sjtu.mts.Service.SearchService;
 import com.sjtu.mts.Service.TextClassService;
 import com.sjtu.mts.Service.WeiboTrackService;
@@ -33,6 +35,9 @@ public class DataController {
 
     @Autowired
     private TextClassService textClassService;
+
+    @Autowired
+    private EventTrackService eventTrackService;
 
 
 
@@ -232,5 +237,15 @@ public class DataController {
     {
         return textClassService.clusteringData(fid,startPublishedDay,endPublishedDay);
     }
-
+    /*事件溯源（生成事件关系树）
+    @author Ma Baowei
+     */
+    @RequestMapping(value = "/getEventTree")
+    @ResponseBody
+    public EventTreeNode getEventTree(@RequestParam("fid") long fid,
+                                      @RequestParam("startPublishedDay") String startPublishedDay,
+                                      @RequestParam("endPublishedDay") String endPublishedDay)
+    {
+        return eventTrackService.getEventTree(fid,startPublishedDay,endPublishedDay);
+    }
 }
