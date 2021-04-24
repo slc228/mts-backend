@@ -3,8 +3,8 @@ package com.sjtu.mts.Service;
 import com.alibaba.fastjson.JSONObject;
 import com.sjtu.mts.Dao.FangAnDao;
 import com.sjtu.mts.Entity.Cluster;
-import com.sjtu.mts.Entity.Data;
 import com.sjtu.mts.Entity.ClusteredData;
+import com.sjtu.mts.Entity.Data;
 import com.sjtu.mts.rpc.TextclassRpc;
 import net.minidev.json.JSONArray;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -15,6 +15,7 @@ import org.springframework.data.elasticsearch.core.query.Criteria;
 import org.springframework.data.elasticsearch.core.query.CriteriaQuery;
 import org.springframework.stereotype.Service;
 
+import java.math.BigDecimal;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.*;
@@ -159,8 +160,11 @@ public class TextClassServiceImpl implements TextClassService {
         String rpc = textclassRpc.clustering(fileContents);
 
         JSONObject rpcJsonObject = JSONObject.parseObject(rpc);
+        JSONObject rpcdata = rpcJsonObject.getJSONObject("class");
+        com.alibaba.fastjson.JSONArray centerList = rpcJsonObject.getJSONArray("centers");
+
         Map<Integer, String> classData =new HashMap<>();
-        Iterator it =rpcJsonObject.entrySet().iterator();
+        Iterator it =rpcdata.entrySet().iterator();
         while (it.hasNext()) {
             Map.Entry<String, String> entry = (Map.Entry<String, String>) it.next();
             classData.put(Integer.parseInt(entry.getKey()), entry.getValue());
@@ -169,6 +173,9 @@ public class TextClassServiceImpl implements TextClassService {
         for (int i =0 ;i<10;i++){
             Cluster cluster = new Cluster();
             cluster.setClusterNum(i);
+            List center = centerList.getJSONArray(i);
+            cluster.setCenter((List<BigDecimal>)center);
+
             result.add(cluster);
         }
         //根据聚类类别num来add Data

@@ -1,15 +1,17 @@
 package com.sjtu.mts.Entity;
 
 
+import java.math.BigDecimal;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Vector;
 
 public class Cluster {
     private  int clusterNum;
     private  int hit;
     private String time;
     private String summary;
-    private List<Double> center = new LinkedList<>();
+    private List<BigDecimal> center = new Vector<>();
     private List<Data> clusterDatas = new LinkedList<>();
 
     public int getClusterNum() {
@@ -28,7 +30,7 @@ public class Cluster {
         return clusterDatas;
     }
 
-    public List<Double> getCenter() {
+    public List<BigDecimal> getCenter() {
         return center;
     }
 
@@ -40,7 +42,7 @@ public class Cluster {
         this.time = time;
     }
 
-    public void setCenter(List<Double> center) {
+    public void setCenter(List<BigDecimal> center) {
         this.center = center;
     }
 
