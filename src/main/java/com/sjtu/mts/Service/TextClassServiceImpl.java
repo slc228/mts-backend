@@ -2,6 +2,7 @@ package com.sjtu.mts.Service;
 
 import com.alibaba.fastjson.JSONObject;
 import com.sjtu.mts.Dao.FangAnDao;
+import com.sjtu.mts.Entity.Cluster;
 import com.sjtu.mts.Entity.Data;
 import com.sjtu.mts.Entity.ClusteredData;
 import com.sjtu.mts.rpc.TextclassRpc;
@@ -131,7 +132,7 @@ public class TextClassServiceImpl implements TextClassService {
     }
 
     @Override
-    public  List<List<ClusteredData>> clusteringData(long fid, String startPublishedDay, String endPublishedDay){
+    public  List<Cluster> clusteringData(long fid, String startPublishedDay, String endPublishedDay){
 
         Criteria criteria = fangAnDao.criteriaByFid(fid);
         if (!startPublishedDay.isEmpty() && !endPublishedDay.isEmpty())
@@ -148,12 +149,11 @@ public class TextClassServiceImpl implements TextClassService {
 
         CriteriaQuery query = new CriteriaQuery(criteria);
         SearchHits<Data> searchHits = this.elasticsearchOperations.search(query, Data.class);
-        List<ClusteredData> clusteredDataList = new LinkedList<>();
+        List<Data> dataList = new LinkedList<>();
         List<String> fileContents = new ArrayList<>();
         for(SearchHit<Data> hit : searchHits){
             Data data = hit.getContent();
-            ClusteredData clusteredData1 = new ClusteredData(data);
-            clusteredDataList.add(clusteredData1);
+            dataList.add(data);
             fileContents.add(data.getContent());
         }
         String rpc = textclassRpc.clustering(fileContents);
@@ -165,79 +165,49 @@ public class TextClassServiceImpl implements TextClassService {
             Map.Entry<String, String> entry = (Map.Entry<String, String>) it.next();
             classData.put(Integer.parseInt(entry.getKey()), entry.getValue());
         }
-        //设置ClusteredData的聚类类别num
-        for (int i =0;i<clusteredDataList.size();i++){
-            ClusteredData clusteredData = clusteredDataList.get(i);
-            clusteredData.setNum(classData.get(i));
-            clusteredDataList.set(i,clusteredData);
-            //System.out.println(clusteredData.toString());
+        List<Cluster> result = new LinkedList<>();
+        for (int i =0 ;i<10;i++){
+            Cluster cluster = new Cluster();
+            cluster.setClusterNum(i);
+            result.add(cluster);
         }
-        //现根据聚类类别排序，再根据发布时间排序
-        Collections.sort(clusteredDataList, new Comparator<ClusteredData>() {
-            @Override
-            public int compare(ClusteredData front, ClusteredData behind) {
-                if (front.getNum().equals(behind.getNum())) {
+        //根据聚类类别num来add Data
+        for (int i =0;i<classData.size();i++){
+            int clusterNum = Integer.parseInt(classData.get(i));
+            result.get(clusterNum).addClusterData(dataList.get(i));
+        }
+
+        for (int i = 0;i<result.size();i++){
+            Cluster cluster = result.get(i);
+            cluster.setHit(cluster.getClusterDatas().size());
+            //根据发布时间排序
+            Collections.sort(result.get(i).getClusterDatas(), new Comparator<Data>() {
+                @Override
+                public int compare(Data front, Data behind) {
                     return front.getPublishedDay().compareTo(behind.getPublishedDay());
-                } else
-                {return front.getNum().compareTo(behind.getNum());}
-            }
-        });
-        //设置ClusteredData的time属性
-        String earlyTime = clusteredDataList.get(0).getPublishedDay();
-        for (int i =0;i<clusteredDataList.size();i++){
-            if(i==0){
-                ClusteredData clusteredData = clusteredDataList.get(i);
-                clusteredData.setTime(earlyTime);
-                clusteredDataList.set(i,clusteredData);
-                continue;
-            }
-            ClusteredData clusteredData = clusteredDataList.get(i);
-            ClusteredData clusteredDataBefore = clusteredDataList.get(i-1);
-            if (clusteredDataBefore.getNum().equals(clusteredData.getNum())){
-                clusteredData.setTime(earlyTime);
-            }else {
-                earlyTime = clusteredData.getPublishedDay();
-                clusteredData.setTime(earlyTime);
-            }
-            clusteredDataList.set(i,clusteredData);
-            //System.out.println(clusteredData.toString());
+                }
+            });
         }
+
+        //设置Cluster的time属性
+        for (int i =0;i<result.size();i++){
+            String time = result.get(i).getClusterDatas().get(0).getPublishedDay();
+            result.get(i).setTime(time);
+        }
+
         //根据time属性排序
-        Collections.sort(clusteredDataList, new Comparator<ClusteredData>() {
+        Collections.sort(result, new Comparator<Cluster>() {
             @Override
-            public int compare(ClusteredData front, ClusteredData behind) {
+            public int compare(Cluster front, Cluster behind) {
                 return front.getTime().compareTo(behind.getTime());
             }
         });
-        List<List<ClusteredData>> result = new LinkedList<>();
+
         List<ClusteredData> tmp  = new LinkedList<>();
         //重新设置ClusteredData的聚类类别num
-        int newNum = 1;
-        for (int i =0;i<clusteredDataList.size();i++){
-            if(i==0){
-                ClusteredData clusteredData = clusteredDataList.get(i);
-                clusteredData.setNum(String.valueOf(newNum));
-                clusteredDataList.set(i,clusteredData);
-                tmp.add(clusteredData);
-                continue;
-            }
-            ClusteredData clusteredData = clusteredDataList.get(i);
-            ClusteredData clusteredDataBefore = clusteredDataList.get(i-1);
-            if (clusteredDataBefore.getTime().equals(clusteredData.getTime())){
-                clusteredData.setNum(String.valueOf(newNum));
-                clusteredDataList.set(i,clusteredData);
-                tmp.add(clusteredData);
-            }else {
-                newNum = newNum+1;
-                clusteredData.setNum(String.valueOf(newNum));
-                clusteredDataList.set(i,clusteredData);
-                result.add(tmp);
-                tmp =  new LinkedList<>();
-                tmp.add(clusteredData);
-            }
-
+        for (int i=0;i<result.size();i++){
+            result.get(i).setClusterNum(i+1);
         }
-        result.add(tmp);
        return result;
     }
 }
