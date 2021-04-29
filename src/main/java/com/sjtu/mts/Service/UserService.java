@@ -89,5 +89,5 @@ public interface UserService {
     JSONObject loginManager(String username, String password);
 
 
-
+    JSONObject changeUserState(String username);
 }
