@@ -64,9 +64,8 @@ public class UserController {
 
     @PostMapping(path = "/registerManager")
     @ResponseBody
-    public JSONObject registerManager(@RequestParam String username, @RequestParam String password, @RequestParam String phone,
-                                      @RequestParam String email) {
-        return userService.registerManager(username, password, phone, email);
+    public JSONObject registerManager(@RequestBody Map<String,String> registerinfo ) {
+        return userService.registerManager(registerinfo.get("username"), registerinfo.get("password"), registerinfo.get("phone"), registerinfo.get("email"));
     }
 
     @RequestMapping(path = "/login")
@@ -96,7 +95,11 @@ public class UserController {
         }
         return result;
     }
-
+    @RequestMapping(path = "/changeUserState")
+    @ResponseBody
+    public JSONObject changeUserStatus(@RequestParam("username")String username){
+        return userService.changeUserState(username);
+    }
     @RequestMapping(path = "/logout")
     @ResponseBody
     public JSONObject logout(HttpServletRequest request) {

@@ -59,4 +59,7 @@ public interface UserDao {
      * @return all user that contains the username
      */
     List<User> findAllByUsernameContains(String username);
+
+    void changeUserState(String username);
+
 }
