@@ -119,12 +119,14 @@ public class UserServiceImp implements UserService {
         JSONObject result = new JSONObject();
         result.put("register", 0);
         String available = "available";
-        if ((int) usernameAvailableManager(username).get(available) != 1) {
+        if ((int) usernameAvailableManager(username).get(available) != 1 ||(int) usernameAvailable(username).get(available) != 1 ) {
             return result;
         }
         try {
             Manager manager = new Manager(username, password, phone, email, 0, "2099",0,1);
             managerDao.save(manager);
+            User user = new User(username, password, phone, email, 0, "2099",0,1);
+            userDao.save(user);
             result.put("register", 1);
             return result;
         } catch (Exception e) {
@@ -175,6 +177,19 @@ public class UserServiceImp implements UserService {
                 return result;
             }
         }
+    }
+    @Override
+    public JSONObject changeUserState(String username){
+        JSONObject result = new JSONObject();
+        result.put("changeUserState",0);
+        try {
+            userDao.changeUserState(username);
+            result.put("changeUserState",1);
+            return result;
+        }catch (Exception e){
+            System.out.println(e);
+        }
+        return result;
     }
 }
 

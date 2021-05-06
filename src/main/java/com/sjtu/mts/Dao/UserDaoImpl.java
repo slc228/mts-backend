@@ -53,5 +53,18 @@ public class UserDaoImpl implements UserDao {
     public List<User> getAllUsers() {
         return userRepository.findAll();
     }
+
+    @Override
+    public void changeUserState(String username){
+        User user = userRepository.findByUsername(username);
+        Integer state = user.getState();
+        if (state == 0){
+            user.setState(1);
+        }
+        if (state == 1){
+            user.setState(0);
+        }
+        userRepository.save(user);
+    }
 }
 

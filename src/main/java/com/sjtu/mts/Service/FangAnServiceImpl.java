@@ -36,7 +36,7 @@ public class FangAnServiceImpl implements FangAnService {
             jsonArray.appendElement(object);
         }
         JSONObject object = new JSONObject();
-        object.put("data:",jsonArray);
+        object.put("data",jsonArray);
         return  object;
 
     }
