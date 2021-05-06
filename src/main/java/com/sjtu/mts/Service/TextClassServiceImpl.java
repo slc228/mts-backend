@@ -5,6 +5,7 @@ import com.sjtu.mts.Dao.FangAnDao;
 import com.sjtu.mts.Entity.Cluster;
 import com.sjtu.mts.Entity.ClusteredData;
 import com.sjtu.mts.Entity.Data;
+import com.sjtu.mts.rpc.SummaryRpc;
 import com.sjtu.mts.rpc.TextclassRpc;
 import net.minidev.json.JSONArray;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -30,6 +31,8 @@ public class TextClassServiceImpl implements TextClassService {
     private FangAnDao fangAnDao;
     @Autowired
     private TextclassRpc textclassRpc;
+    @Autowired
+    private SummaryRpc summaryRpc;
     @Override
     public JSONArray textClass(long fid, String startPublishedDay, String endPublishedDay){
         long start=  System.currentTimeMillis();
@@ -140,7 +143,7 @@ public class TextClassServiceImpl implements TextClassService {
     }
 
     @Override
-    public  List<Cluster> clusteringData(long fid, String startPublishedDay, String endPublishedDay){
+        public  List<Cluster> clusteringData(long fid, String startPublishedDay, String endPublishedDay){
 
         Criteria criteria = fangAnDao.criteriaByFid(fid);
         if (!startPublishedDay.isEmpty() && !endPublishedDay.isEmpty())
@@ -201,6 +204,19 @@ public class TextClassServiceImpl implements TextClassService {
                     return front.getPublishedDay().compareTo(behind.getPublishedDay());
                 }
             });
+        }
+
+        // 设置聚类摘要
+        for (int i = 0; i < result.size(); i++) {
+            Cluster cluster = result.get(i);
+            List<String> documents = new ArrayList<>();
+            for (Data data : cluster.getClusterDatas())
+            {
+                documents.add(data.getContent());
+            }
+            String summary = summaryRpc.multiDocumentsSummary(documents);
+            System.out.println(summary);
+            cluster.setSummary(summary);
         }
 
         //设置Cluster的time属性
