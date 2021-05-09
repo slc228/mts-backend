@@ -20,6 +20,7 @@ import java.math.BigDecimal;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.*;
+import java.util.stream.Collectors;
 
 @Service
 public class TextClassServiceImpl implements TextClassService {
@@ -172,7 +173,7 @@ public class TextClassServiceImpl implements TextClassService {
         JSONObject rpcJsonObject = JSONObject.parseObject(rpc);
         JSONObject rpcdata = rpcJsonObject.getJSONObject("class");
         com.alibaba.fastjson.JSONArray centerList = rpcJsonObject.getJSONArray("centers");
-
+        com.alibaba.fastjson.JSONArray similarList = rpcJsonObject.getJSONArray("similar");
         Map<Integer, String> classData =new HashMap<>();
         Iterator it =rpcdata.entrySet().iterator();
         while (it.hasNext()) {
@@ -180,18 +181,42 @@ public class TextClassServiceImpl implements TextClassService {
             classData.put(Integer.parseInt(entry.getKey()), entry.getValue());
         }
         List<Cluster> result = new LinkedList<>();
-        for (int i =0 ;i<10;i++){
+        List<List<Integer>> similarList1 = new LinkedList<>();
+        List<Integer> similarAll = new LinkedList<>();
+        for (int i =0 ;i<centerList.size();i++){
             Cluster cluster = new Cluster();
             cluster.setClusterNum(i);
             List center = centerList.getJSONArray(i);
+//            System.out.println(center);
+            List similar =  similarList.getJSONArray(i);
+            List<Integer> similar1 = (List<Integer>)similar;
+//            System.out.println(similar1);
+            if (similar1.size()>0){
+                for (Integer index:similar1){
+                    similarAll.add(index);
+                }
+            }
+            similarList1.add(similar1);
             cluster.setCenter((List<BigDecimal>)center);
 
             result.add(cluster);
         }
+        Collections.sort(similarAll);
+        Collections.reverse(similarAll);
+        List<Integer> listWithoutDuplicates = similarAll.stream().distinct().collect(Collectors.toList());
+//        System.out.println(listWithoutDuplicates);
+//        System.out.println(listWithoutDuplicates.size());
+//        System.out.println(classData.size());
+        for (int i = 0;i<listWithoutDuplicates.size();i++){
+            Integer duplicateIndex = listWithoutDuplicates.get(i);
+            classData.keySet().removeIf(key -> key.equals(duplicateIndex));
+
+        }
+//        System.out.println(classData.size());
         //根据聚类类别num来add Data
-        for (int i =0;i<classData.size();i++){
-            int clusterNum = Integer.parseInt(classData.get(i));
-            result.get(clusterNum).addClusterData(dataList.get(i));
+        for (Map.Entry<Integer, String> entry : classData.entrySet()){
+            int clusterNum = Integer.parseInt(entry.getValue());
+            result.get(clusterNum).addClusterData(dataList.get(entry.getKey()));
         }
 
         for (int i = 0;i<result.size();i++){

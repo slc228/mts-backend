@@ -34,6 +34,7 @@ public class SearchServiceImpl implements SearchService {
     private final ElasticsearchOperations elasticsearchOperations;
     private final AreaRepository areaRepository;
     private final SensitiveWordRepository sensitiveWordRepository;
+    static  boolean flag = false;
 
     @Autowired
     private FangAnDao fangAnDao;
@@ -330,6 +331,7 @@ public class SearchServiceImpl implements SearchService {
         try {
             SensitiveWord sensitiveWord1 = new SensitiveWord(sensitiveWord);
             sensitiveWordRepository.save(sensitiveWord1);
+            flag =false;
             result.put("addSensitiveWord", 1);
         }catch (Exception e){
             result.put("addSensitiveWord", 0);
@@ -343,6 +345,7 @@ public class SearchServiceImpl implements SearchService {
         try {
             sensitiveWordRepository.deleteByContent(sensitiveWord);
             result.put("delSensitiveWord", 1);
+            flag = false;
             return result;
         }catch (Exception e){
             result.put("delSensitiveWord", 0);
@@ -350,7 +353,7 @@ public class SearchServiceImpl implements SearchService {
         return result;
     }
 
-    static  boolean flag = false;
+
     @Override
     public JSONArray sensitiveWordFiltering(String text){
 
