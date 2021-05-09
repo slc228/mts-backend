@@ -88,9 +88,9 @@ public class SensitiveWordInit
                 {
                     nowMap.put("isEnd", "1");
                 }
-                System.out.println("封装敏感词库过程："+sensitiveWordMap);
+                //System.out.println("封装敏感词库过程："+sensitiveWordMap);
             }
-            System.out.println("查看敏感词库数据:" + sensitiveWordMap);
+            //System.out.println("查看敏感词库数据:" + sensitiveWordMap);
         }
     }
 }
