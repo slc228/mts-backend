@@ -73,7 +73,16 @@ public class DataController {
         return searchService.globalSearchResourceCount(keyword, startPublishedDay,
                 endPublishedDay);
     }
+    @GetMapping("/globalSearch/resourceCount2")
+    @ResponseBody
+    public ResourceCountResponse countByKeywordAndPublishedDayAndFromType2(
+            @RequestParam("fid") long fid,
+            @RequestParam("startPublishedDay") String startPublishedDay,
+            @RequestParam("endPublishedDay") String endPublishedDay
 
+    ) {
+        return searchService.globalSearchResourceCount2(fid,startPublishedDay,endPublishedDay);
+    }
     @GetMapping("/globalSearch/cflagCount")
     @ResponseBody
     public CflagCountResponse countByKeywordAndPublishedDayAndCflag(
@@ -84,6 +93,16 @@ public class DataController {
         return searchService.globalSearchCflagCount(keyword, startPublishedDay, endPublishedDay);
     }
 
+    @GetMapping("/globalSearch/cflagCount2")
+    @ResponseBody
+    public CflagCountResponse countByKeywordAndPublishedDayAndCflag2(
+            @RequestParam("fid") long fid,
+            @RequestParam("startPublishedDay") String startPublishedDay,
+            @RequestParam("endPublishedDay") String endPublishedDay
+
+    ) {
+        return searchService.globalSearchCflagCount2(fid,startPublishedDay,endPublishedDay);
+    }
     @GetMapping("/globalSearch/amountTrendCount")
     @ResponseBody
     public AmountTrendResponse countAmountTrendByKeywordAndPublishedDay(
@@ -92,6 +111,16 @@ public class DataController {
             @RequestParam("endPublishedDay") String endPublishedDay
     ) {
         return searchService.globalSearchTrendCount(keyword, startPublishedDay, endPublishedDay);
+    }
+    @GetMapping("/globalSearch/amountTrendCount2")
+    @ResponseBody
+    public AmountTrendResponse countAmountTrendByKeywordAndPublishedDay2(
+            @RequestParam("fid") long fid,
+            @RequestParam("startPublishedDay") String startPublishedDay,
+            @RequestParam("endPublishedDay") String endPublishedDay
+
+    ) {
+        return searchService.globalSearchTrendCount2(fid,startPublishedDay,endPublishedDay);
     }
 
     /*某事件各地区发文
@@ -105,6 +134,17 @@ public class DataController {
             @RequestParam("endPublishedDay") String endPublishedDay
     ) {
         return searchService.countArea(keyword,startPublishedDay,endPublishedDay);
+    }
+    @GetMapping("/globalSearch/areaCount2")
+    @ResponseBody
+    public AreaAnalysisResponse countAreaByKeywordAndPublishedDay2(
+            @RequestParam("fid") long fid,
+            @RequestParam("startPublishedDay") String startPublishedDay,
+            @RequestParam("endPublishedDay") String endPublishedDay
+
+    ) {
+        return searchService.countArea2(fid,startPublishedDay,endPublishedDay);
+
     }
 
     /*根据方案查找舆情
