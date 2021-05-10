@@ -24,6 +24,9 @@ public interface SearchService {
 
     public DataResponse fangAnSearch(long fid,String cflag, String startPublishedDay, String endPublishedDay,
                                      String fromType, int page, int pageSize, int timeOrder);
+    public DataResponse fangAnSearch2(long fid,String keyword,String cflag, String startPublishedDay, String endPublishedDay,
+                                     String fromType, int page, int pageSize, int timeOrder);
+
     public JSONObject addSensitiveWord(String sensitiveWord);
     public JSONObject delSensitiveWord(String sensitiveWord);
     public JSONArray sensitiveWordFiltering(String text);

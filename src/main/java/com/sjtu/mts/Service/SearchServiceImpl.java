@@ -320,6 +320,65 @@ public class SearchServiceImpl implements SearchService {
         return result;
     }
     @Override
+    public DataResponse fangAnSearch2(long fid,String keyword,String cflag, String startPublishedDay, String endPublishedDay,
+                                     String fromType, int page, int pageSize, int timeOrder){
+        Criteria criteria = fangAnDao.criteriaByFid(fid);
+        if (!keyword.isEmpty()){
+            criteria.subCriteria(new Criteria().and("content").contains(keyword).
+                    or("title").contains(keyword));
+        }
+        if (!cflag.isEmpty())
+        {
+            criteria.subCriteria(new Criteria().and("cflag").is(cflag));
+        }
+        if (!startPublishedDay.isEmpty() && !endPublishedDay.isEmpty())
+        {
+            SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+            try {
+                Date startDate = sdf.parse(startPublishedDay);
+                Date endDate = sdf.parse(endPublishedDay);
+                criteria.subCriteria(new Criteria().and("publishedDay").between(startDate, endDate));
+            } catch (ParseException e) {
+                e.printStackTrace();
+            }
+        }
+        if (!fromType.isEmpty())
+        {
+            String[] searchSplitArray1 = fromType.trim().split("\\s+");
+            List<String>searchSplitArray = Arrays.asList(searchSplitArray1);
+
+            if(searchSplitArray.size()>1){
+                criteria.subCriteria(new Criteria().and("fromType").in(searchSplitArray));
+            }else {
+                criteria.subCriteria(new Criteria().and("fromType").is(searchSplitArray.get(0)));
+            }
+
+        }
+        CriteriaQuery query = new CriteriaQuery(criteria);
+        if (timeOrder == 0) {
+            query.setPageable(PageRequest.of(page, pageSize, Sort.by(Sort.Direction.DESC, "publishedDay")));
+        }
+        else {
+            query.setPageable(PageRequest.of(page, pageSize, Sort.by(Sort.Direction.ASC, "publishedDay")));
+        }
+        SearchHits<Data> searchHits = this.elasticsearchOperations.search(query, Data.class);
+        SearchPage<Data> searchPage = SearchHitSupport.searchPageFor(searchHits, query.getPageable());
+        long hitNumber = this.elasticsearchOperations.count(query, Data.class);
+
+        List<Data> pageDataContent = new ArrayList<>();
+        for (SearchHit<Data> hit : searchPage.getSearchHits())
+        {
+            pageDataContent.add(hit.getContent());
+        }
+
+        DataResponse result = new DataResponse();
+        result.setHitNumber(hitNumber);
+        result.setDataContent(pageDataContent);
+
+        return result;
+    }
+
+    @Override
     public JSONObject addSensitiveWord(String sensitiveWord){
         JSONObject result = new JSONObject();
         result.put("addSensitiveWord", 0);

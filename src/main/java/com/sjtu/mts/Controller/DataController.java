@@ -126,6 +126,24 @@ public class DataController {
     ){
         return searchService.fangAnSearch(fid,cflag,startPublishedDay,endPublishedDay,fromType,page,pageSize,timeOrder);
     }
+    /*
+    * 根据方案二次查找舆情
+    * @author FYR*/
+    @GetMapping("/singleSearch/findByFangAn2")
+    @ResponseBody
+    public DataResponse fangAnSearch2(
+            @RequestParam("fid") long fid,
+            @RequestParam("keyword")String keyword,
+            @RequestParam("cflag") String cflag,
+            @RequestParam("startPublishedDay") String startPublishedDay,
+            @RequestParam("endPublishedDay") String endPublishedDay,
+            @RequestParam("fromType") String fromType,
+            @RequestParam("page") int page,
+            @RequestParam("pageSize") int pageSize,
+            @RequestParam("timeOrder") int timeOrder
+    ){
+        return searchService.fangAnSearch2(fid,keyword,cflag,startPublishedDay,endPublishedDay,fromType,page,pageSize,timeOrder);
+    }
 
     /*溯源微博，生成并返回微博转发关系树
     @author Ma Baowei
