@@ -134,6 +134,33 @@ public class SearchServiceImpl implements SearchService {
         return new ResourceCountResponse(resultList.get(0), resultList.get(1), resultList.get(2),
                 resultList.get(3), resultList.get(4), resultList.get(5), resultList.get(6));
     }
+
+    @Override
+    public ResourceCountResponse globalSearchResourceCount2(long fid,String startPublishedDay, String endPublishedDay){
+        List<Long> resultList = new ArrayList<>();
+        for (int fromType = 1; fromType <= 7 ; fromType++) {
+
+            Criteria criteria = fangAnDao.criteriaByFid(fid);
+            if (!startPublishedDay.isEmpty() && !endPublishedDay.isEmpty())
+            {
+                SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+                try {
+                    Date startDate = sdf.parse(startPublishedDay);
+                    Date endDate = sdf.parse(endPublishedDay);
+                    criteria.subCriteria(new Criteria().and("publishedDay").between(startDate, endDate));
+                } catch (ParseException e) {
+                    e.printStackTrace();
+                }
+            }
+            criteria.subCriteria(new Criteria().and("fromType").is(fromType));
+            CriteriaQuery query = new CriteriaQuery(criteria);
+            long searchHitCount = this.elasticsearchOperations.count(query, Data.class);
+            resultList.add(searchHitCount);
+        }
+        return new ResourceCountResponse(resultList.get(0), resultList.get(1), resultList.get(2),
+                resultList.get(3), resultList.get(4), resultList.get(5), resultList.get(6));
+    }
+
     @Override
     public CflagCountResponse globalSearchCflagCount(String keyword, String startPublishedDay, String endPublishedDay) {
         List<Long> resultList = new ArrayList<>();
@@ -165,6 +192,30 @@ public class SearchServiceImpl implements SearchService {
         }
         return new CflagCountResponse(resultList.get(0), resultList.get(1));
     }
+    @Override
+    public CflagCountResponse globalSearchCflagCount2(long fid, String startPublishedDay, String endPublishedDay){
+        List<Long> resultList = new ArrayList<>();
+        for (int cflag = 1; cflag <= 2 ; cflag++) {
+            Criteria criteria = fangAnDao.criteriaByFid(fid);
+            if (!startPublishedDay.isEmpty() && !endPublishedDay.isEmpty())
+            {
+                SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+                try {
+                    Date startDate = sdf.parse(startPublishedDay);
+                    Date endDate = sdf.parse(endPublishedDay);
+                    criteria.subCriteria(new Criteria().and("publishedDay").between(startDate, endDate));
+                } catch (ParseException e) {
+                    e.printStackTrace();
+                }
+            }
+            criteria.subCriteria(new Criteria().and("cflag").is(cflag));
+            CriteriaQuery query = new CriteriaQuery(criteria);
+            long searchHitCount = this.elasticsearchOperations.count(query, Data.class);
+            resultList.add(searchHitCount);
+        }
+        return new CflagCountResponse(resultList.get(0), resultList.get(1));
+    }
+
     @Override
     public AmountTrendResponse globalSearchTrendCount(String keyword, String startPublishedDay, String endPublishedDay) {
         int pointNum = 6;
@@ -215,7 +266,48 @@ public class SearchServiceImpl implements SearchService {
                 fromTypeResultList.get(4), fromTypeResultList.get(5), fromTypeResultList.get(6),
                 fromTypeResultList.get(7));
     }
-
+    @Override
+    public AmountTrendResponse globalSearchTrendCount2(long fid,String startPublishedDay, String endPublishedDay){
+        int pointNum = 6;
+        SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+        List<Date> dateList = new ArrayList<>();
+        try {
+            Date startDate = sdf.parse(startPublishedDay);
+            Date endDate = sdf.parse(endPublishedDay);
+            dateList.add(startDate);
+            for (int i = 1; i <= pointNum; i++){
+                Date dt = new Date((long)(startDate.getTime()+(endDate.getTime()-startDate.getTime())*i/(double)pointNum));
+                dateList.add(dt);
+            }
+        } catch (ParseException e) {
+            e.printStackTrace();
+        }
+        List<String> timeRange = new ArrayList<>();
+        List<List<Long>> fromTypeResultList = new ArrayList<>();
+        for (int fromType = 0; fromType <= 7 ; fromType++) {
+            List<Long> resultList = new ArrayList<>();
+            for (int j = 0; j < pointNum; j++) {
+                Criteria criteria = fangAnDao.criteriaByFid(fid);
+                // fromType 0 indicates searching all fromTypes
+                if (fromType != 0) {
+                    criteria.subCriteria(new Criteria().and("fromType").is(fromType));
+                }
+                else {
+                    // only add once
+                    timeRange.add(sdf.format(dateList.get(j)) + " to " + sdf.format(dateList.get(j + 1)));
+                }
+                criteria.subCriteria(new Criteria().and("publishedDay").between(dateList.get(j), dateList.get(j + 1)));
+                CriteriaQuery query = new CriteriaQuery(criteria);
+                long searchHitCount = this.elasticsearchOperations.count(query, Data.class);
+                resultList.add(searchHitCount);
+            }
+            fromTypeResultList.add(resultList);
+        }
+        return new AmountTrendResponse(timeRange, fromTypeResultList.get(0),
+                fromTypeResultList.get(1), fromTypeResultList.get(2), fromTypeResultList.get(3),
+                fromTypeResultList.get(4), fromTypeResultList.get(5), fromTypeResultList.get(6),
+                fromTypeResultList.get(7));
+    }
     @Override
     public AreaAnalysisResponse countArea(String keyword, String startPublishedDay, String endPublishedDay){
         List<Long> resultList = new ArrayList<>();
@@ -230,6 +322,46 @@ public class SearchServiceImpl implements SearchService {
                             or("title").contains(searchString));
                 }
             }
+            if (!startPublishedDay.isEmpty() && !endPublishedDay.isEmpty())
+            {
+                SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+                try {
+                    Date startDate = sdf.parse(startPublishedDay);
+                    Date endDate = sdf.parse(endPublishedDay);
+                    criteria.subCriteria(new Criteria().and("publishedDay").between(startDate, endDate));
+                } catch (ParseException e) {
+                    e.printStackTrace();
+                }
+            }
+            List<String> citys;
+            citys = areaRepository.findCityNameByCodeid(codeids.get(i));
+            for(int j=0;j<citys.size();j++){
+                citys.set(j,citys.get(j).replaceAll("\\s*", ""));
+                if(citys.get(j).contains("市辖")||citys.get(j).contains("县辖")){
+                    citys.remove(j);
+                }
+            }
+            citys = (List) citys.stream().distinct().collect(Collectors.toList());//去重
+            //System.out.println(Arrays.toString(citys.toArray()));
+            criteria.subCriteria(new Criteria("content").in(citys).or("title").in(citys));
+            CriteriaQuery query = new CriteriaQuery(criteria);
+            long searchHitCount = this.elasticsearchOperations.count(query, Data.class);
+            resultList.add(searchHitCount);
+
+        }
+        return new AreaAnalysisResponse(resultList.get(0),resultList.get(1),resultList.get(2),resultList.get(3),resultList.get(4),
+                resultList.get(5),resultList.get(6),resultList.get(7),resultList.get(8),resultList.get(9),resultList.get(10),resultList.get(11),
+                resultList.get(12),resultList.get(13),resultList.get(14),resultList.get(15),resultList.get(16),resultList.get(17),
+                resultList.get(18),resultList.get(19),resultList.get(20),resultList.get(21),resultList.get(22),resultList.get(23),
+                resultList.get(24),resultList.get(25),resultList.get(26),resultList.get(27),resultList.get(28),resultList.get(29),
+                resultList.get(30),resultList.get(31),resultList.get(32),resultList.get(33));
+    }
+    @Override
+    public AreaAnalysisResponse countArea2(long fid,String startPublishedDay, String endPublishedDay){
+        List<Long> resultList = new ArrayList<>();
+        List<Integer> codeids = Arrays.asList(11,12,13,14,15,21,22,23,31,32,33,34,35,36,37,41,42,43,44,45,46,50,51,52,53,54,61,62,63,64,65,71,81,91);
+        for(int i =0;i<codeids.size();i++){
+            Criteria criteria = fangAnDao.criteriaByFid(fid);
             if (!startPublishedDay.isEmpty() && !endPublishedDay.isEmpty())
             {
                 SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");

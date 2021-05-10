@@ -15,12 +15,21 @@ public interface SearchService {
 
     public ResourceCountResponse globalSearchResourceCount(String keyword, String startPublishedDay,
                                                            String endPublishedDay);
+    public ResourceCountResponse globalSearchResourceCount2(long fid,String startPublishedDay, String endPublishedDay);
 
     public CflagCountResponse globalSearchCflagCount(String keyword, String startPublishedDay, String endPublishedDay);
 
+    public CflagCountResponse globalSearchCflagCount2(long fid,String startPublishedDay, String endPublishedDay);
+
+
     public AmountTrendResponse globalSearchTrendCount(String keyword, String startPublishedDay, String endPublishedDay);
 
+    public AmountTrendResponse globalSearchTrendCount2(long fid,String startPublishedDay, String endPublishedDay);
+
     public AreaAnalysisResponse countArea(String keyword, String startPublishedDay, String endPublishedDay);
+
+    public AreaAnalysisResponse countArea2(long fid,String startPublishedDay, String endPublishedDay);
+
 
     public DataResponse fangAnSearch(long fid,String cflag, String startPublishedDay, String endPublishedDay,
                                      String fromType, int page, int pageSize, int timeOrder);
