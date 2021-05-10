@@ -1,6 +1,7 @@
 package com.sjtu.mts.Controller;
 
 import com.sjtu.mts.Service.FangAnService;
+import com.sjtu.mts.Service.MonitorUrlService;
 import com.sjtu.mts.Service.UserService;
 import net.minidev.json.JSONArray;
 import net.minidev.json.JSONObject;
@@ -21,6 +22,8 @@ public class UserController {
     private UserService userService;
     @Autowired
     private FangAnService fangAnService;
+    @Autowired
+    private MonitorUrlService monitorUrlService;
 
 
     @GetMapping(path="/allUsers")
@@ -171,7 +174,30 @@ public class UserController {
     ) {
         return fangAnService.findFangAnByFid(username,fid);
     }
-
+    @GetMapping(path = "/findAllUrl")
+    @ResponseBody
+    public JSONArray findAllUrl() {
+        return monitorUrlService.allUrl();
+    }
+    @GetMapping(path = "/delUrl")
+    @ResponseBody
+    public JSONObject dellUrl(@RequestParam("id") long id) {
+        return monitorUrlService.delUrl(id);
+    }
+    @PostMapping(path = "/addUrl")
+    @ResponseBody
+    public JSONObject addUrl(@RequestBody Map<String,String> urlInfo){
+        return monitorUrlService.saveUrl(
+                urlInfo.get("name"),
+                urlInfo.get("url"),
+                urlInfo.get("create_by"),
+                urlInfo.get("create_date"),
+                urlInfo.get("update_by"),
+                urlInfo.get("update_date"),
+                urlInfo.get("remarks"),
+                urlInfo.get("del_flag").charAt(0)
+        );
+    }
 
 }
 
