@@ -10,7 +10,7 @@ import lombok.Setter;
 @Getter
 @Setter
 public class CflagCountResponse {
-    long Cflag1;
+    long Cflag0;
 
-    long Cflag2;
+    long Cflag1;
 }

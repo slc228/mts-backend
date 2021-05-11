@@ -164,7 +164,7 @@ public class SearchServiceImpl implements SearchService {
     @Override
     public CflagCountResponse globalSearchCflagCount(String keyword, String startPublishedDay, String endPublishedDay) {
         List<Long> resultList = new ArrayList<>();
-        for (int cflag = 1; cflag <= 2 ; cflag++) {
+        for (int cflag = 0; cflag <= 1 ; cflag++) {
             Criteria criteria = new Criteria();
             if (!keyword.isEmpty())
             {
@@ -195,7 +195,7 @@ public class SearchServiceImpl implements SearchService {
     @Override
     public CflagCountResponse globalSearchCflagCount2(long fid, String startPublishedDay, String endPublishedDay){
         List<Long> resultList = new ArrayList<>();
-        for (int cflag = 1; cflag <= 2 ; cflag++) {
+        for (int cflag = 0; cflag <= 1 ; cflag++) {
             Criteria criteria = fangAnDao.criteriaByFid(fid);
             if (!startPublishedDay.isEmpty() && !endPublishedDay.isEmpty())
             {
