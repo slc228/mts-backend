@@ -1,5 +1,7 @@
 package com.sjtu.mts.Keyword;
 
+import com.hankcs.hanlp.HanLP;
+
 import java.io.BufferedReader;
 import java.io.File;
 import java.nio.charset.Charset;
