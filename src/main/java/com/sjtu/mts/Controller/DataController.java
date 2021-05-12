@@ -21,7 +21,7 @@ import java.util.Map;
 
 @RestController
 @RequestMapping("/data")
-@CrossOrigin
+@CrossOrigin()
 public class DataController {
 
     @Autowired

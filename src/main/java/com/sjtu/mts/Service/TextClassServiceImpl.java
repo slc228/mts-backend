@@ -120,9 +120,11 @@ public class TextClassServiceImpl implements TextClassService {
         }
         String rpc = textclassRpc.clustering(fileContents);
         JSONArray result = new JSONArray();
+
         JSONObject rpcJsonObject = JSONObject.parseObject(rpc);
+        JSONObject rpcdata = rpcJsonObject.getJSONObject("class");
         Map<Integer, String> data =new HashMap<>();
-        Iterator it =rpcJsonObject.entrySet().iterator();
+        Iterator it =rpcdata.entrySet().iterator();
         while (it.hasNext()) {
             Map.Entry<String, String> entry = (Map.Entry<String, String>) it.next();
             data.put(Integer.parseInt(entry.getKey()), entry.getValue());

@@ -49,7 +49,6 @@ public class FangAnDaoImpl implements FangAnDao {
     @Override
     public Criteria criteriaByFid(long fid){
         FangAn fangAn = fangAnRepository.findByFid(fid);
-        int matchType = fangAn.getMatchType();
         String regionKeyword = fangAn.getRegionKeyword();
         int regionKeywordMatch = fangAn.getRegionKeywordMatch();
 
