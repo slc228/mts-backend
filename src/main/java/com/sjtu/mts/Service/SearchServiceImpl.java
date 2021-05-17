@@ -635,7 +635,8 @@ public class SearchServiceImpl implements SearchService {
     }
 
     @Override
-    public List<KeywordResponse> extractKeyword(long fid, String startPublishedDay, String endPublishedDay, int keywordNumber){
+    public List<KeywordResponse> extractKeyword(long fid, String startPublishedDay, String endPublishedDay
+            , int keywordNumber, String extractMethod){
         Criteria criteria = fangAnDao.criteriaByFid(fid);
         if (!startPublishedDay.isEmpty() && !endPublishedDay.isEmpty())
         {
@@ -662,7 +663,7 @@ public class SearchServiceImpl implements SearchService {
         int threadCounts = 8;//采用的线程数
 
         long start=  System.currentTimeMillis();
-        MultipleThreadExtraction countListIntegerSum=new MultipleThreadExtraction(fileContents,threadCounts);
+        MultipleThreadExtraction countListIntegerSum=new MultipleThreadExtraction(fileContents,threadCounts, extractMethod);
 
         List<List<String>> sum=countListIntegerSum.getIntegerSum();
         Map<String, Integer> wordScore = new HashMap<>();

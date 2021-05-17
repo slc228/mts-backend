@@ -46,5 +46,6 @@ public interface SearchService {
     public JSONArray sensitiveWordFilteringHanLp(String text);
     public JSONArray sensitiveWord(long fid, String startPublishedDay, String endPublishedDay);
 
-    public List<KeywordResponse> extractKeyword(long fid, String startPublishedDay, String endPublishedDay, int keywordNumber);
+    public List<KeywordResponse> extractKeyword(long fid, String startPublishedDay, String endPublishedDay
+            , int keywordNumber, String extractMethod);
 }

@@ -14,7 +14,7 @@ import static com.sjtu.mts.Keyword.Wrapper.min;
  */
 public class TextRankKeyword
 {
-    public static final int nKeyword = 10;
+    public static final int nKeyword = 25;
     /**
      * 阻尼系数（ＤａｍｐｉｎｇＦａｃｔｏｒ），一般取值为0.85
      */

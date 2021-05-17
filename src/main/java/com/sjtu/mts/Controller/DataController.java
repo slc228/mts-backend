@@ -248,9 +248,10 @@ public class DataController {
             @RequestParam("fid") long fid,
             @RequestParam("startPublishedDay") String startPublishedDay,
             @RequestParam("endPublishedDay") String endPublishedDay,
-            @RequestParam("keywordNumber") int keywordNumber
+            @RequestParam("keywordNumber") int keywordNumber,
+            @RequestParam("extractMethod") String extractMethod
     ) {
-        return searchService.extractKeyword(fid,startPublishedDay,endPublishedDay,keywordNumber);
+        return searchService.extractKeyword(fid,startPublishedDay,endPublishedDay,keywordNumber,extractMethod);
     }
 
     /*文本分类
@@ -314,5 +315,27 @@ public class DataController {
     public com.alibaba.fastjson.JSONObject predictSentiment(@RequestBody Map<String,List<String>> textInfo)
     {
         return sentimentService.sentimentPredict(textInfo.get("textList"));
+    }
+    /*情感数量统计（饼图接口）
+    @author Ma Baowei
+     */
+    @PostMapping(value = "/sentimentCount")
+    @ResponseBody
+    public SentimentCountResponse sentimentCount(@RequestParam("fid") long fid,
+                                                   @RequestParam("startPublishedDay") String startPublishedDay,
+                                                   @RequestParam("endPublishedDay") String endPublishedDay)
+    {
+        return sentimentService.countSentiment(fid,startPublishedDay,endPublishedDay);
+    }
+    /*情感趋势统计
+    @author Ma Baowei
+     */
+    @PostMapping(value = "/sentimentTrendCount")
+    @ResponseBody
+    public SentimentTrendResponse sentimentTrendCount(@RequestParam("fid") long fid,
+                                                 @RequestParam("startPublishedDay") String startPublishedDay,
+                                                 @RequestParam("endPublishedDay") String endPublishedDay)
+    {
+        return sentimentService.sentimentTrendCount(fid,startPublishedDay,endPublishedDay);
     }
 }
