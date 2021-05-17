@@ -204,7 +204,8 @@ public class DataController {
     @ResponseBody
     public JSONArray sensitiveWord(@RequestBody Map<String,String> textinfo )
     {
-        return searchService.sensitiveWordFiltering(textinfo.get("text"));
+        //return searchService.sensitiveWordFiltering(textinfo.get("text"));
+        return searchService.sensitiveWordFilteringHanLp(textinfo.get("text"));
     }
     /*多个舆情文本敏感词识别
     @author Fu Yongrui
