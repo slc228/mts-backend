@@ -248,8 +248,13 @@ public class TextClassServiceImpl implements TextClassService {
 
         //设置Cluster的time属性
         for (int i =0;i<result.size();i++){
-            String time = result.get(i).getClusterDatas().get(0).getPublishedDay();
-            result.get(i).setTime(time);
+            if (result.get(i).getClusterDatas().isEmpty()){
+                result.get(i).setTime("2018-02-28 00:00:00");
+            }else {
+                String time = result.get(i).getClusterDatas().get(0).getPublishedDay();
+                result.get(i).setTime(time);
+            }
+
         }
 
         //根据time属性排序

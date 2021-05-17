@@ -1,10 +1,7 @@
 package com.sjtu.mts.Service;
 
 import com.sjtu.mts.Dao.FangAnDao;
-import com.sjtu.mts.Entity.Data;
-import com.sjtu.mts.Entity.SensitiveWord;
-import com.sjtu.mts.Entity.SensitiveWordInit;
-import com.sjtu.mts.Entity.SensitivewordEngine;
+import com.sjtu.mts.Entity.*;
 import com.sjtu.mts.Keyword.KeywordResponse;
 import com.sjtu.mts.Keyword.MultipleThreadExtraction;
 import com.sjtu.mts.Repository.AreaRepository;
@@ -35,6 +32,7 @@ public class SearchServiceImpl implements SearchService {
     private final AreaRepository areaRepository;
     private final SensitiveWordRepository sensitiveWordRepository;
     static  boolean flag = false;
+    static  boolean flagIK = false;
 
     @Autowired
     private FangAnDao fangAnDao;
@@ -547,7 +545,7 @@ public class SearchServiceImpl implements SearchService {
 
     @Override
     public JSONArray sensitiveWordFiltering(String text){
-
+        long start=  System.currentTimeMillis();
         if(false==flag){
             // 初始化敏感词库对象
             SensitiveWordInit sensitiveWordInit = new SensitiveWordInit();
@@ -561,9 +559,36 @@ public class SearchServiceImpl implements SearchService {
         }
         // 得到敏感词有哪些，传入2表示获取所有敏感词
         JSONArray result = SensitivewordEngine.getSwAndpos2(text, 2);
+        long end = System.currentTimeMillis();
+        System.out.println("DFA敏感词提取耗时：" + (end-start) + "ms");
         return result;
     }
+    @Override
+    public  JSONArray sensitiveWordFilteringHanLp(String text){
+        long start=  System.currentTimeMillis();
+        if (false == flagIK){
 
+            // 从数据库中获取敏感词对象集合
+            List<SensitiveWord> sensitiveWords = sensitiveWordRepository.findAll();
+            // 构建敏感词库
+            Set<String> sensitiveWordSet = new HashSet<>();
+            for (SensitiveWord s : sensitiveWords)
+            {
+                sensitiveWordSet.add(s.getContent().trim());
+            }
+            SensitiveWordUtil2.init(sensitiveWordSet);
+            flagIK = true;
+        }
+        try {
+            JSONArray result= SensitiveWordUtil2.getSensitiveWord(text);
+            long end = System.currentTimeMillis();
+            System.out.println("hanLp敏感词提取耗时：" + (end-start) + "ms");
+            return result;
+        }catch (Exception e){
+            System.out.println(e);
+        }
+        return null;
+    }
     @Override
     public JSONArray sensitiveWord(long fid, String startPublishedDay, String endPublishedDay){
         if(false==flag){

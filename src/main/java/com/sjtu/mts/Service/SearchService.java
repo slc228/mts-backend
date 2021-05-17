@@ -38,7 +38,12 @@ public interface SearchService {
 
     public JSONObject addSensitiveWord(String sensitiveWord);
     public JSONObject delSensitiveWord(String sensitiveWord);
+    /*
+    * DFA方法提取敏感词*/
     public JSONArray sensitiveWordFiltering(String text);
+    /*
+     * 分词方法提取敏感词*/
+    public JSONArray sensitiveWordFilteringHanLp(String text);
     public JSONArray sensitiveWord(long fid, String startPublishedDay, String endPublishedDay);
 
     public List<KeywordResponse> extractKeyword(long fid, String startPublishedDay, String endPublishedDay, int keywordNumber);
