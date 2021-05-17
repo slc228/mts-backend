@@ -6,10 +6,7 @@ import com.sjtu.mts.EventTrack.EventTreeNode;
 import com.sjtu.mts.Keyword.KeywordResponse;
 import com.sjtu.mts.Repository.DataRepository;
 import com.sjtu.mts.Response.*;
-import com.sjtu.mts.Service.EventTrackService;
-import com.sjtu.mts.Service.SearchService;
-import com.sjtu.mts.Service.TextClassService;
-import com.sjtu.mts.Service.WeiboTrackService;
+import com.sjtu.mts.Service.*;
 import com.sjtu.mts.WeiboTrack.WeiboRepostTree;
 import net.minidev.json.JSONArray;
 import net.minidev.json.JSONObject;
@@ -39,6 +36,8 @@ public class DataController {
     @Autowired
     private EventTrackService eventTrackService;
 
+    @Autowired
+    private SentimentService sentimentService;
 
 
     @GetMapping("/findByCflag/{cflag}")
@@ -305,5 +304,14 @@ public class DataController {
                                       @RequestParam("endPublishedDay") String endPublishedDay)
     {
         return eventTrackService.getEventTree(fid,startPublishedDay,endPublishedDay);
+    }
+    /*情感分析
+    @author Ma Baowei
+     */
+    @PostMapping(value = "/sentimentAnalysis")
+    @ResponseBody
+    public com.alibaba.fastjson.JSONObject predictSentiment(@RequestBody Map<String,List<String>> textInfo)
+    {
+        return sentimentService.sentimentPredict(textInfo.get("textList"));
     }
 }
