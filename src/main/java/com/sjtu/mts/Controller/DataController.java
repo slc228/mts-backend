@@ -319,7 +319,7 @@ public class DataController {
     /*情感数量统计（饼图接口）
     @author Ma Baowei
      */
-    @PostMapping(value = "/sentimentCount")
+    @GetMapping(value = "/sentimentCount")
     @ResponseBody
     public SentimentCountResponse sentimentCount(@RequestParam("fid") long fid,
                                                    @RequestParam("startPublishedDay") String startPublishedDay,
@@ -330,7 +330,7 @@ public class DataController {
     /*情感趋势统计
     @author Ma Baowei
      */
-    @PostMapping(value = "/sentimentTrendCount")
+    @GetMapping(value = "/sentimentTrendCount")
     @ResponseBody
     public SentimentTrendResponse sentimentTrendCount(@RequestParam("fid") long fid,
                                                  @RequestParam("startPublishedDay") String startPublishedDay,
