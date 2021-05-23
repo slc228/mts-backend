@@ -40,6 +40,9 @@ public class DataController {
     @Autowired
     private SentimentService sentimentService;
 
+    @Autowired
+    private TextAlertService textAlertService;
+
     @GetMapping("/testApi")
     @ResponseBody
     public String heartBeating() {
@@ -297,6 +300,19 @@ public class DataController {
     {
         return textClassService.textClass(fid,startPublishedDay,endPublishedDay);
     }
+
+
+    /*文本预警
+    @author HZT
+     */
+    @PostMapping(value = "/textAlert")
+    @ResponseBody
+    public com.alibaba.fastjson.JSONObject textAlert(@RequestBody Map<String,List<String>> textInfo)
+    {
+        System.out.println(textInfo.get("textList"));
+        return textAlertService.textAlert(textInfo.get("textList"));
+    }
+
     /*文本分类2
     @author Fu Yongrui
      */

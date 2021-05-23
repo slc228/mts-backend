@@ -622,6 +622,7 @@ public class SearchServiceImpl implements SearchService {
         }
         return result;
     }
+
     @Override
     public JSONObject delSensitiveWord(String sensitiveWord){
         JSONObject result = new JSONObject();
