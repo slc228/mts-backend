@@ -15,6 +15,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.io.UnsupportedEncodingException;
 import java.util.*;
+import com.sjtu.mts.Entity.Wuser;
 
 @RestController
 @RequestMapping("/data")
@@ -64,7 +65,7 @@ public class DataController {
 
     @GetMapping("/globalSearch/getActivateUser")
     @ResponseBody
-    public List<Wuser> getActivateUser(@RequestParam("fid") long fid) {
+    public Map<String, Integer> getActivateUser(@RequestParam("fid") long fid) {
         return searchService.getActivateUser(fid);
     }
 

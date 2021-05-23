@@ -7,6 +7,9 @@ import net.minidev.json.JSONObject;
 
 import java.io.UnsupportedEncodingException;
 import java.util.List;
+import java.util.Map;
+
+import com.sjtu.mts.Entity.Wuser;
 
 public interface SearchService {
 
@@ -14,7 +17,7 @@ public interface SearchService {
                                String fromType, int page, int pageSize, int timeOrder);
 ;
 
-    public List<Wuser> getActivateUser(long fid);
+    public Map<String, Integer> getActivateUser(long fid);
 
     public ResourceCountResponse globalSearchResourceCount(String keyword, String startPublishedDay,
                                                            String endPublishedDay);

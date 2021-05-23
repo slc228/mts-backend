@@ -7,11 +7,12 @@ import org.springframework.data.elasticsearch.annotations.Document;
 import org.springframework.data.elasticsearch.annotations.Field;
 import org.springframework.data.elasticsearch.annotations.FieldType;
 
-@Document(indexName = "yuqing")
+@Document(indexName = "weixinUser")
 @AllArgsConstructor
 @NoArgsConstructor
 @Getter
 public class Wuser {
     @Field(type = FieldType.Text)
-    private String cflag;
+    private String username;
+    private Integer commentNumber;
 }

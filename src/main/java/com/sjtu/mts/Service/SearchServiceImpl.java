@@ -24,6 +24,7 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 import static com.sjtu.mts.Keyword.Wrapper.min;
+import com.sjtu.mts.Entity.Wuser;
 
 
 @Service
@@ -265,6 +266,7 @@ public class SearchServiceImpl implements SearchService {
                 fromTypeResultList.get(4), fromTypeResultList.get(5), fromTypeResultList.get(6),
                 fromTypeResultList.get(7));
     }
+
     @Override
     public AmountTrendResponse globalSearchTrendCount3(long fid,String startPublishedDay, String endPublishedDay){
         int pointNum = 48;
@@ -307,6 +309,7 @@ public class SearchServiceImpl implements SearchService {
                 fromTypeResultList.get(4), fromTypeResultList.get(5), fromTypeResultList.get(6),
                 fromTypeResultList.get(7));
     }
+
     @Override
     public AmountTrendResponse globalSearchTrendCount2(long fid,String startPublishedDay, String endPublishedDay){
         int pointNum = 6;
@@ -523,12 +526,21 @@ public class SearchServiceImpl implements SearchService {
     }
 
     @Override
-    public List<Wuser> getActivateUser (long fid) {
+    public Map<String, Integer> getActivateUser (long fid) {
         Criteria criteria = fangAnDao.criteriaByFid(fid);
+        criteria.subCriteria(new Criteria().and("fromType").is("3"));
         CriteriaQuery query = new CriteriaQuery(criteria);
+        SearchHits<Data> searchHits = this.elasticsearchOperations.search(query, Data.class);
 
-        List<Wuser> ret = new ArrayList<>();
-        return ret;
+        Map<String, Integer> m = new HashMap<>();
+        for (SearchHit<Data> hit : searchHits)
+        {
+            String title = hit.getContent().getTitle();
+            Integer num = m.get(title);
+            if (num == null) m.put(title, 1);
+            else m.put(title, num + 1);
+        }
+        return m;
     }
 
 
