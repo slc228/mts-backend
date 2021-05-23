@@ -32,7 +32,7 @@ public class UserController {
         // This returns a JSON or XML with the users
         HttpSession session = request.getSession();
         String matter = (String) session.getAttribute("role");
-        if("0".equals(matter)){
+        /* if("0".equals(matter)){
             return userService.getAllUsers();
         }else {
             JSONObject jsonObject = new JSONObject();
@@ -40,8 +40,12 @@ public class UserController {
             JSONArray jsonArray = new JSONArray();
             jsonArray.appendElement(jsonObject);
             return jsonArray;
-        }
-
+        } */
+        JSONObject jsonObject = new JSONObject();
+        jsonObject.put("login", 0);
+        JSONArray jsonArray = new JSONArray();
+        jsonArray.appendElement(jsonObject);
+        return jsonArray;
     }
     @GetMapping(path="/allManagers")
     @ResponseBody
