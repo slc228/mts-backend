@@ -17,12 +17,14 @@ import org.springframework.data.elasticsearch.core.query.Criteria;
 import org.springframework.data.elasticsearch.core.query.CriteriaQuery;
 import org.springframework.stereotype.Service;
 
+import java.io.UnsupportedEncodingException;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.*;
 import java.util.stream.Collectors;
 
 import static com.sjtu.mts.Keyword.Wrapper.min;
+import com.sjtu.mts.Entity.Wuser;
 
 
 @Service
@@ -264,6 +266,50 @@ public class SearchServiceImpl implements SearchService {
                 fromTypeResultList.get(4), fromTypeResultList.get(5), fromTypeResultList.get(6),
                 fromTypeResultList.get(7));
     }
+
+    @Override
+    public AmountTrendResponse globalSearchTrendCount3(long fid,String startPublishedDay, String endPublishedDay){
+        int pointNum = 48;
+        SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+        List<Date> dateList = new ArrayList<>();
+        try {
+            Date startDate = sdf.parse(startPublishedDay);
+            Date endDate = sdf.parse(endPublishedDay);
+            dateList.add(startDate);
+            for (int i = 1; i <= pointNum; i++) {
+                Date dt = new Date((long)(startDate.getTime()+(endDate.getTime()-startDate.getTime())*i/(double)pointNum));
+                dateList.add(dt);
+            }
+        } catch (ParseException e) {
+            e.printStackTrace();
+        }
+        List<String> timeRange = new ArrayList<>();
+        List<List<Long>> fromTypeResultList = new ArrayList<>();
+        for (int fromType = 0; fromType <= 7 ; fromType++) {
+            List<Long> resultList = new ArrayList<>();
+            for (int j = 0; j < pointNum; j++) {
+                Criteria criteria = fangAnDao.criteriaByFid(fid);
+                // fromType 0 indicates searching all fromTypes
+                if (fromType != 0) {
+                    criteria.subCriteria(new Criteria().and("fromType").is(fromType));
+                }
+                else {
+                    // only add once
+                    timeRange.add(sdf.format(dateList.get(j)) + " to " + sdf.format(dateList.get(j + 1)));
+                }
+                criteria.subCriteria(new Criteria().and("publishedDay").between(dateList.get(j), dateList.get(j + 1)));
+                CriteriaQuery query = new CriteriaQuery(criteria);
+                long searchHitCount = this.elasticsearchOperations.count(query, Data.class);
+                resultList.add(searchHitCount);
+            }
+            fromTypeResultList.add(resultList);
+        }
+        return new AmountTrendResponse(timeRange, fromTypeResultList.get(0),
+                fromTypeResultList.get(1), fromTypeResultList.get(2), fromTypeResultList.get(3),
+                fromTypeResultList.get(4), fromTypeResultList.get(5), fromTypeResultList.get(6),
+                fromTypeResultList.get(7));
+    }
+
     @Override
     public AmountTrendResponse globalSearchTrendCount2(long fid,String startPublishedDay, String endPublishedDay){
         int pointNum = 6;
@@ -449,6 +495,55 @@ public class SearchServiceImpl implements SearchService {
 
         return result;
     }
+
+    @Override
+    public DataResponse searchByUser(long fid, String username, int pageSize, int pageId) throws UnsupportedEncodingException {
+        String decodeUsername = java.net.URLDecoder.decode(username, "utf-8");
+        Criteria criteria = fangAnDao.criteriaByFid(fid);
+        if (!username.isEmpty()){
+            /*DataResponse result = new DataResponse();
+            result.setHitNumber(0);
+            result.setDataContent(new ArrayList<>());
+            return result;*/
+            criteria.subCriteria(new Criteria().and("title").is(decodeUsername));
+        }
+        String fromType = "3";
+        criteria.subCriteria(new Criteria().and("fromType").is(fromType));
+        CriteriaQuery query = new CriteriaQuery(criteria);
+        query.setPageable(PageRequest.of(pageId, pageSize, Sort.by(Sort.Direction.DESC, "publishedDay")));
+        SearchHits<Data> searchHits = this.elasticsearchOperations.search(query, Data.class);
+        SearchPage<Data> searchPage = SearchHitSupport.searchPageFor(searchHits, query.getPageable());
+        long hitNumber = this.elasticsearchOperations.count(query, Data.class);
+        List<Data> pageDataContent = new ArrayList<>();
+        for (SearchHit<Data> hit : searchPage.getSearchHits())
+        {
+            pageDataContent.add(hit.getContent());
+        }
+        DataResponse result = new DataResponse();
+        result.setHitNumber(hitNumber);
+        result.setDataContent(pageDataContent);
+        return result;
+    }
+
+    @Override
+    public Map<String, Integer> getActivateUser (long fid) {
+        Criteria criteria = fangAnDao.criteriaByFid(fid);
+        criteria.subCriteria(new Criteria().and("fromType").is("3"));
+        CriteriaQuery query = new CriteriaQuery(criteria);
+        SearchHits<Data> searchHits = this.elasticsearchOperations.search(query, Data.class);
+
+        Map<String, Integer> m = new HashMap<>();
+        for (SearchHit<Data> hit : searchHits)
+        {
+            String title = hit.getContent().getTitle();
+            Integer num = m.get(title);
+            if (num == null) m.put(title, 1);
+            else m.put(title, num + 1);
+        }
+        return m;
+    }
+
+
     @Override
     public DataResponse fangAnSearch2(long fid,String keyword,String cflag, String startPublishedDay, String endPublishedDay,
                                      String fromType, int page, int pageSize, int timeOrder){
@@ -527,6 +622,7 @@ public class SearchServiceImpl implements SearchService {
         }
         return result;
     }
+
     @Override
     public JSONObject delSensitiveWord(String sensitiveWord){
         JSONObject result = new JSONObject();

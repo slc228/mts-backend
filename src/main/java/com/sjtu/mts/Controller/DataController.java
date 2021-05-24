@@ -13,8 +13,9 @@ import net.minidev.json.JSONObject;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.List;
-import java.util.Map;
+import java.io.UnsupportedEncodingException;
+import java.util.*;
+import com.sjtu.mts.Entity.Wuser;
 
 @RestController
 @RequestMapping("/data")
@@ -39,11 +40,36 @@ public class DataController {
     @Autowired
     private SentimentService sentimentService;
 
+    @Autowired
+    private TextAlertService textAlertService;
+
+    @GetMapping("/testApi")
+    @ResponseBody
+    public String heartBeating() {
+        return "healthy";
+    }
 
     @GetMapping("/findByCflag/{cflag}")
     @ResponseBody
     public List<Data> findById(@PathVariable("cflag") int cflag) {
         return dataRepository.findByCflag(String.valueOf(cflag));
+    }
+
+    @GetMapping("/globalSearch/searchByUser")
+    @ResponseBody
+    public DataResponse searchByUser (
+            @RequestParam("fid") long fid,
+            @RequestParam("username") String username,
+            @RequestParam("pageSize") int pageSize,
+            @RequestParam("pageId") int pageId
+    ) throws UnsupportedEncodingException {
+        return searchService.searchByUser(fid, username, pageSize, pageId);
+    }
+
+    @GetMapping("/globalSearch/getActivateUser")
+    @ResponseBody
+    public Map<String, Integer> getActivateUser(@RequestParam("fid") long fid) {
+        return searchService.getActivateUser(fid);
     }
 
     @GetMapping("/globalSearch/dataSearch")
@@ -122,6 +148,16 @@ public class DataController {
         return searchService.globalSearchTrendCount2(fid,startPublishedDay,endPublishedDay);
     }
 
+    @GetMapping("/globalSearch/amountTrendCount3")
+    @ResponseBody
+    public AmountTrendResponse countAmountTrendByKeywordAndPublishedDay3(
+            @RequestParam("fid") long fid,
+            @RequestParam("startPublishedDay") String startPublishedDay,
+            @RequestParam("endPublishedDay") String endPublishedDay
+    ) {
+        return searchService.globalSearchTrendCount3(fid,startPublishedDay,endPublishedDay);
+    }
+
     /*某事件各地区发文
     @author FYR
      */
@@ -143,7 +179,6 @@ public class DataController {
 
     ) {
         return searchService.countArea2(fid,startPublishedDay,endPublishedDay);
-
     }
 
     /*根据方案查找舆情
@@ -265,6 +300,19 @@ public class DataController {
     {
         return textClassService.textClass(fid,startPublishedDay,endPublishedDay);
     }
+
+
+    /*文本预警
+    @author HZT
+     */
+    @PostMapping(value = "/textAlert")
+    @ResponseBody
+    public com.alibaba.fastjson.JSONObject textAlert(@RequestBody Map<String,List<String>> textInfo)
+    {
+        System.out.println(textInfo.get("textList"));
+        return textAlertService.textAlert(textInfo.get("textList"));
+    }
+
     /*文本分类2
     @author Fu Yongrui
      */

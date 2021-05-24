@@ -32,7 +32,7 @@ public class UserController {
         // This returns a JSON or XML with the users
         HttpSession session = request.getSession();
         String matter = (String) session.getAttribute("role");
-        if("0".equals(matter)){
+        /* if("0".equals(matter)){
             return userService.getAllUsers();
         }else {
             JSONObject jsonObject = new JSONObject();
@@ -40,8 +40,12 @@ public class UserController {
             JSONArray jsonArray = new JSONArray();
             jsonArray.appendElement(jsonObject);
             return jsonArray;
-        }
-
+        } */
+        JSONObject jsonObject = new JSONObject();
+        jsonObject.put("login", 0);
+        JSONArray jsonArray = new JSONArray();
+        jsonArray.appendElement(jsonObject);
+        return jsonArray;
     }
     @GetMapping(path="/allManagers")
     @ResponseBody
@@ -74,6 +78,7 @@ public class UserController {
     @RequestMapping(path = "/login")
     @ResponseBody
     public JSONObject login(HttpServletRequest request, @RequestBody Map<String,String> userinfo) {
+        System.out.println("test login");
         JSONObject result = ("0".equals(userinfo.get("role"))) ? userService.loginManager(userinfo.get("username"), userinfo.get("password")) : userService.login(userinfo.get("username"), userinfo.get("password"),"1");
         if ("1".equals(result.getAsString("login"))) {
             HttpSession session = request.getSession();
