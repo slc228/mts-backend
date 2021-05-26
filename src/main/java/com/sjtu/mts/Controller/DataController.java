@@ -14,8 +14,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
 import java.io.UnsupportedEncodingException;
-import java.util.*;
-import com.sjtu.mts.Entity.Wuser;
+import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/data")
@@ -216,7 +216,14 @@ public class DataController {
             @RequestParam("pageSize") int pageSize,
             @RequestParam("timeOrder") int timeOrder
     ){
-        return searchService.fangAnSearch2(fid,keyword,cflag,startPublishedDay,endPublishedDay,fromType,page,pageSize,timeOrder);
+        String decodeKeyword = "";
+        try{
+             decodeKeyword = java.net.URLDecoder.decode(keyword, "utf-8");
+        }catch (Exception e){
+            System.out.println(e);
+        }
+
+        return searchService.fangAnSearch2(fid,decodeKeyword,cflag,startPublishedDay,endPublishedDay,fromType,page,pageSize,timeOrder);
     }
 
     /*溯源微博，生成并返回微博转发关系树
