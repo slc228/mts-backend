@@ -6,18 +6,16 @@ import com.sjtu.mts.EventTrack.EventTreeNode;
 import com.sjtu.mts.Keyword.KeywordResponse;
 import com.sjtu.mts.Repository.DataRepository;
 import com.sjtu.mts.Response.*;
-import com.sjtu.mts.Service.EventTrackService;
-import com.sjtu.mts.Service.SearchService;
-import com.sjtu.mts.Service.TextClassService;
-import com.sjtu.mts.Service.WeiboTrackService;
+import com.sjtu.mts.Service.*;
 import com.sjtu.mts.WeiboTrack.WeiboRepostTree;
 import net.minidev.json.JSONArray;
 import net.minidev.json.JSONObject;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.List;
-import java.util.Map;
+import java.io.UnsupportedEncodingException;
+import java.util.*;
+import com.sjtu.mts.Entity.Wuser;
 
 @RestController
 @RequestMapping("/data")
@@ -39,12 +37,39 @@ public class DataController {
     @Autowired
     private EventTrackService eventTrackService;
 
+    @Autowired
+    private SentimentService sentimentService;
 
+    @Autowired
+    private TextAlertService textAlertService;
+
+    @GetMapping("/testApi")
+    @ResponseBody
+    public String heartBeating() {
+        return "healthy";
+    }
 
     @GetMapping("/findByCflag/{cflag}")
     @ResponseBody
     public List<Data> findById(@PathVariable("cflag") int cflag) {
         return dataRepository.findByCflag(String.valueOf(cflag));
+    }
+
+    @GetMapping("/globalSearch/searchByUser")
+    @ResponseBody
+    public DataResponse searchByUser (
+            @RequestParam("fid") long fid,
+            @RequestParam("username") String username,
+            @RequestParam("pageSize") int pageSize,
+            @RequestParam("pageId") int pageId
+    ) throws UnsupportedEncodingException {
+        return searchService.searchByUser(fid, username, pageSize, pageId);
+    }
+
+    @GetMapping("/globalSearch/getActivateUser")
+    @ResponseBody
+    public Map<String, Integer> getActivateUser(@RequestParam("fid") long fid) {
+        return searchService.getActivateUser(fid);
     }
 
     @GetMapping("/globalSearch/dataSearch")
@@ -123,6 +148,16 @@ public class DataController {
         return searchService.globalSearchTrendCount2(fid,startPublishedDay,endPublishedDay);
     }
 
+    @GetMapping("/globalSearch/amountTrendCount3")
+    @ResponseBody
+    public AmountTrendResponse countAmountTrendByKeywordAndPublishedDay3(
+            @RequestParam("fid") long fid,
+            @RequestParam("startPublishedDay") String startPublishedDay,
+            @RequestParam("endPublishedDay") String endPublishedDay
+    ) {
+        return searchService.globalSearchTrendCount3(fid,startPublishedDay,endPublishedDay);
+    }
+
     /*某事件各地区发文
     @author FYR
      */
@@ -144,7 +179,6 @@ public class DataController {
 
     ) {
         return searchService.countArea2(fid,startPublishedDay,endPublishedDay);
-
     }
 
     /*根据方案查找舆情
@@ -249,9 +283,10 @@ public class DataController {
             @RequestParam("fid") long fid,
             @RequestParam("startPublishedDay") String startPublishedDay,
             @RequestParam("endPublishedDay") String endPublishedDay,
-            @RequestParam("keywordNumber") int keywordNumber
+            @RequestParam("keywordNumber") int keywordNumber,
+            @RequestParam("extractMethod") String extractMethod
     ) {
-        return searchService.extractKeyword(fid,startPublishedDay,endPublishedDay,keywordNumber);
+        return searchService.extractKeyword(fid,startPublishedDay,endPublishedDay,keywordNumber,extractMethod);
     }
 
     /*文本分类
@@ -265,6 +300,19 @@ public class DataController {
     {
         return textClassService.textClass(fid,startPublishedDay,endPublishedDay);
     }
+
+
+    /*文本预警
+    @author HZT
+     */
+    @PostMapping(value = "/textAlert")
+    @ResponseBody
+    public com.alibaba.fastjson.JSONObject textAlert(@RequestBody Map<String,List<String>> textInfo)
+    {
+        System.out.println(textInfo.get("textList"));
+        return textAlertService.textAlert(textInfo.get("textList"));
+    }
+
     /*文本分类2
     @author Fu Yongrui
      */
@@ -306,5 +354,36 @@ public class DataController {
                                       @RequestParam("endPublishedDay") String endPublishedDay)
     {
         return eventTrackService.getEventTree(fid,startPublishedDay,endPublishedDay);
+    }
+    /*情感分析
+    @author Ma Baowei
+     */
+    @PostMapping(value = "/sentimentAnalysis")
+    @ResponseBody
+    public com.alibaba.fastjson.JSONObject predictSentiment(@RequestBody Map<String,List<String>> textInfo)
+    {
+        return sentimentService.sentimentPredict(textInfo.get("textList"));
+    }
+    /*情感数量统计（饼图接口）
+    @author Ma Baowei
+     */
+    @GetMapping(value = "/sentimentCount")
+    @ResponseBody
+    public SentimentCountResponse sentimentCount(@RequestParam("fid") long fid,
+                                                   @RequestParam("startPublishedDay") String startPublishedDay,
+                                                   @RequestParam("endPublishedDay") String endPublishedDay)
+    {
+        return sentimentService.countSentiment(fid,startPublishedDay,endPublishedDay);
+    }
+    /*情感趋势统计
+    @author Ma Baowei
+     */
+    @GetMapping(value = "/sentimentTrendCount")
+    @ResponseBody
+    public SentimentTrendResponse sentimentTrendCount(@RequestParam("fid") long fid,
+                                                 @RequestParam("startPublishedDay") String startPublishedDay,
+                                                 @RequestParam("endPublishedDay") String endPublishedDay)
+    {
+        return sentimentService.sentimentTrendCount(fid,startPublishedDay,endPublishedDay);
     }
 }

@@ -11,6 +11,7 @@ public interface TextClassService {
 
     JSONArray textClass(long fid, String startPublishedDay, String endPublishedDay);
     com.alibaba.fastjson.JSONObject textClass2(List<String> textList);
+
     JSONArray clustering(long fid, String startPublishedDay, String endPublishedDay);
 
     /*
@@ -18,4 +19,6 @@ public interface TextClassService {
     * 按照时间最早的顺序，最早的为聚类num:1.
     * ClusteredData的time属性为该聚类中最早舆情的时间*/
     List<Cluster> clusteringData(long fid, String startPublishedDay, String endPublishedDay);
+
+
 }

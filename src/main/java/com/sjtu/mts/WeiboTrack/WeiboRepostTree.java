@@ -15,7 +15,7 @@ import java.util.Set;
 @Setter
 public class WeiboRepostTree {
     private Set<WeiboRepostTree> children = new LinkedHashSet<>(); // LinkedHashSet preserves insertion order
-    @JsonIgnore
+//    @JsonIgnore
     private WeiboData data;
     private String name;
 

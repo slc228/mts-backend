@@ -93,6 +93,9 @@ public class TextClassServiceImpl implements TextClassService {
         JSONObject jsonObject = JSONObject.parseObject(rpc);
         return jsonObject;
     }
+
+
+
     @Override
     public  JSONArray clustering(long fid, String startPublishedDay, String endPublishedDay){
         long start=  System.currentTimeMillis();

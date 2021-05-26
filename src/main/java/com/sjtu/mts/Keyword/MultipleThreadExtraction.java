@@ -7,13 +7,13 @@ import java.io.File;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 import java.util.concurrent.BrokenBarrierException;
 import java.util.concurrent.CyclicBarrier;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+
+import static com.sjtu.mts.Keyword.Wrapper.min;
 
 public class MultipleThreadExtraction {
 
@@ -21,10 +21,16 @@ public class MultipleThreadExtraction {
     private CyclicBarrier barrier;//障栅集合点(同步器)
     private List<String> list;
     private int threadCounts;//使用的线程数
+    private String extractMethod;
 
-    public MultipleThreadExtraction(List<String> list, int threadCounts) {
+    public MultipleThreadExtraction(List<String> list, int threadCounts, String extractMethod) {
         this.list = list;
         this.threadCounts = threadCounts;
+        this.extractMethod = extractMethod;
+    }
+
+    public String getExtractMethod() {
+        return extractMethod;
     }
 
     /**
@@ -73,10 +79,18 @@ public class MultipleThreadExtraction {
         public void run() {
             List<List<String>> subSum = new ArrayList<>();
             for (String i : subList) {
-//                List<String> keywordList = HanLP.extractKeyword(i, 25);
-//                List<String> keywordList = new TextRankKeyword().getKeyword("",i);
-                List<String> keywordList = new Yake.KeywordExtractor().extract_keywords(i);
-                subSum.add(keywordList);
+                if (getExtractMethod().equals("tfidf")){
+                    List<String> keywordList = HanLP.extractKeyword(i, 25);
+                    subSum.add(keywordList);
+                }
+                if (getExtractMethod().equals("textrank")){
+                    List<String> keywordList = new TextRankKeyword().getKeyword("",i);
+                    subSum.add(keywordList);
+                }
+                else {
+                    List<String> keywordList = new Yake.KeywordExtractor().extract_keywords(i);
+                    subSum.add(keywordList);
+                }
             }
             synchronized (MultipleThreadExtraction.this) { //在LargeListIntegerSum对象上同步
                 sum.addAll(subSum);
@@ -89,5 +103,51 @@ public class MultipleThreadExtraction {
                 System.out.println(Thread.currentThread().getName() + ":BrokenBarrier");
             }
         }
+    }
+
+    // For test
+    public static void main(String[] args)
+    {
+        List<String> extractlist = new ArrayList<>();
+        extractlist.add("我们是共产主义接班人");
+        extractlist.add("毛主席是我国最伟大的领导人之一。");
+        MultipleThreadExtraction countListIntegerSum=new MultipleThreadExtraction(extractlist,8, "tfidf");
+
+        int keywordNumber = 25;
+        long start = System.currentTimeMillis();
+        List<List<String>> sum=countListIntegerSum.getIntegerSum();
+        Map<String, Integer> wordScore = new HashMap<>();
+        for (List<String> singleDocList : sum)
+        {
+            for (int i=0; i<singleDocList.size(); i++){
+                if (!wordScore.containsKey(singleDocList.get(i))){
+                    wordScore.put(singleDocList.get(i), 0);
+                }
+                wordScore.put(singleDocList.get(i),wordScore.get(singleDocList.get(i))+(singleDocList.size()-i));
+            }
+        }
+        List<Map.Entry<String, Integer>> keywordList = new ArrayList<Map.Entry<String, Integer>>(wordScore.entrySet());
+        Collections.sort(keywordList, new Comparator<Map.Entry<String, Integer>>()
+        {
+            @Override
+            public int compare(Map.Entry<String, Integer> o1, Map.Entry<String, Integer> o2)
+            {
+                return Integer.compare(0, o1.getValue() - o2.getValue());
+            }
+        });
+
+        List<KeywordResponse> keywords = new ArrayList<>();
+        for(int i=0; i<min(keywordNumber, keywordList.size()); i++)
+        {
+            String name = keywordList.get(i).getKey().replace(" ", "");
+            Integer value = keywordList.get(i).getValue();
+            keywords.add(new KeywordResponse(name, value));
+        }
+        for (KeywordResponse kr : keywords){
+            System.out.println(kr.name);
+        }
+        long end = System.currentTimeMillis();
+        System.out.println("关键词提取耗时：" + (end-start) + "ms");
+
     }
 }

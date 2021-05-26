@@ -21,7 +21,7 @@ public class EventTrackServiceImpl implements EventTrackService{
                 "null", "Rootnode", null, null, new ArrayList<>());
         IteratorNodeTool tool = new IteratorNodeTool();
         for (Cluster cluster : res){
-            tool.addNewNodeToTree(root, new EventTreeNode(cluster), 0);
+            tool.addNewNodeToTree(root, new EventTreeNode(cluster), 0.1);
         }
         return root;
     }
