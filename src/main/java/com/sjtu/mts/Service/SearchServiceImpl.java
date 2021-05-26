@@ -32,7 +32,7 @@ public class SearchServiceImpl implements SearchService {
     private final AreaRepository areaRepository;
     private final SensitiveWordRepository sensitiveWordRepository;
     static  boolean flag = false;
-    static  boolean flagIK = false;
+    static  boolean flagHanLp = false;
 
     @Autowired
     private FangAnDao fangAnDao;
@@ -521,6 +521,7 @@ public class SearchServiceImpl implements SearchService {
             SensitiveWord sensitiveWord1 = new SensitiveWord(sensitiveWord);
             sensitiveWordRepository.save(sensitiveWord1);
             flag =false;
+            flagHanLp = false;
             result.put("addSensitiveWord", 1);
         }catch (Exception e){
             result.put("addSensitiveWord", 0);
@@ -535,6 +536,7 @@ public class SearchServiceImpl implements SearchService {
             sensitiveWordRepository.deleteByContent(sensitiveWord);
             result.put("delSensitiveWord", 1);
             flag = false;
+            flagHanLp = false;
             return result;
         }catch (Exception e){
             result.put("delSensitiveWord", 0);
@@ -566,7 +568,7 @@ public class SearchServiceImpl implements SearchService {
     @Override
     public  JSONArray sensitiveWordFilteringHanLp(String text){
         long start=  System.currentTimeMillis();
-        if (false == flagIK){
+        if (false == flagHanLp){
 
             // 从数据库中获取敏感词对象集合
             List<SensitiveWord> sensitiveWords = sensitiveWordRepository.findAll();
@@ -577,7 +579,7 @@ public class SearchServiceImpl implements SearchService {
                 sensitiveWordSet.add(s.getContent().trim());
             }
             SensitiveWordUtil2.init(sensitiveWordSet);
-            flagIK = true;
+            flagHanLp = true;
         }
         try {
             JSONArray result= SensitiveWordUtil2.getSensitiveWord(text);
