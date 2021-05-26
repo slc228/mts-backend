@@ -84,7 +84,13 @@ public class DataController {
             @RequestParam("pageSize") int pageSize,
             @RequestParam("timeOrder") int timeOrder
     ) {
-        return searchService.Search(keyword, cflag, startPublishedDay, endPublishedDay, fromType,
+        String decodeKeyword = "";
+        try{
+            decodeKeyword = java.net.URLDecoder.decode(keyword, "utf-8");
+        }catch (Exception e){
+            System.out.println(e);
+        }
+        return searchService.Search(decodeKeyword, cflag, startPublishedDay, endPublishedDay, fromType,
                 page, pageSize, timeOrder);
     }
 
