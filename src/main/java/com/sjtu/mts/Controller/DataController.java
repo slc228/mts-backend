@@ -87,6 +87,7 @@ public class DataController {
         String decodeKeyword = "";
         try{
             decodeKeyword = java.net.URLDecoder.decode(keyword, "utf-8");
+            System.out.println("Decoded keyword: "+decodeKeyword);
         }catch (Exception e){
             System.out.println(e);
         }
