@@ -66,7 +66,7 @@ public class DataController {
         return searchService.searchByUser(fid, username, pageSize, pageId);
     }
 
-    @GetMapping("/globalSearch/getActivateUser")
+    @GetMapping("/getActivateUser")
     @ResponseBody
     public Map<String, Integer> getActivateUser(@RequestParam("fid") long fid) {
         return searchService.getActivateUser(fid);
@@ -301,6 +301,12 @@ public class DataController {
         return textClassService.textClass(fid,startPublishedDay,endPublishedDay);
     }
 
+    @RequestMapping(value = "/sensitiveCount")
+    @ResponseBody
+    public com.alibaba.fastjson.JSONObject sensitiveCount(@RequestParam("fid") long fid)
+    {
+        return textAlertService.sensitiveCount(fid);
+    }
 
     /*文本预警
     @author HZT
@@ -312,6 +318,7 @@ public class DataController {
         System.out.println(textInfo.get("textList"));
         return textAlertService.textAlert(textInfo.get("textList"));
     }
+
 
     /*文本分类2
     @author Fu Yongrui
