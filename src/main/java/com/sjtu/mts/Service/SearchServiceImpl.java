@@ -7,6 +7,7 @@ import com.sjtu.mts.Keyword.MultipleThreadExtraction;
 import com.sjtu.mts.Repository.AreaRepository;
 import com.sjtu.mts.Repository.SensitiveWordRepository;
 import com.sjtu.mts.Response.*;
+import com.sjtu.mts.rpc.TextAlertRpc;
 import net.minidev.json.JSONArray;
 import net.minidev.json.JSONObject;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -525,13 +526,13 @@ public class SearchServiceImpl implements SearchService {
         return result;
     }
 
+
     @Override
     public Map<String, Integer> getActivateUser (long fid) {
         Criteria criteria = fangAnDao.criteriaByFid(fid);
         criteria.subCriteria(new Criteria().and("fromType").is("3"));
         CriteriaQuery query = new CriteriaQuery(criteria);
         SearchHits<Data> searchHits = this.elasticsearchOperations.search(query, Data.class);
-
         Map<String, Integer> m = new HashMap<>();
         for (SearchHit<Data> hit : searchHits)
         {
@@ -542,6 +543,7 @@ public class SearchServiceImpl implements SearchService {
         }
         return m;
     }
+
 
 
     @Override

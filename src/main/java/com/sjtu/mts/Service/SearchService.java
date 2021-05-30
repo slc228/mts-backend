@@ -15,9 +15,7 @@ public interface SearchService {
 
     public DataResponse Search(String keyword, String cflag, String startPublishedDay, String endPublishedDay,
                                String fromType, int page, int pageSize, int timeOrder);
-;
 
-    public Map<String, Integer> getActivateUser(long fid);
 
     public ResourceCountResponse globalSearchResourceCount(String keyword, String startPublishedDay,
                                                            String endPublishedDay);
@@ -38,7 +36,11 @@ public interface SearchService {
 
     public AreaAnalysisResponse countArea2(long fid,String startPublishedDay, String endPublishedDay);
 
+    /* 研判预警模块接口 */
     public DataResponse searchByUser(long fid, String username, int pageSize, int pageId) throws UnsupportedEncodingException;
+    public Map<String, Integer> getActivateUser(long fid);
+
+
     public DataResponse fangAnSearch(long fid,String cflag, String startPublishedDay, String endPublishedDay,
                                      String fromType, int page, int pageSize, int timeOrder);
     public DataResponse fangAnSearch2(long fid,String keyword,String cflag, String startPublishedDay, String endPublishedDay,

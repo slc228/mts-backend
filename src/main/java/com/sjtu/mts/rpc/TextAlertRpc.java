@@ -21,7 +21,6 @@ public class TextAlertRpc {
     RestTemplate restTemplate;
 
     public String textAlert(List<String> fileContents){
-        System.out.println(fileContents);
         JSONArray json = new JSONArray();
         for (String file : fileContents){
             json.add(file);
@@ -33,6 +32,7 @@ public class TextAlertRpc {
         Map<String, Object> requestParam = new HashMap<String, Object>();
         requestParam.put("textList", json);
         HttpEntity entity = new HttpEntity(requestParam, headers);
-        return  restTemplate.postForObject("http://python-service/predict",entity,String.class);
+        return  restTemplate.postForObject("http://text-alert/predict",entity,String.class);
+        // return  restTemplate.postForObject("http://localhost:3337/predict",entity,String.class);
     }
 }
