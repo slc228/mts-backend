@@ -13,6 +13,7 @@ public class WeiboData {
     private String author;
     private String content;
     private String cflag;
+    private String url;
     private String publishedDay;
 
     public boolean isSameWeibo(WeiboData another){

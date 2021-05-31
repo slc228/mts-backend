@@ -39,6 +39,7 @@ public class WeiboRepostTree {
                 if (child.data.getCflag().equals("0")){
                     child.data.setCflag(data.getCflag());
                     child.data.setPublishedDay(data.getPublishedDay());
+                    child.data.setUrl(data.getUrl());
                 }
                 return child;
             }

@@ -53,7 +53,7 @@ public class WeiboTrackServiceImpl implements WeiboTrackService {
 
         SearchHits<Data> searchHits = this.elasticsearchOperations.search(query, Data.class);
 
-        WeiboData test = new WeiboData("root", "", "0", "unknown");
+        WeiboData test = new WeiboData("root", "", "0", "unknown", "unknown");
         WeiboRepostTree root = new WeiboRepostTree(test);
         for (SearchHit<Data> hit : searchHits)
         {
@@ -73,11 +73,12 @@ public class WeiboTrackServiceImpl implements WeiboTrackService {
                 if (i == repostList.size() - 1){
                     String cflag = weiboOriginData.getCflag();
                     String publishedDay = weiboOriginData.getPublishedDay();
-                    WeiboData weiboData = new WeiboData(author, content, cflag, publishedDay);
+                    String url = weiboOriginData.getWebpageUrl();
+                    WeiboData weiboData = new WeiboData(author, content, cflag, url, publishedDay);
                     current = current.findChildAndAddInfo(weiboData);
                 }
                 else{
-                    WeiboData weiboData = new WeiboData(author, content, "0", "unknown");
+                    WeiboData weiboData = new WeiboData(author, content, "0","unknown","unknown");
                     current = current.findChild(weiboData);
                 }
             }
