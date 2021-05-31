@@ -13,6 +13,7 @@ import java.text.SimpleDateFormat;
 import java.util.*;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import static com.sjtu.mts.Keyword.Wrapper.min;
 
 @AllArgsConstructor
 @NoArgsConstructor
@@ -26,7 +27,7 @@ public class EventTreeNode {
     private String summary;
     @JsonIgnore
     private List<BigDecimal> center = new Vector<>();
-    @JsonIgnore
+//    @JsonIgnore
     private List<Data> clusterDatas = new LinkedList<>();
     private List<EventTreeNode> childList;
 
@@ -43,7 +44,12 @@ public class EventTreeNode {
         }
         this.summary = cluster.getSummary();
         this.center = cluster.getCenter();
-        this.clusterDatas = cluster.getClusterDatas();
+        //取聚类中的前5条舆情
+        List<Data> firstFive = new ArrayList<>();
+        for (int i = 0; i < min(5,cluster.getClusterDatas().size()); i++){
+            firstFive.add(cluster.getClusterDatas().get(i));
+        }
+        this.clusterDatas = firstFive;
         this.childList = new ArrayList<>();
     }
 }
