@@ -32,8 +32,24 @@ public class SummaryRpc {
         //RestTemplate带参传的时候要用HttpEntity<?>对象传递
         Map<String, Object> requestParam = new HashMap<String, Object>();
         requestParam.put("textList", json);
+        requestParam.put("type", "multi");
         HttpEntity entity = new HttpEntity(requestParam, headers);
 //        System.out.println(entity);
-        return  restTemplate.postForObject("http://summary-service/multiDocumentSummary",entity,String.class);
+        return  restTemplate.postForObject("http://summary-service/summary",entity,String.class);
+    }
+
+    public String singleDocumentSummary(String document)
+    {
+        HttpHeaders headers = new HttpHeaders();
+        //定义请求参数类型，这里用json所以是MediaType.APPLICATION_JSON
+        headers.setContentType(MediaType.APPLICATION_JSON);
+        //RestTemplate带参传的时候要用HttpEntity<?>对象传递
+        Map<String, Object> requestParam = new HashMap<String, Object>();
+        requestParam.put("text", document);
+        requestParam.put("type", "single");
+        HttpEntity entity = new HttpEntity(requestParam, headers);
+//        System.out.println(entity);
+        return  restTemplate.postForObject("http://summary-service/summary",entity,String.class);
+
     }
 }

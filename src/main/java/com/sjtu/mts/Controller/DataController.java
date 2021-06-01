@@ -43,6 +43,9 @@ public class DataController {
     @Autowired
     private TextAlertService textAlertService;
 
+    @Autowired
+    private SummaryService summaryService;
+
     @GetMapping("/testApi")
     @ResponseBody
     public String heartBeating() {
@@ -364,6 +367,26 @@ public class DataController {
                                         @RequestParam("endPublishedDay") String endPublishedDay)
     {
         return textClassService.clusteringData(fid,startPublishedDay,endPublishedDay);
+    }
+    /*单文档摘要
+    @author Huang Sicheng
+     */
+    @RequestMapping(value = "/singleDocumentSummary")
+    @ResponseBody
+    public JSONObject singleDocumentSummary(@RequestParam("document") String document)
+    {
+        return summaryService.singleSummary(document);
+    }
+    /*多文档摘要
+    @author Huang Sicheng
+     */
+    @RequestMapping(value = "/multiDocumentSummary")
+    @ResponseBody
+    public JSONObject multiDocumentSummary(@RequestParam("fid") long fid,
+                                           @RequestParam("startPublishedDay") String startPublishedDay,
+                                           @RequestParam("endPublishedDay") String endPublishedDay)
+    {
+        return summaryService.multiSummary(fid, startPublishedDay, endPublishedDay);
     }
     /*事件溯源（生成事件关系树）
     @author Ma Baowei
