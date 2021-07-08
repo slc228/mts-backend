@@ -46,6 +46,9 @@ public class DataController {
     @Autowired
     private SummaryService summaryService;
 
+    @Autowired
+    private FangAnService fangAnService;
+
     @GetMapping("/testApi")
     @ResponseBody
     public String heartBeating() {
@@ -429,5 +432,13 @@ public class DataController {
                                                  @RequestParam("endPublishedDay") String endPublishedDay)
     {
         return sentimentService.sentimentTrendCount(fid,startPublishedDay,endPublishedDay);
+    }
+    /*获取所有的方案fid
+    @author Fu Sicheng
+     */
+    @GetMapping("/getAllFid")
+    @ResponseBody
+    public JSONObject getAllFid() {
+        return fangAnService.getAllFid();
     }
 }

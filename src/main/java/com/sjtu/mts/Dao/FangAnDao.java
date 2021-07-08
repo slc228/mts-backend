@@ -8,6 +8,7 @@ import java.util.List;
 public interface FangAnDao {
     FangAn save(FangAn fangAn);
     List<FangAn> findAllByUsername(String username);
+    List<FangAn> findAll();
 
     Boolean existsByUsernameAndProgrammeName(String username,String programme);
 
