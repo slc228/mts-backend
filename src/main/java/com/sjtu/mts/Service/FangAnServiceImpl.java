@@ -2,6 +2,7 @@ package com.sjtu.mts.Service;
 
 import com.sjtu.mts.Dao.FangAnDao;
 import com.sjtu.mts.Entity.FangAn;
+import com.sjtu.mts.Repository.SwordFidRepository;
 import net.minidev.json.JSONArray;
 import net.minidev.json.JSONObject;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -14,6 +15,8 @@ public class FangAnServiceImpl implements FangAnService {
 
     @Autowired
     private FangAnDao fangAnDao;
+    @Autowired
+    private SwordFidRepository swordFidRepository;
 
     @Override
     public JSONObject findAllByUsername(String username){
@@ -30,9 +33,19 @@ public class FangAnServiceImpl implements FangAnService {
             object.put("regionKeywordMatch", fangAn.getRegionKeywordMatch());
             object.put("roleKeyword", fangAn.getRoleKeyword());
             object.put("roleKeywordMatch", fangAn.getRoleKeywordMatch());
-            object.put("eventKeyword", fangAn.getEventKeyword());
+            //object.put("eventKeyword", fangAn.getEventKeyword());
             object.put("eventKeywordMatch", fangAn.getEventKeywordMatch());
             object.put("enableAlert", fangAn.getEnableAlert());
+            object.put("sensitiveWord", fangAn.getSensitiveword());
+            JSONArray eventKeyword = new JSONArray();
+            String event = fangAn.getEventKeyword();
+            while(event.length()>0)
+            {
+                int tag=event.indexOf('+');
+                eventKeyword.appendElement(event.substring(0,tag));
+                event=event.substring(tag+1);
+            }
+            object.put("eventKeyword", eventKeyword);
             jsonArray.appendElement(object);
         }
         JSONObject object = new JSONObject();
@@ -51,7 +64,8 @@ public class FangAnServiceImpl implements FangAnService {
                                  int roleKeywordMatch,
                                  String eventKeyword,
                                  int eventKeywordMatch,
-                                 boolean enableAlert){
+                                 boolean enableAlert,
+                                 String sensitiveWord){
         JSONObject result = new JSONObject();
         result.put("saveFangAn", 0);
         Boolean ifExist = fangAnDao.existsByUsernameAndProgrammeName(username,programmeName);
@@ -61,7 +75,7 @@ public class FangAnServiceImpl implements FangAnService {
             return result;
         }
         try {
-            FangAn fangAn1 = new FangAn(username,programmeName,matchType,regionKeyword,regionKeywordMatch,roleKeyword,roleKeywordMatch,eventKeyword,eventKeywordMatch,enableAlert);
+            FangAn fangAn1 = new FangAn(username,programmeName,matchType,regionKeyword,regionKeywordMatch,roleKeyword,roleKeywordMatch,eventKeyword,eventKeywordMatch,enableAlert,sensitiveWord);
             fangAnDao.save(fangAn1);
             result.put("saveFangAn", 1);
             return result;
@@ -81,7 +95,8 @@ public class FangAnServiceImpl implements FangAnService {
                                    int roleKeywordMatch,
                                    String eventKeyword,
                                    int eventKeywordMatch,
-                                   boolean enableAlert
+                                   boolean enableAlert,
+                                   String sensitiveWord
     ){
         JSONObject result = new JSONObject();
         result.put("changeFangAn", 0);
@@ -101,6 +116,7 @@ public class FangAnServiceImpl implements FangAnService {
             oldFangAn.setEventKeyword(eventKeyword);
             oldFangAn.setEventKeywordMatch(eventKeywordMatch);
             oldFangAn.setEnableAlert(enableAlert);
+            oldFangAn.setSensitiveword(sensitiveWord);
             //fangAnDao.deleteByFid(fid);
             fangAnDao.save(oldFangAn);
             result.put("changeFangAn", 1);
@@ -123,6 +139,7 @@ public class FangAnServiceImpl implements FangAnService {
                 return result;
             }
             fangAnDao.deleteByFid(fid);
+            swordFidRepository.deleteByFid(fid);
             result.put("delFangAn", 1);
             return result;
         }catch (Exception e){
@@ -147,9 +164,19 @@ public class FangAnServiceImpl implements FangAnService {
             result.put("regionKeywordMatch", fangAn.getRegionKeywordMatch());
             result.put("roleKeyword", fangAn.getRoleKeyword());
             result.put("roleKeywordMatch", fangAn.getRoleKeywordMatch());
-            result.put("eventKeyword", fangAn.getEventKeyword());
+            //result.put("eventKeyword", fangAn.getEventKeyword());
             result.put("eventKeywordMatch", fangAn.getEventKeywordMatch());
             result.put("enableAlert", fangAn.getEnableAlert());
+            result.put("sensitiveWord", fangAn.getSensitiveword());
+            JSONArray eventKeyword = new JSONArray();
+            String event = fangAn.getEventKeyword();
+            while(event.length()>0)
+            {
+                int tag=event.indexOf('+');
+                eventKeyword.appendElement(event.substring(0,tag));
+                event=event.substring(tag+1);
+            }
+            result.put("eventKeyword", eventKeyword);
             return result;
         }
 

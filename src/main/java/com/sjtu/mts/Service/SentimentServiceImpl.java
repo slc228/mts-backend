@@ -46,26 +46,31 @@ public class SentimentServiceImpl implements SentimentService {
 
     @Override
     public SentimentCountResponse countSentiment(long fid, String startPublishedDay, String endPublishedDay) {
-        Criteria criteria = fangAnDao.criteriaByFid(fid);
-        if (!startPublishedDay.isEmpty() && !endPublishedDay.isEmpty()) {
-            SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
-            try {
-                Date startDate = sdf.parse(startPublishedDay);
-                Date endDate = sdf.parse(endPublishedDay);
-                criteria.subCriteria(new Criteria().and("publishedDay").between(startDate, endDate));
-            } catch (ParseException e) {
-                e.printStackTrace();
+        List<String> fileContents = new ArrayList<>();
+        //Criteria criteria = fangAnDao.criteriaByFid(fid);
+        List<Criteria> criterias=fangAnDao.FindCriteriasByFid(fid);
+        for (Criteria criteria:criterias){
+            if (!startPublishedDay.isEmpty() && !endPublishedDay.isEmpty())
+            {
+                SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+                try {
+                    Date startDate = sdf.parse(startPublishedDay);
+                    Date endDate = sdf.parse(endPublishedDay);
+                    criteria.subCriteria(new Criteria().and("publishedDay").between(startDate, endDate));
+                } catch (ParseException e) {
+                    e.printStackTrace();
+                }
+            }
+
+            CriteriaQuery query = new CriteriaQuery(criteria);
+            SearchHits<Data> searchHits = this.elasticsearchOperations.search(query, Data.class);
+
+            for(SearchHit<Data> hit : searchHits){
+                Data data = hit.getContent();
+                fileContents.add(data.getContent());
             }
         }
 
-        CriteriaQuery query = new CriteriaQuery(criteria);
-        SearchHits<Data> searchHits = this.elasticsearchOperations.search(query, Data.class);
-
-        List<String> fileContents = new ArrayList<>();
-        for (SearchHit<Data> hit : searchHits) {
-            Data data = hit.getContent();
-            fileContents.add(data.getContent());
-        }
 
         String rpc = sentimentRpc.sentimentAnalysis(fileContents);
         JSONObject jsonObject = JSONObject.parseObject(rpc);
@@ -124,18 +129,24 @@ public class SentimentServiceImpl implements SentimentService {
                 new ArrayList<>(), new ArrayList<>(), new ArrayList<>(), new ArrayList<>(),
                 new ArrayList<>(), new ArrayList<>(), new ArrayList<>());
         for (int j = 0; j < pointNum; j++) {
-            Criteria criteria = fangAnDao.criteriaByFid(fid);
             timeRange.add(sdf.format(dateList.get(j)) + " to " + sdf.format(dateList.get(j + 1)));
-            criteria.subCriteria(new Criteria().and("publishedDay").between(dateList.get(j), dateList.get(j + 1)));
-            CriteriaQuery query = new CriteriaQuery(criteria);
-
-            SearchHits<Data> searchHits = this.elasticsearchOperations.search(query, Data.class);
-
+            //Criteria criteria = fangAnDao.criteriaByFid(fid);
             List<String> fileContents = new ArrayList<>();
-            for (SearchHit<Data> hit : searchHits) {
-                Data data = hit.getContent();
-                fileContents.add(data.getContent());
+
+            List<Criteria> criterias=fangAnDao.FindCriteriasByFid(fid);
+            for (Criteria criteria:criterias)
+            {
+                criteria.subCriteria(new Criteria().and("publishedDay").between(dateList.get(j), dateList.get(j + 1)));
+                CriteriaQuery query = new CriteriaQuery(criteria);
+
+                SearchHits<Data> searchHits = this.elasticsearchOperations.search(query, Data.class);
+
+                for (SearchHit<Data> hit : searchHits) {
+                    Data data = hit.getContent();
+                    fileContents.add(data.getContent());
+                }
             }
+
 
             String rpc = sentimentRpc.sentimentAnalysis(fileContents);
             JSONObject jsonObject = JSONObject.parseObject(rpc);
