@@ -19,5 +19,17 @@ public class WeiboUser {
     private String id;
 
     @Field(type = FieldType.Text)
+    private String userid;
+
+    @Field(type = FieldType.Text)
     private String nickname;
+
+    @Field(type = FieldType.Text)
+    private Integer weibo;
+
+    @Field(type = FieldType.Text)
+    private Integer follow;
+
+    @Field(type = FieldType.Text)
+    private Integer fans;
 }

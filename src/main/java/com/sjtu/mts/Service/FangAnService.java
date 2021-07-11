@@ -33,6 +33,4 @@ public interface FangAnService {
 
     JSONObject findFangAnByFid(String username,long fid);
 
-    JSONObject getAllFid();
-
 }
