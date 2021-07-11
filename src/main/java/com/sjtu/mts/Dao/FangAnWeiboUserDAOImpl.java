@@ -24,6 +24,11 @@ public class FangAnWeiboUserDAOImpl implements FangAnWeiboUserDAO{
     };
 
     @Override
+    public List<FangAnWeiboUser> findAll() {
+        return fanganWeiboUserRepository.findAll();
+    }
+
+    @Override
     public List<FangAnWeiboUser> findAllByFidAndWeibousernickname(long fid,String weibousernickname){
         return fanganWeiboUserRepository.findAllByFidAndWeibousernickname(fid,weibousernickname);
     };

@@ -49,6 +49,9 @@ public class DataController {
     @Autowired
     private SummaryService summaryService;
 
+    @Autowired
+    private FangAnService fangAnService;
+
     @GetMapping("/testApi")
     @ResponseBody
     public String heartBeating() {
@@ -497,6 +500,15 @@ public class DataController {
     {
         //return searchService.sensitiveWordFiltering(textinfo.get("text"));
         return searchService.sensitiveWordByFid(Long.parseLong(textinfo.get("fid")),textinfo.get("text"));
+    }
+
+    /*获取所有的方案fid
+    @author Fu Sicheng
+     */
+    @GetMapping("/getAllFid")
+    @ResponseBody
+    public JSONObject getAllFid() {
+        return fangAnService.getAllFid();
     }
 
     /*方案的事件关键词

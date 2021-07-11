@@ -1231,7 +1231,20 @@ public class SearchServiceImpl implements SearchService {
 
         return result;
     }
-    
+
+//    @Override
+//    public JSONObject getAllSelectWeiboUser() {
+//        List<FangAnWeiboUser> fangAnWeiboUserList = fangAnWeiboUserDAO.findAll();
+//        JSONArray array = new JSONArray();
+//        for (FangAnWeiboUser user : fangAnWeiboUserList)
+//        {
+//            array.appendElement(user.getWeibouserid());
+//        }
+//        JSONObject result = new JSONObject();
+//        result.put("data", array);
+//        return result;
+//    }
+
     @Override
     public JSONObject addWeiboUser(long fid,String Weibouserid,String Weibousernickname){
         JSONObject result = new JSONObject();
@@ -1255,7 +1268,7 @@ public class SearchServiceImpl implements SearchService {
                 pageContent.add(hit.getContent());
             }
             SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
-            String PublishDayStr=pageContent.get(0).getPublishDay();
+            String PublishDayStr=pageContent.get(0).getPublish_time();
             PublishDayStr=PublishDayStr.substring(0,PublishDayStr.length()-1);
             PublishDayStr=PublishDayStr+":00";
             PublishDayStr=PublishDayStr.substring(0,10)+" "+PublishDayStr.substring(11);
@@ -1299,7 +1312,7 @@ public class SearchServiceImpl implements SearchService {
                 jsonObject.put("isnew",0);
             }
             else {
-                String PublishDayStr=pageContent.get(0).getPublishDay();
+                String PublishDayStr=pageContent.get(0).getPublish_time();
                 PublishDayStr=PublishDayStr.substring(0,PublishDayStr.length()-1);
                 PublishDayStr=PublishDayStr+":00";
                 PublishDayStr=PublishDayStr.substring(0,10)+" "+PublishDayStr.substring(11);
@@ -1331,9 +1344,9 @@ public class SearchServiceImpl implements SearchService {
             JSONObject jsonObject=new JSONObject();
             jsonObject.put("id",hit.getContent().getUserid());
             jsonObject.put("nickname",hit.getContent().getNickname());
-            jsonObject.put("NumOfWeibo",hit.getContent().getWeibo());
-            jsonObject.put("NumOfFollow",hit.getContent().getFollow());
-            jsonObject.put("NumOfFans",hit.getContent().getFans());
+            jsonObject.put("NumOfWeibo",hit.getContent().getWeibo_num());
+            jsonObject.put("NumOfFollow",hit.getContent().getFollowing());
+            jsonObject.put("NumOfFans",hit.getContent().getFollowers());
             WeiboUserContent.appendElement(jsonObject);
         }
 

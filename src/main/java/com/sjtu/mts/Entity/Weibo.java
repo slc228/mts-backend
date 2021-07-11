@@ -19,29 +19,44 @@ public class Weibo {
     private String id;
 
     @Field(type = FieldType.Text)
-    private String userid;
+    private String weiboid;
 
     @Field(type = FieldType.Text)
-    private String nickname;
+    private String userid;
 
     @Field(type = FieldType.Text)
     private String content;
 
     @Field(type = FieldType.Text)
-    private String position;
-
-    @Field(type = FieldType.Date)
-    private String publishDay;
-
-    @Field(type = FieldType.Integer)
-    private Integer like;
-
-    @Field(type = FieldType.Integer)
-    private Integer transpond;
-
-    @Field(type = FieldType.Integer)
-    private Integer comment;
+    private String article_url;
 
     @Field(type = FieldType.Text)
-    private String tool;
+    private String original_pictures;
+
+    @Field(type = FieldType.Date)
+    private String retweet_pictures;
+
+    @Field(type = FieldType.Boolean)
+    private Integer original;
+
+    @Field(type = FieldType.Text)
+    private Integer video_url;
+
+    @Field(type = FieldType.Text)
+    private Integer publish_place;
+
+    @Field(type = FieldType.Date)
+    private String publish_time;
+
+    @Field(type = FieldType.Text)
+    private String publish_tool;
+
+    @Field(type = FieldType.Integer)
+    private String up_num;
+
+    @Field(type = FieldType.Integer)
+    private String retweet_num;
+
+    @Field(type = FieldType.Integer)
+    private String comment_num;
 }

@@ -25,11 +25,35 @@ public class WeiboUser {
     private String nickname;
 
     @Field(type = FieldType.Text)
-    private Integer weibo;
+    private String gender;
 
     @Field(type = FieldType.Text)
-    private Integer follow;
+    private String location;
 
     @Field(type = FieldType.Text)
-    private Integer fans;
+    private String birthday;
+
+    @Field(type = FieldType.Text)
+    private String description;
+
+    @Field(type = FieldType.Text)
+    private String verified_reason;
+
+    @Field(type = FieldType.Text)
+    private String talent;
+
+    @Field(type = FieldType.Text)
+    private String education;
+
+    @Field(type = FieldType.Text)
+    private String work;
+
+    @Field(type = FieldType.Text)
+    private Integer weibo_num;
+
+    @Field(type = FieldType.Text)
+    private Integer following;
+
+    @Field(type = FieldType.Text)
+    private Integer followers;
 }

@@ -6,6 +6,7 @@ import java.util.List;
 public interface FangAnWeiboUserDAO {
     FangAnWeiboUser save(FangAnWeiboUser fanganWeiboUser);
     List<FangAnWeiboUser> findAllByFid(long fid);
+    List<FangAnWeiboUser> findAll();
 
     List<FangAnWeiboUser> findAllByFidAndWeibousernickname(long fid,String weibousernickname);
 
