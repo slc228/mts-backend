@@ -532,13 +532,12 @@ public class DataController {
     /*获得近似的微博用户id和昵称
        @author Sun liangchen
    */
-    @GetMapping("/searchByWeiboUser")
+    @GetMapping("/searchBriefWeiboUser")
     @ResponseBody
-    public JSONObject searchByWeiboUser (
-            @RequestParam("fid") long fid,
+    public JSONObject searchBriefWeiboUser (
             @RequestParam("WeiboUserForSearch") String WeiboUserForSearch
     ) throws UnsupportedEncodingException {
-        return searchService.searchByWeiboUser(fid, WeiboUserForSearch);
+        return searchService.searchBriefWeiboUser(WeiboUserForSearch);
     }
 
 }

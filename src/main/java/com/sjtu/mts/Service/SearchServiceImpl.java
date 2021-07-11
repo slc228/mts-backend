@@ -1205,16 +1205,16 @@ public class SearchServiceImpl implements SearchService {
     }
 
     @Override
-    public JSONObject searchByWeiboUser(long fid,String WeiboUserForSearch)
+    public JSONObject searchBriefWeiboUser(String WeiboUserForSearch)
     {
         Criteria criteria = new Criteria();
-        criteria.subCriteria(new Criteria("id").in(WeiboUserForSearch).or("nickname").in(WeiboUserForSearch));
+        criteria.subCriteria(new Criteria("uri").in(WeiboUserForSearch).or("nickname").in(WeiboUserForSearch));
         CriteriaQuery query = new CriteriaQuery(criteria);
-        SearchHits<WeiboUser> searchHits = this.elasticsearchOperations.search(query, WeiboUser.class);
-        long hitNumber = this.elasticsearchOperations.count(query, WeiboUser.class);
+        SearchHits<BriefWeiboUser> searchHits = this.elasticsearchOperations.search(query, BriefWeiboUser.class);
+        long hitNumber = this.elasticsearchOperations.count(query, BriefWeiboUser.class);
 
-        List<WeiboUser> WeiboUserContent = new ArrayList<>();
-        for (SearchHit<WeiboUser> hit : searchHits.getSearchHits())
+        List<BriefWeiboUser> WeiboUserContent = new ArrayList<>();
+        for (SearchHit<BriefWeiboUser> hit : searchHits.getSearchHits())
         {
             WeiboUserContent.add(hit.getContent());
         }

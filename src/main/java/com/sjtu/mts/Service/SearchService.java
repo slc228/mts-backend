@@ -68,5 +68,5 @@ public interface SearchService {
 
     public HotArticleResponse getHotArticle(int pageId,int pageSize);
 
-    public JSONObject searchByWeiboUser(long fid,String WeiboUserForSearch);
+    public JSONObject searchBriefWeiboUser(String WeiboUserForSearch);
 }
