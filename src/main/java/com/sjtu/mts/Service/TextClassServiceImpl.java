@@ -37,29 +37,34 @@ public class TextClassServiceImpl implements TextClassService {
     @Override
     public JSONArray textClass(long fid, String startPublishedDay, String endPublishedDay){
         long start=  System.currentTimeMillis();
-        Criteria criteria = fangAnDao.criteriaByFid(fid);
-        if (!startPublishedDay.isEmpty() && !endPublishedDay.isEmpty())
+        List<String> fileContents = new ArrayList<>();
+        List<String> fileTitles = new ArrayList<>();
+        //Criteria criteria = fangAnDao.criteriaByFid(fid);
+        List<Criteria> criterias=fangAnDao.FindCriteriasByFid(fid);
+        for (Criteria criteria:criterias)
         {
-            SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
-            try {
-                Date startDate = sdf.parse(startPublishedDay);
-                Date endDate = sdf.parse(endPublishedDay);
-                criteria.subCriteria(new Criteria().and("publishedDay").between(startDate, endDate));
-            } catch (ParseException e) {
-                e.printStackTrace();
+            if (!startPublishedDay.isEmpty() && !endPublishedDay.isEmpty())
+            {
+                SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+                try {
+                    Date startDate = sdf.parse(startPublishedDay);
+                    Date endDate = sdf.parse(endPublishedDay);
+                    criteria.subCriteria(new Criteria().and("publishedDay").between(startDate, endDate));
+                } catch (ParseException e) {
+                    e.printStackTrace();
+                }
+            }
+
+            CriteriaQuery query = new CriteriaQuery(criteria);
+            SearchHits<Data> searchHits = this.elasticsearchOperations.search(query, Data.class);
+
+            for(SearchHit<Data> hit : searchHits){
+                Data data = hit.getContent();
+                fileTitles.add(data.getTitle());
+                fileContents.add(data.getContent());
             }
         }
 
-        CriteriaQuery query = new CriteriaQuery(criteria);
-        SearchHits<Data> searchHits = this.elasticsearchOperations.search(query, Data.class);
-
-        List<String> fileContents = new ArrayList<>();
-        List<String> fileTitles = new ArrayList<>();
-        for(SearchHit<Data> hit : searchHits){
-            Data data = hit.getContent();
-            fileTitles.add(data.getTitle());
-            fileContents.add(data.getContent());
-        }
         //System.out.println(textclassRpc.sayHello());
         String rpc = textclassRpc.textclass(fileContents);
         JSONArray result = new JSONArray();
@@ -99,27 +104,33 @@ public class TextClassServiceImpl implements TextClassService {
     @Override
     public  JSONArray clustering(long fid, String startPublishedDay, String endPublishedDay){
         long start=  System.currentTimeMillis();
-        Criteria criteria = fangAnDao.criteriaByFid(fid);
-        if (!startPublishedDay.isEmpty() && !endPublishedDay.isEmpty())
-        {
-            SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
-            try {
-                Date startDate = sdf.parse(startPublishedDay);
-                Date endDate = sdf.parse(endPublishedDay);
-                criteria.subCriteria(new Criteria().and("publishedDay").between(startDate, endDate));
-            } catch (ParseException e) {
-                e.printStackTrace();
-            }
-        }
 
-        CriteriaQuery query = new CriteriaQuery(criteria);
-        SearchHits<Data> searchHits = this.elasticsearchOperations.search(query, Data.class);
         List<String> fileContents = new ArrayList<>();
         List<String> fileTitles = new ArrayList<>();
-        for(SearchHit<Data> hit : searchHits){
-            Data data = hit.getContent();
-            fileTitles.add(data.getTitle());
-            fileContents.add(data.getContent());
+        //Criteria criteria = fangAnDao.criteriaByFid(fid);
+        List<Criteria> criterias=fangAnDao.FindCriteriasByFid(fid);
+        for (Criteria criteria:criterias)
+        {
+            if (!startPublishedDay.isEmpty() && !endPublishedDay.isEmpty())
+            {
+                SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+                try {
+                    Date startDate = sdf.parse(startPublishedDay);
+                    Date endDate = sdf.parse(endPublishedDay);
+                    criteria.subCriteria(new Criteria().and("publishedDay").between(startDate, endDate));
+                } catch (ParseException e) {
+                    e.printStackTrace();
+                }
+            }
+
+            CriteriaQuery query = new CriteriaQuery(criteria);
+            SearchHits<Data> searchHits = this.elasticsearchOperations.search(query, Data.class);
+
+            for(SearchHit<Data> hit : searchHits){
+                Data data = hit.getContent();
+                fileTitles.add(data.getTitle());
+                fileContents.add(data.getContent());
+            }
         }
         String rpc = textclassRpc.clustering(fileContents);
         JSONArray result = new JSONArray();
@@ -151,28 +162,34 @@ public class TextClassServiceImpl implements TextClassService {
     @Override
         public  List<Cluster> clusteringData(long fid, String startPublishedDay, String endPublishedDay){
 
-        Criteria criteria = fangAnDao.criteriaByFid(fid);
-        if (!startPublishedDay.isEmpty() && !endPublishedDay.isEmpty())
+        List<Data> dataList = new LinkedList<>();
+        List<String> fileContents = new ArrayList<>();
+        //Criteria criteria = fangAnDao.criteriaByFid(fid);
+        List<Criteria> criterias=fangAnDao.FindCriteriasByFid(fid);
+        for (Criteria criteria:criterias)
         {
-            SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
-            try {
-                Date startDate = sdf.parse(startPublishedDay);
-                Date endDate = sdf.parse(endPublishedDay);
-                criteria.subCriteria(new Criteria().and("publishedDay").between(startDate, endDate));
-            } catch (ParseException e) {
-                e.printStackTrace();
+            if (!startPublishedDay.isEmpty() && !endPublishedDay.isEmpty())
+            {
+                SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+                try {
+                    Date startDate = sdf.parse(startPublishedDay);
+                    Date endDate = sdf.parse(endPublishedDay);
+                    criteria.subCriteria(new Criteria().and("publishedDay").between(startDate, endDate));
+                } catch (ParseException e) {
+                    e.printStackTrace();
+                }
+            }
+
+            CriteriaQuery query = new CriteriaQuery(criteria);
+            SearchHits<Data> searchHits = this.elasticsearchOperations.search(query, Data.class);
+
+            for(SearchHit<Data> hit : searchHits){
+                Data data = hit.getContent();
+                dataList.add(data);
+                fileContents.add(data.getContent());
             }
         }
 
-        CriteriaQuery query = new CriteriaQuery(criteria);
-        SearchHits<Data> searchHits = this.elasticsearchOperations.search(query, Data.class);
-        List<Data> dataList = new LinkedList<>();
-        List<String> fileContents = new ArrayList<>();
-        for(SearchHit<Data> hit : searchHits){
-            Data data = hit.getContent();
-            dataList.add(data);
-            fileContents.add(data.getContent());
-        }
         String rpc = textclassRpc.clustering(fileContents);
 
         JSONObject rpcJsonObject = JSONObject.parseObject(rpc);

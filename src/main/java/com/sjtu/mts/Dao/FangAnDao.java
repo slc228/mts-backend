@@ -18,5 +18,6 @@ public interface FangAnDao {
     /*传入方案id，返回方案查询的舆情结果
      * @author：FU Yongrui*/
     Criteria criteriaByFid(long fid);
+    List<Criteria> FindCriteriasByFid(long fid);
 
 }

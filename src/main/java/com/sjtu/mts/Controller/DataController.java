@@ -101,6 +101,32 @@ public class DataController {
                 page, pageSize, timeOrder);
     }
 
+    @GetMapping("/globalSearch/dataSearchWithObject")
+    @ResponseBody
+    public DataResponse dataSearchWithObject(
+            @RequestParam("keyword") String keyword,
+            @RequestParam("cflag") String cflag,
+            @RequestParam("startPublishedDay") String startPublishedDay,
+            @RequestParam("endPublishedDay") String endPublishedDay,
+            @RequestParam("fromType") String fromType,
+            @RequestParam("page") int page,
+            @RequestParam("pageSize") int pageSize,
+            @RequestParam("timeOrder") int timeOrder,
+            @RequestParam("keywords") String keywords
+    ) {
+        String decodeKeyword = "";
+        String decodeKeywords = "";
+        try{
+            decodeKeyword = java.net.URLDecoder.decode(keyword, "utf-8");
+            decodeKeywords = java.net.URLDecoder.decode(keywords, "utf-8");
+            System.out.println("Decoded keyword: "+decodeKeyword);
+            System.out.println(decodeKeywords);
+        }catch (Exception e){
+            System.out.println(e);
+        }
+        return searchService.SearchWithObject(decodeKeyword, cflag, startPublishedDay, endPublishedDay, fromType,page, pageSize, timeOrder,decodeKeywords);
+    }
+
     @GetMapping("/globalSearch/resourceCount")
     @ResponseBody
     public ResourceCountResponse countByKeywordAndPublishedDayAndFromType(
@@ -119,7 +145,7 @@ public class DataController {
             @RequestParam("endPublishedDay") String endPublishedDay
 
     ) {
-        return searchService.globalSearchResourceCount2(fid,startPublishedDay,endPublishedDay);
+        return searchService.globalSearchResourceCountByFid(fid,startPublishedDay,endPublishedDay);
     }
     @GetMapping("/globalSearch/cflagCount")
     @ResponseBody
@@ -139,7 +165,7 @@ public class DataController {
             @RequestParam("endPublishedDay") String endPublishedDay
 
     ) {
-        return searchService.globalSearchCflagCount2(fid,startPublishedDay,endPublishedDay);
+        return searchService.globalSearchCflagCountByFid(fid,startPublishedDay,endPublishedDay);
     }
     @GetMapping("/globalSearch/amountTrendCount")
     @ResponseBody
@@ -191,7 +217,7 @@ public class DataController {
             @RequestParam("endPublishedDay") String endPublishedDay
 
     ) {
-        return searchService.countArea2(fid,startPublishedDay,endPublishedDay);
+        return searchService.countAreaByFid(fid,startPublishedDay,endPublishedDay);
     }
 
     /*根据方案查找舆情
@@ -232,6 +258,7 @@ public class DataController {
         String decodeKeyword = "";
         try{
              decodeKeyword = java.net.URLDecoder.decode(keyword, "utf-8");
+             System.out.println(decodeKeyword);
         }catch (Exception e){
             System.out.println(e);
         }
@@ -262,6 +289,7 @@ public class DataController {
         //return searchService.sensitiveWordFiltering(textinfo.get("text"));
         return searchService.sensitiveWordFilteringHanLp(textinfo.get("text"));
     }
+
     /*多个舆情文本敏感词识别
     @author Fu Yongrui
      */
@@ -340,7 +368,7 @@ public class DataController {
     }
 
 
-    /*文本分类2
+    /*文本分类2，返回数据格式不同
     @author Fu Yongrui
      */
     @PostMapping(value = "/textClass2")
@@ -360,7 +388,7 @@ public class DataController {
     {
         return textClassService.clustering(fid,startPublishedDay,endPublishedDay);
     }
-    /*文本聚类2
+    /*文本聚类2,返回数据格式不同
     @author Fu Yongrui
      */
     @RequestMapping(value = "/clusteringData")
@@ -441,4 +469,76 @@ public class DataController {
     public JSONObject getAllFid() {
         return fangAnService.getAllFid();
     }
+    /*自动识别事件关键词
+    @author Fu Yongrui
+     */
+    @PostMapping(value = "/autoaddEkeyword")
+    @ResponseBody
+    public JSONObject autoaddEkeyword(@RequestBody Map<String,String> textinfo
+                                      ){
+        return searchService.autoaddEkeyword(Long.parseLong(textinfo.get("fid")),textinfo.get("text"));
+    }
+    /*为方案添加敏感词
+    @author Fu Yongrui
+     */
+    @PostMapping(value = "/addSensitivewordForFid")
+    @ResponseBody
+    public JSONObject addSensitivewordForFid(@RequestBody Map<String,String> textinfo
+    ){
+        return searchService.addSensitivewordForFid(Long.parseLong(textinfo.get("fid")),textinfo.get("text"));
+    }
+    /*查看方案敏感词
+    @author Fu Yongrui
+     */
+    @GetMapping(value = "/sensitivewordForFid")
+    @ResponseBody
+    public JSONArray sensitivewordForFid(@RequestParam("fid") long fid
+    ){
+        return searchService.sensitivewordForFid(fid);
+    }
+    /*按方案查找敏感词
+    @author Fu Yongrui
+     */
+    @PostMapping(value = "/sensitiveWordByFid")
+    @ResponseBody
+    public JSONArray sensitiveWordByFid(@RequestBody Map<String,String> textinfo )
+    {
+        //return searchService.sensitiveWordFiltering(textinfo.get("text"));
+        return searchService.sensitiveWordByFid(Long.parseLong(textinfo.get("fid")),textinfo.get("text"));
+    }
+
+    /*方案的事件关键词
+    @author Sun liangchen
+     */
+    @PostMapping(value = "/eventKeyWordByFid")
+    @ResponseBody
+    public JSONArray eventKeyWordByFid(@RequestBody Map<String,String> textinfo
+    ){
+        return searchService.eventKeyWordByFid(Long.parseLong(textinfo.get("fid")));
+    }
+
+    /*所有热门文章
+        @author Sun liangchen
+    */
+    @GetMapping("/getHotArticle")
+    @ResponseBody
+    public HotArticleResponse getHotArticle(
+            @RequestParam("pageId") int pageId,
+            @RequestParam("pageSize") int pageSize
+    ){
+        return searchService.getHotArticle(pageId,pageSize);
+    }
+
+    /*获得近似的微博用户id和昵称
+       @author Sun liangchen
+   */
+    @GetMapping("/searchByWeiboUser")
+    @ResponseBody
+    public JSONObject searchByWeiboUser (
+            @RequestParam("fid") long fid,
+            @RequestParam("WeiboUserForSearch") String WeiboUserForSearch
+    ) throws UnsupportedEncodingException {
+        return searchService.searchByWeiboUser(fid, WeiboUserForSearch);
+    }
+
 }

@@ -59,18 +59,24 @@ public class TextAlertServiceImpl implements TextAlertService {
 
     @Override
     public JSONObject sensitiveCount(long fid) {
-        Criteria criteria = fangAnDao.criteriaByFid(fid);
-        criteria.subCriteria(new Criteria().and("fromType").is("3"));
-        CriteriaQuery query = new CriteriaQuery(criteria);
-        SearchHits<Data> searchHits = this.elasticsearchOperations.search(query, Data.class);
         List<String> textList = new ArrayList<String>();
         JSONArray pageDataContent = new JSONArray();
-        for (SearchHit<Data> hit : searchHits)
+        //Criteria criteria = fangAnDao.criteriaByFid(fid);
+        List<Criteria> criterias=fangAnDao.FindCriteriasByFid(fid);
+        for(Criteria criteria:criterias)
         {
-            Data data = hit.getContent();
-            pageDataContent.add(data);
-            textList.add(data.getContent());
+            criteria.subCriteria(new Criteria().and("fromType").is("3"));
+            CriteriaQuery query = new CriteriaQuery(criteria);
+            SearchHits<Data> searchHits = this.elasticsearchOperations.search(query, Data.class);
+
+            for (SearchHit<Data> hit : searchHits)
+            {
+                Data data = hit.getContent();
+                pageDataContent.add(data);
+                textList.add(data.getContent());
+            }
         }
+
         Integer maxSize = 5000;
         if (textList.size() > maxSize) textList = textList.subList(0, maxSize);
         System.out.println(textList.size());
