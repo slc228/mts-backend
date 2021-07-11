@@ -1,11 +1,14 @@
 package com.sjtu.mts.Service;
 
+import com.sjtu.mts.Entity.FangAnWeiboUser;
+import com.sjtu.mts.Entity.Weibo;
 import com.sjtu.mts.Keyword.KeywordResponse;
 import com.sjtu.mts.Response.*;
 import net.minidev.json.JSONArray;
 import net.minidev.json.JSONObject;
 
 import java.io.UnsupportedEncodingException;
+import java.text.ParseException;
 import java.util.List;
 import java.util.Map;
 
@@ -69,4 +72,12 @@ public interface SearchService {
     public HotArticleResponse getHotArticle(int pageId,int pageSize);
 
     public JSONObject searchBriefWeiboUser(String WeiboUserForSearch);
+
+    public JSONObject addWeiboUser(long fid,String Weibouserid,String Weibousernickname);
+
+    public JSONArray getFangAnMonitor(long fid) throws ParseException;
+
+    public JSONObject getWeiboByid(String id);
+
+    public List<Weibo> getWeiboListByid(String id);
 }

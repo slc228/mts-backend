@@ -182,20 +182,6 @@ public class FangAnServiceImpl implements FangAnService {
 
     }
 
-    @Override
-    public JSONObject getAllFid()
-    {
-        JSONArray jsonArray = new JSONArray();
-        List<FangAn> fangAnList = fangAnDao.findAll();
-        for(FangAn fangAn : fangAnList){
-            JSONObject object = new JSONObject();
-            object.put("fid", fangAn.getFid());
-            jsonArray.appendElement(object);
-        }
-        JSONObject object = new JSONObject();
-        object.put("data",jsonArray);
-        return  object;
-    }
 
 
 }

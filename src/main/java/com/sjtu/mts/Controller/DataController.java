@@ -2,6 +2,8 @@ package com.sjtu.mts.Controller;
 
 import com.sjtu.mts.Entity.Cluster;
 import com.sjtu.mts.Entity.Data;
+import com.sjtu.mts.Entity.FangAnWeiboUser;
+import com.sjtu.mts.Entity.Weibo;
 import com.sjtu.mts.EventTrack.EventTreeNode;
 import com.sjtu.mts.Keyword.KeywordResponse;
 import com.sjtu.mts.Repository.DataRepository;
@@ -14,6 +16,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
 import java.io.UnsupportedEncodingException;
+import java.text.ParseException;
 import java.util.List;
 import java.util.Map;
 
@@ -45,9 +48,6 @@ public class DataController {
 
     @Autowired
     private SummaryService summaryService;
-
-    @Autowired
-    private FangAnService fangAnService;
 
     @GetMapping("/testApi")
     @ResponseBody
@@ -461,14 +461,6 @@ public class DataController {
     {
         return sentimentService.sentimentTrendCount(fid,startPublishedDay,endPublishedDay);
     }
-    /*获取所有的方案fid
-    @author Fu Sicheng
-     */
-    @GetMapping("/getAllFid")
-    @ResponseBody
-    public JSONObject getAllFid() {
-        return fangAnService.getAllFid();
-    }
     /*自动识别事件关键词
     @author Fu Yongrui
      */
@@ -537,7 +529,55 @@ public class DataController {
     public JSONObject searchBriefWeiboUser (
             @RequestParam("WeiboUserForSearch") String WeiboUserForSearch
     ) throws UnsupportedEncodingException {
+        String weiboUserForSearch = java.net.URLDecoder.decode(WeiboUserForSearch, "utf-8");
         return searchService.searchBriefWeiboUser(WeiboUserForSearch);
     }
 
+    /*添加方案监测的微博用户
+       @author Sun liangchen
+   */
+    @GetMapping("/addWeiboUser")
+    @ResponseBody
+    public JSONObject addWeiboUser (
+            @RequestParam("fid") long fid,
+            @RequestParam("id") String id,
+            @RequestParam("nickname") String nickname
+    ) throws UnsupportedEncodingException {
+        String Weibouserid = java.net.URLDecoder.decode(id, "utf-8");
+        String Weibousernickname = java.net.URLDecoder.decode(nickname, "utf-8");
+        return searchService.addWeiboUser(fid, Weibouserid, Weibousernickname);
+    }
+
+     /*获得方案监测的微博用户
+       @author Sun liangchen
+   */
+    @GetMapping("/getFangAnMonitor")
+    @ResponseBody
+    public JSONArray getFangAnMonitor (
+            @RequestParam("fid") long fid
+    ) throws UnsupportedEncodingException, ParseException {
+        return searchService.getFangAnMonitor(fid);
+    }
+
+   /*获得微博数，关注数，粉丝数
+       @author Sun liangchen
+   */
+    @GetMapping("/getWeiboByid")
+    @ResponseBody
+    public JSONObject getWeiboByid (
+            @RequestParam("id") String id
+    ) throws UnsupportedEncodingException {
+        return searchService.getWeiboByid(id);
+    }
+
+    /*获得微博列表
+       @author Sun liangchen
+   */
+    @GetMapping("/getWeiboListByid")
+    @ResponseBody
+    public List<Weibo> getWeiboListByid (
+            @RequestParam("id") String id
+    ) throws UnsupportedEncodingException {
+        return searchService.getWeiboListByid(id);
+    }
 }

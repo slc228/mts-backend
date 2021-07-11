@@ -33,11 +33,6 @@ public class FangAnDaoImpl implements FangAnDao {
     }
 
     @Override
-    public List<FangAn> findAll() {
-        return fangAnRepository.findAll();
-    }
-
-    @Override
     public Boolean existsByUsernameAndProgrammeName(String username,String programme){
         return fangAnRepository.existsByUsernameAndProgrammeName(username,programme);
     }

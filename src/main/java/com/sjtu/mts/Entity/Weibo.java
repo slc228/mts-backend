@@ -10,23 +10,38 @@ import org.springframework.data.elasticsearch.annotations.FieldType;
 
 import java.util.Date;
 
-@Document(indexName = "hotarticle")
+@Document(indexName = "weibo")
 @AllArgsConstructor
 @NoArgsConstructor
 @Getter
-public class hotArticle {
+public class Weibo {
+    @Id
+    private String id;
+
+    @Field(type = FieldType.Text)
+    private String userid;
+
+    @Field(type = FieldType.Text)
+    private String nickname;
+
+    @Field(type = FieldType.Text)
+    private String content;
+
+    @Field(type = FieldType.Text)
+    private String position;
+
     @Field(type = FieldType.Date)
-    private String publishedDay;
+    private String publishDay;
+
+    @Field(type = FieldType.Integer)
+    private Integer like;
+
+    @Field(type = FieldType.Integer)
+    private Integer transpond;
+
+    @Field(type = FieldType.Integer)
+    private Integer comment;
 
     @Field(type = FieldType.Text)
-    private String resource;
-
-    @Field(type = FieldType.Text)
-    private String title;
-
-    @Field(type = FieldType.Text)
-    private String url;
-
-    @Field(type = FieldType.Text)
-    private String heat;
+    private String tool;
 }

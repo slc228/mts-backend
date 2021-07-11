@@ -1,6 +1,7 @@
 package com.sjtu.mts.Service;
 
 import com.sjtu.mts.Dao.FangAnDao;
+import com.sjtu.mts.Dao.FangAnWeiboUserDAO;
 import com.sjtu.mts.Entity.*;
 import com.sjtu.mts.Keyword.KeywordResponse;
 import com.sjtu.mts.Keyword.MultipleThreadExtraction;
@@ -14,12 +15,14 @@ import net.minidev.json.JSONObject;
 import org.elasticsearch.index.query.QueryBuilder;
 import org.elasticsearch.index.query.QueryBuilders;
 import org.elasticsearch.index.query.QueryShardContext;
+import org.joda.time.DateTime;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.elasticsearch.core.*;
 import org.springframework.data.elasticsearch.core.query.Criteria;
 import org.springframework.data.elasticsearch.core.query.CriteriaQuery;
+import org.springframework.security.core.parameters.P;
 import org.springframework.stereotype.Service;
 
 import java.io.UnsupportedEncodingException;
@@ -44,6 +47,9 @@ public class SearchServiceImpl implements SearchService {
 
     @Autowired
     private FangAnDao fangAnDao;
+
+    @Autowired
+    private FangAnWeiboUserDAO fangAnWeiboUserDAO;
 
 
     public SearchServiceImpl(ElasticsearchOperations elasticsearchOperations,AreaRepository areaRepository,SensitiveWordRepository sensitiveWordRepository,SwordFidRepository swordFidRepository)
@@ -1225,4 +1231,132 @@ public class SearchServiceImpl implements SearchService {
 
         return result;
     }
+    
+    @Override
+    public JSONObject addWeiboUser(long fid,String Weibouserid,String Weibousernickname){
+        JSONObject result = new JSONObject();
+        result.put("addweibouser", 0);
+        Boolean ifExist = fangAnWeiboUserDAO.existsByFidAndWeibouserid(fid,Weibouserid);
+        if(ifExist){
+            result.put("addweibouser", 0);
+            result.put("该条已存在", 1);
+            return result;
+        }
+        try {
+            Criteria criteria = new Criteria();
+            criteria.subCriteria(new Criteria("userid").contains(Weibouserid));
+            CriteriaQuery query = new CriteriaQuery(criteria);
+            query.setPageable(PageRequest.of(0, 10, Sort.by(Sort.Direction.DESC, "publishDay")));
+            SearchHits<Weibo> searchHits = this.elasticsearchOperations.search(query, Weibo.class);
+            SearchPage<Weibo> searchPage = SearchHitSupport.searchPageFor(searchHits, query.getPageable());
+            List<Weibo> pageContent = new ArrayList<>();
+            for (SearchHit<Weibo> hit : searchPage.getSearchHits())
+            {
+                pageContent.add(hit.getContent());
+            }
+            SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+            String PublishDayStr=pageContent.get(0).getPublishDay();
+            PublishDayStr=PublishDayStr.substring(0,PublishDayStr.length()-1);
+            PublishDayStr=PublishDayStr+":00";
+            PublishDayStr=PublishDayStr.substring(0,10)+" "+PublishDayStr.substring(11);
+            Date PublishDay = sdf.parse(PublishDayStr);
+
+            FangAnWeiboUser fangAnWeiboUser = new FangAnWeiboUser(fid,Weibousernickname,Weibouserid,PublishDay);
+            fangAnWeiboUserDAO.save(fangAnWeiboUser);
+            result.put("addweibouser", 1);
+            return result;
+        }catch (Exception e){
+            result.put("addweibouser", 0);
+        }
+        return result;
+    };
+
+    @Override
+    public JSONArray getFangAnMonitor(long fid) throws ParseException {
+        JSONArray jsonArray=new JSONArray();
+        List<FangAnWeiboUser> fangAnWeiboUsers=fangAnWeiboUserDAO.findAllByFid(fid);
+        for (FangAnWeiboUser fangAnWeiboUser:fangAnWeiboUsers)
+        {
+            JSONObject jsonObject=new JSONObject();
+            jsonObject.put("weibouserid",fangAnWeiboUser.getWeibouserid());
+            jsonObject.put("weibousernickname",fangAnWeiboUser.getWeibousernickname());;
+            jsonObject.put("fid",fangAnWeiboUser.getFid());
+
+            Criteria criteria = new Criteria();
+            criteria.subCriteria(new Criteria("userid").contains(fangAnWeiboUser.getWeibouserid()));
+            CriteriaQuery query = new CriteriaQuery(criteria);
+            query.setPageable(PageRequest.of(0, 10, Sort.by(Sort.Direction.DESC, "publishDay")));
+            SearchHits<Weibo> searchHits = this.elasticsearchOperations.search(query, Weibo.class);
+            SearchPage<Weibo> searchPage = SearchHitSupport.searchPageFor(searchHits, query.getPageable());
+            List<Weibo> pageContent = new ArrayList<>();
+            for (SearchHit<Weibo> hit : searchPage.getSearchHits())
+            {
+                pageContent.add(hit.getContent());
+            }
+            SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+            if (pageContent.size()==0)
+            {
+                jsonObject.put("isnew",0);
+            }
+            else {
+                String PublishDayStr=pageContent.get(0).getPublishDay();
+                PublishDayStr=PublishDayStr.substring(0,PublishDayStr.length()-1);
+                PublishDayStr=PublishDayStr+":00";
+                PublishDayStr=PublishDayStr.substring(0,10)+" "+PublishDayStr.substring(11);
+                Date PublishDay = sdf.parse(PublishDayStr);
+                if (fangAnWeiboUser.getNewweibotime().before(PublishDay))
+                {
+                    jsonObject.put("isnew",1);
+                }
+                else {
+                    jsonObject.put("isnew",0);
+                }
+            }
+            jsonArray.appendElement(jsonObject);
+        }
+        return jsonArray;
+    };
+
+    @Override
+    public JSONObject getWeiboByid(String id){
+        Criteria criteria = new Criteria();
+        criteria.subCriteria(new Criteria("userid").contains(id));
+        CriteriaQuery query = new CriteriaQuery(criteria);
+        SearchHits<WeiboUser> searchHits = this.elasticsearchOperations.search(query, WeiboUser.class);
+        long hitNumber = this.elasticsearchOperations.count(query, WeiboUser.class);
+
+        JSONArray WeiboUserContent=new JSONArray();
+        for (SearchHit<WeiboUser> hit : searchHits.getSearchHits())
+        {
+            JSONObject jsonObject=new JSONObject();
+            jsonObject.put("id",hit.getContent().getUserid());
+            jsonObject.put("nickname",hit.getContent().getNickname());
+            jsonObject.put("NumOfWeibo",hit.getContent().getWeibo());
+            jsonObject.put("NumOfFollow",hit.getContent().getFollow());
+            jsonObject.put("NumOfFans",hit.getContent().getFans());
+            WeiboUserContent.appendElement(jsonObject);
+        }
+
+        JSONObject result= (JSONObject) WeiboUserContent.get(0);
+        return result;
+    };
+
+    @Override
+    public List<Weibo> getWeiboListByid(String id){
+        System.out.println(id);
+        Criteria criteria = new Criteria();
+        criteria.subCriteria(new Criteria("userid").contains(id));
+        CriteriaQuery query = new CriteriaQuery(criteria);
+        SearchHits<Weibo> searchHits = this.elasticsearchOperations.search(query, Weibo.class);
+        long hitNumber = this.elasticsearchOperations.count(query, Weibo.class);
+
+        List<Weibo> WeiboUserContent=new ArrayList<>();
+        for (SearchHit<Weibo> hit : searchHits.getSearchHits())
+        {
+            System.out.println(hit.getContent().getContent());
+            WeiboUserContent.add(hit.getContent());
+        }
+
+        return WeiboUserContent;
+    };
 }
