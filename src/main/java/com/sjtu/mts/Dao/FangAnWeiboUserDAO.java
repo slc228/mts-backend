@@ -10,6 +10,8 @@ public interface FangAnWeiboUserDAO {
 
     List<FangAnWeiboUser> findAllByFidAndWeibousernickname(long fid,String weibousernickname);
 
+    FangAnWeiboUser findByFidAndWeibouserid(long fid,String weibouserid);
+
     Boolean existsByFidAndWeibouserid(long fid, String weibouserid);
 
     void  deleteByFidAndWeibousernickname(long fid,String weibouser);

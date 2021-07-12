@@ -42,4 +42,9 @@ public class FangAnWeiboUserDAOImpl implements FangAnWeiboUserDAO{
     public Boolean existsByFidAndWeibouserid(long fid, String weibouserid){
         return fanganWeiboUserRepository.existsByFidAndWeibouserid(fid,weibouserid);
     };
+
+    @Override
+    public FangAnWeiboUser findByFidAndWeibouserid(long fid,String weibouserid){
+        return fanganWeiboUserRepository.findByFidAndWeibouserid(fid,weibouserid);
+    };
 }

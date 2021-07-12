@@ -1259,25 +1259,31 @@ public class SearchServiceImpl implements SearchService {
             return result;
         }
         try {
-//            Criteria criteria = new Criteria();
-//            criteria.subCriteria(new Criteria("userid").contains(Weibouserid));
-//            CriteriaQuery query = new CriteriaQuery(criteria);
-//            query.setPageable(PageRequest.of(0, 10, Sort.by(Sort.Direction.DESC, "publishDay")));
-//            SearchHits<Weibo> searchHits = this.elasticsearchOperations.search(query, Weibo.class);
-//            SearchPage<Weibo> searchPage = SearchHitSupport.searchPageFor(searchHits, query.getPageable());
-//            List<Weibo> pageContent = new ArrayList<>();
-//            for (SearchHit<Weibo> hit : searchPage.getSearchHits())
-//            {
-//                pageContent.add(hit.getContent());
-//            }
-//            SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
-//            String PublishDayStr=pageContent.get(0).getPublish_time();
-//            PublishDayStr=PublishDayStr.substring(0,PublishDayStr.length()-1);
-//            PublishDayStr=PublishDayStr+":00";
-//            PublishDayStr=PublishDayStr.substring(0,10)+" "+PublishDayStr.substring(11);
-//            Date PublishDay = sdf.parse(PublishDayStr);
+            Criteria criteria = new Criteria();
+            criteria.subCriteria(new Criteria("userid").contains(Weibouserid));
+            CriteriaQuery query = new CriteriaQuery(criteria);
+            query.setPageable(PageRequest.of(0, 10, Sort.by(Sort.Direction.DESC, "publish_time")));
+            SearchHits<Weibo> searchHits = this.elasticsearchOperations.search(query, Weibo.class);
+            SearchPage<Weibo> searchPage = SearchHitSupport.searchPageFor(searchHits, query.getPageable());
+            List<Weibo> pageContent = new ArrayList<>();
+            for (SearchHit<Weibo> hit : searchPage.getSearchHits()) {
+                pageContent.add(hit.getContent());
+            }
+            Date PublishDay = null;
 
-            FangAnWeiboUser fangAnWeiboUser = new FangAnWeiboUser(fid,Weibousernickname,Weibouserid,new Date());
+            if (pageContent.size() > 0) {
+                SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+                String PublishDayStr = pageContent.get(0).getPublish_time();
+                PublishDayStr = PublishDayStr.substring(0, PublishDayStr.length() - 1);
+                PublishDayStr = PublishDayStr + ":00";
+                PublishDayStr = PublishDayStr.substring(0, 10) + " " + PublishDayStr.substring(11);
+                PublishDay = sdf.parse(PublishDayStr);
+            }
+            else {
+                PublishDay=new Date();
+            }
+
+            FangAnWeiboUser fangAnWeiboUser = new FangAnWeiboUser(fid, Weibousernickname, Weibouserid, PublishDay);
             fangAnWeiboUserDAO.save(fangAnWeiboUser);
 
             List<FangAnWeiboUser> fangAnWeiboUserList = fangAnWeiboUserDAO.findAll();
@@ -1287,7 +1293,7 @@ public class SearchServiceImpl implements SearchService {
                 array.add(user.getWeibouserid());
             }
             weiboSpiderRpc.crawlNewUserids(array);
-
+          
             result.put("addweibouser", 1);
             return result;
         }catch (Exception e){
@@ -1311,17 +1317,15 @@ public class SearchServiceImpl implements SearchService {
             Criteria criteria = new Criteria();
             criteria.subCriteria(new Criteria("userid").contains(fangAnWeiboUser.getWeibouserid()));
             CriteriaQuery query = new CriteriaQuery(criteria);
-            query.setPageable(PageRequest.of(0, 10, Sort.by(Sort.Direction.DESC, "publishDay")));
+            query.setPageable(PageRequest.of(0, 10, Sort.by(Sort.Direction.DESC, "publish_time")));
             SearchHits<Weibo> searchHits = this.elasticsearchOperations.search(query, Weibo.class);
             SearchPage<Weibo> searchPage = SearchHitSupport.searchPageFor(searchHits, query.getPageable());
             List<Weibo> pageContent = new ArrayList<>();
-            for (SearchHit<Weibo> hit : searchPage.getSearchHits())
-            {
+            for (SearchHit<Weibo> hit : searchPage.getSearchHits()) {
                 pageContent.add(hit.getContent());
             }
             SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
-            if (pageContent.size()==0)
-            {
+            if (pageContent.size()==0) {
                 jsonObject.put("isnew",0);
             }
             else {
@@ -1330,8 +1334,7 @@ public class SearchServiceImpl implements SearchService {
                 PublishDayStr=PublishDayStr+":00";
                 PublishDayStr=PublishDayStr.substring(0,10)+" "+PublishDayStr.substring(11);
                 Date PublishDay = sdf.parse(PublishDayStr);
-                if (fangAnWeiboUser.getNewweibotime().before(PublishDay))
-                {
+                if (fangAnWeiboUser.getNewweibotime().before(PublishDay)) {
                     jsonObject.put("isnew",1);
                 }
                 else {
@@ -1344,7 +1347,7 @@ public class SearchServiceImpl implements SearchService {
     };
 
     @Override
-    public JSONObject getWeiboByid(String id){
+    public JSONObject getWeiboByid(long fid,String id) throws ParseException {
         Criteria criteria = new Criteria();
         criteria.subCriteria(new Criteria("userid").contains(id));
         CriteriaQuery query = new CriteriaQuery(criteria);
@@ -1364,6 +1367,32 @@ public class SearchServiceImpl implements SearchService {
         }
 
         JSONObject result= (JSONObject) WeiboUserContent.get(0);
+
+        FangAnWeiboUser fangAnWeiboUser=fangAnWeiboUserDAO.findByFidAndWeibouserid(fid,id);
+        Criteria criteria1 = new Criteria();
+        criteria1.subCriteria(new Criteria("userid").contains(fangAnWeiboUser.getWeibouserid()));
+        CriteriaQuery query1 = new CriteriaQuery(criteria);
+        query1.setPageable(PageRequest.of(0, 10, Sort.by(Sort.Direction.DESC, "publish_time")));
+        SearchHits<Weibo> searchHits1 = this.elasticsearchOperations.search(query, Weibo.class);
+        SearchPage<Weibo> searchPage = SearchHitSupport.searchPageFor(searchHits1, query.getPageable());
+        List<Weibo> pageContent = new ArrayList<>();
+        for (SearchHit<Weibo> hit : searchPage.getSearchHits()) {
+            pageContent.add(hit.getContent());
+        }
+        SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+        if (pageContent.size()==0) {
+
+        }
+        else {
+            String PublishDayStr=pageContent.get(0).getPublish_time();
+            PublishDayStr=PublishDayStr.substring(0,PublishDayStr.length()-1);
+            PublishDayStr=PublishDayStr+":00";
+            PublishDayStr=PublishDayStr.substring(0,10)+" "+PublishDayStr.substring(11);
+            Date PublishDay = sdf.parse(PublishDayStr);
+            fangAnWeiboUser.setNewweibotime(PublishDay);
+            fangAnWeiboUserDAO.save(fangAnWeiboUser);
+        }
+
         return result;
     };
 
@@ -1379,7 +1408,6 @@ public class SearchServiceImpl implements SearchService {
         List<Weibo> WeiboUserContent=new ArrayList<>();
         for (SearchHit<Weibo> hit : searchHits.getSearchHits())
         {
-            System.out.println(hit.getContent().getContent());
             WeiboUserContent.add(hit.getContent());
         }
 
