@@ -577,9 +577,10 @@ public class DataController {
     @GetMapping("/getWeiboByid")
     @ResponseBody
     public JSONObject getWeiboByid (
+            @RequestParam("fid") long fid,
             @RequestParam("id") String id
     ) throws UnsupportedEncodingException {
-        return searchService.getWeiboByid(id);
+        return searchService.getWeiboByid(fid,id);
     }
 
     /*获得微博列表

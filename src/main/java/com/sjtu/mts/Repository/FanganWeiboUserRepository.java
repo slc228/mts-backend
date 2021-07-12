@@ -15,6 +15,8 @@ public interface FanganWeiboUserRepository extends JpaRepository<FangAnWeiboUser
 
     List<FangAnWeiboUser> findAllByFidAndWeibousernickname(long fid, String weibousernickname);
 
+    FangAnWeiboUser findByFidAndWeibouserid(long fid,String weibouserid);
+
     Boolean existsByFidAndWeibouserid(long fid, String weibouserid);
 
     @Transactional(rollbackOn = Exception.class)

@@ -78,7 +78,7 @@ public interface SearchService {
 
     public JSONArray getFangAnMonitor(long fid) throws ParseException;
 
-    public JSONObject getWeiboByid(String id);
+    public JSONObject getWeiboByid(long fid,String id) throws ParseException;
 
     public List<Weibo> getWeiboListByid(String id);
 }
