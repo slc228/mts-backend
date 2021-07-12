@@ -10,6 +10,7 @@ import com.sjtu.mts.Repository.AreaRepository;
 import com.sjtu.mts.Repository.SensitiveWordRepository;
 import com.sjtu.mts.Repository.SwordFidRepository;
 import com.sjtu.mts.Response.*;
+import com.sjtu.mts.rpc.WeiboSpiderRpc;
 import net.minidev.json.JSONArray;
 import net.minidev.json.JSONObject;
 import org.elasticsearch.index.query.QueryBuilder;
@@ -51,6 +52,8 @@ public class SearchServiceImpl implements SearchService {
     @Autowired
     private FangAnWeiboUserDAO fangAnWeiboUserDAO;
 
+    @Autowired
+    private WeiboSpiderRpc weiboSpiderRpc;
 
     public SearchServiceImpl(ElasticsearchOperations elasticsearchOperations,AreaRepository areaRepository,SensitiveWordRepository sensitiveWordRepository,SwordFidRepository swordFidRepository)
     {
@@ -1256,30 +1259,40 @@ public class SearchServiceImpl implements SearchService {
             return result;
         }
         try {
-            Criteria criteria = new Criteria();
-            criteria.subCriteria(new Criteria("userid").contains(Weibouserid));
-            CriteriaQuery query = new CriteriaQuery(criteria);
-            query.setPageable(PageRequest.of(0, 10, Sort.by(Sort.Direction.DESC, "publishDay")));
-            SearchHits<Weibo> searchHits = this.elasticsearchOperations.search(query, Weibo.class);
-            SearchPage<Weibo> searchPage = SearchHitSupport.searchPageFor(searchHits, query.getPageable());
-            List<Weibo> pageContent = new ArrayList<>();
-            for (SearchHit<Weibo> hit : searchPage.getSearchHits())
-            {
-                pageContent.add(hit.getContent());
-            }
-            SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
-            String PublishDayStr=pageContent.get(0).getPublish_time();
-            PublishDayStr=PublishDayStr.substring(0,PublishDayStr.length()-1);
-            PublishDayStr=PublishDayStr+":00";
-            PublishDayStr=PublishDayStr.substring(0,10)+" "+PublishDayStr.substring(11);
-            Date PublishDay = sdf.parse(PublishDayStr);
+//            Criteria criteria = new Criteria();
+//            criteria.subCriteria(new Criteria("userid").contains(Weibouserid));
+//            CriteriaQuery query = new CriteriaQuery(criteria);
+//            query.setPageable(PageRequest.of(0, 10, Sort.by(Sort.Direction.DESC, "publishDay")));
+//            SearchHits<Weibo> searchHits = this.elasticsearchOperations.search(query, Weibo.class);
+//            SearchPage<Weibo> searchPage = SearchHitSupport.searchPageFor(searchHits, query.getPageable());
+//            List<Weibo> pageContent = new ArrayList<>();
+//            for (SearchHit<Weibo> hit : searchPage.getSearchHits())
+//            {
+//                pageContent.add(hit.getContent());
+//            }
+//            SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+//            String PublishDayStr=pageContent.get(0).getPublish_time();
+//            PublishDayStr=PublishDayStr.substring(0,PublishDayStr.length()-1);
+//            PublishDayStr=PublishDayStr+":00";
+//            PublishDayStr=PublishDayStr.substring(0,10)+" "+PublishDayStr.substring(11);
+//            Date PublishDay = sdf.parse(PublishDayStr);
 
-            FangAnWeiboUser fangAnWeiboUser = new FangAnWeiboUser(fid,Weibousernickname,Weibouserid,PublishDay);
+            FangAnWeiboUser fangAnWeiboUser = new FangAnWeiboUser(fid,Weibousernickname,Weibouserid,new Date());
             fangAnWeiboUserDAO.save(fangAnWeiboUser);
+
+            List<FangAnWeiboUser> fangAnWeiboUserList = fangAnWeiboUserDAO.findAll();
+            List<String> array = new ArrayList<>();
+            for (FangAnWeiboUser user : fangAnWeiboUserList)
+            {
+                array.add(user.getWeibouserid());
+            }
+            weiboSpiderRpc.crawlNewUserids(array);
+
             result.put("addweibouser", 1);
             return result;
         }catch (Exception e){
             result.put("addweibouser", 0);
+            e.printStackTrace();
         }
         return result;
     };
