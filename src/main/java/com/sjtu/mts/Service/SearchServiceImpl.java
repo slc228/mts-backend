@@ -10,6 +10,7 @@ import com.sjtu.mts.Repository.AreaRepository;
 import com.sjtu.mts.Repository.SensitiveWordRepository;
 import com.sjtu.mts.Repository.SwordFidRepository;
 import com.sjtu.mts.Response.*;
+import com.sjtu.mts.rpc.WeiboSpiderRpc;
 import net.minidev.json.JSONArray;
 import net.minidev.json.JSONObject;
 import org.elasticsearch.index.query.QueryBuilder;
@@ -51,6 +52,8 @@ public class SearchServiceImpl implements SearchService {
     @Autowired
     private FangAnWeiboUserDAO fangAnWeiboUserDAO;
 
+    @Autowired
+    private WeiboSpiderRpc weiboSpiderRpc;
 
     public SearchServiceImpl(ElasticsearchOperations elasticsearchOperations,AreaRepository areaRepository,SensitiveWordRepository sensitiveWordRepository,SwordFidRepository swordFidRepository)
     {
@@ -1282,10 +1285,20 @@ public class SearchServiceImpl implements SearchService {
 
             FangAnWeiboUser fangAnWeiboUser = new FangAnWeiboUser(fid, Weibousernickname, Weibouserid, PublishDay);
             fangAnWeiboUserDAO.save(fangAnWeiboUser);
+
+            List<FangAnWeiboUser> fangAnWeiboUserList = fangAnWeiboUserDAO.findAll();
+            List<String> array = new ArrayList<>();
+            for (FangAnWeiboUser user : fangAnWeiboUserList)
+            {
+                array.add(user.getWeibouserid());
+            }
+            weiboSpiderRpc.crawlNewUserids(array);
+          
             result.put("addweibouser", 1);
             return result;
         }catch (Exception e){
             result.put("addweibouser", 0);
+            e.printStackTrace();
         }
         return result;
     };
