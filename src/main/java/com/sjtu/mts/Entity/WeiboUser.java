@@ -25,6 +25,12 @@ public class WeiboUser {
     private String nickname;
 
     @Field(type = FieldType.Text)
+    private String user_avatar;
+
+    @Field(type = FieldType.Text)
+    private String tags;
+
+    @Field(type = FieldType.Text)
     private String gender;
 
     @Field(type = FieldType.Text)
