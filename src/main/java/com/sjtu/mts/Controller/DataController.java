@@ -579,7 +579,7 @@ public class DataController {
     public JSONObject getWeiboByid (
             @RequestParam("fid") long fid,
             @RequestParam("id") String id
-    ) throws UnsupportedEncodingException {
+    ) throws UnsupportedEncodingException, ParseException {
         return searchService.getWeiboByid(fid,id);
     }
 
