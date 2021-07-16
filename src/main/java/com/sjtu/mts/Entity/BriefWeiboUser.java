@@ -21,4 +21,9 @@ public class BriefWeiboUser {
 
     @Field(type = FieldType.Text)
     private String nickname;
+
+    public BriefWeiboUser(String uri, String nickname){
+        this.uri = uri;
+        this.nickname = nickname;
+    }
 }

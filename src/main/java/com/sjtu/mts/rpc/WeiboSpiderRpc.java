@@ -1,6 +1,9 @@
 package com.sjtu.mts.rpc;
 
-import net.minidev.json.JSONArray;
+import com.alibaba.fastjson.JSONArray;
+import com.alibaba.fastjson.JSONObject;
+import com.sjtu.mts.Entity.BriefWeiboUser;
+import io.netty.handler.codec.json.JsonObjectDecoder;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
@@ -8,6 +11,7 @@ import org.springframework.http.MediaType;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -33,6 +37,28 @@ public class WeiboSpiderRpc {
         HttpEntity entity = new HttpEntity(requestParam, headers);
 //        System.out.println(entity);
         return  restTemplate.postForObject("http://weibo-spider-service/new_userid",entity,String.class);
+    }
+
+    public List<BriefWeiboUser> searchBriefWeiboUser(String WeiboUserForSearch){
+        HttpHeaders headers = new HttpHeaders();
+        //定义请求参数类型，这里用json所以是MediaType.APPLICATION_JSON
+        headers.setContentType(MediaType.APPLICATION_JSON);
+        //RestTemplate带参传的时候要用HttpEntity<?>对象传递
+        Map<String, Object> requestParam = new HashMap<String, Object>();
+        requestParam.put("WeiboUserForSearch", WeiboUserForSearch);
+        HttpEntity entity = new HttpEntity(requestParam, headers);
+//        System.out.println(entity);
+        String response = restTemplate.postForObject("http://weibo-spider-service/BriefWeiboUser",entity, String.class);
+        JSONObject parsed = JSONObject.parseObject(response);
+        JSONArray briefUsers = parsed.getJSONArray("data");
+        List<BriefWeiboUser> result = new ArrayList<>();
+        for (int i = 0; i < briefUsers.size(); i++) {
+            result.add(new BriefWeiboUser(
+                    briefUsers.getJSONObject(i).getString("uri"),
+                    briefUsers.getJSONObject(i).getString("nickname")
+            ));
+        }
+        return result;
     }
 
 }

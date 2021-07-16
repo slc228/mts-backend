@@ -1216,6 +1216,9 @@ public class SearchServiceImpl implements SearchService {
     @Override
     public JSONObject searchBriefWeiboUser(String WeiboUserForSearch)
     {
+//        这条代码触发从https://s.weibo.com/user?q= 网页实时爬取相关用户
+//        List<BriefWeiboUser> currentSearch = weiboSpiderRpc.searchBriefWeiboUser(WeiboUserForSearch);
+
         Criteria criteria = new Criteria();
         criteria.subCriteria(new Criteria("uri").in(WeiboUserForSearch).or("nickname").in(WeiboUserForSearch));
         CriteriaQuery query = new CriteriaQuery(criteria);

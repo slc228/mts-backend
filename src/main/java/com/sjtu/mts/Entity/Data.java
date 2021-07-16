@@ -46,5 +46,14 @@ public class Data {
 
     @Field(type = FieldType.Long)
     private Long _version_;
+
+    @Field(type = FieldType.Text)
+    private String tag;
+
+    @Field(type = FieldType.Text)
+    private String emotion;
+
+    @Field(type = FieldType.Text)
+    private String sensitiveType;
 }
 
