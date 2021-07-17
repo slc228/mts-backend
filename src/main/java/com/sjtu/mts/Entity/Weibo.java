@@ -33,17 +33,17 @@ public class Weibo {
     @Field(type = FieldType.Text)
     private String original_pictures;
 
-    @Field(type = FieldType.Date)
+    @Field(type = FieldType.Text)
     private String retweet_pictures;
 
     @Field(type = FieldType.Boolean)
-    private Integer original;
+    private Boolean original;
 
     @Field(type = FieldType.Text)
-    private Integer video_url;
+    private String video_url;
 
     @Field(type = FieldType.Text)
-    private Integer publish_place;
+    private String publish_place;
 
     @Field(type = FieldType.Date)
     private String publish_time;
@@ -52,11 +52,11 @@ public class Weibo {
     private String publish_tool;
 
     @Field(type = FieldType.Integer)
-    private String up_num;
+    private Integer up_num;
 
     @Field(type = FieldType.Integer)
-    private String retweet_num;
+    private Integer retweet_num;
 
     @Field(type = FieldType.Integer)
-    private String comment_num;
+    private Integer comment_num;
 }
