@@ -1,6 +1,7 @@
 package com.sjtu.mts.Service;
 
 import com.alibaba.fastjson.JSON;
+import com.sjtu.mts.Entity.BriefWeiboUser;
 import com.sjtu.mts.Entity.FangAnWeiboUser;
 import com.sjtu.mts.Entity.Weibo;
 import com.sjtu.mts.Keyword.KeywordResponse;
@@ -72,7 +73,7 @@ public interface SearchService {
 
     public HotArticleResponse getHotArticle(int pageId,int pageSize);
 
-    public JSONObject searchBriefWeiboUser(String WeiboUserForSearch);
+    public List<BriefWeiboUser> searchBriefWeiboUser(long fid, String WeiboUserForSearch);
 
     public JSONObject addWeiboUser(long fid,String Weibouserid,String Weibousernickname);
 
@@ -80,5 +81,5 @@ public interface SearchService {
 
     public JSONObject getWeiboByid(long fid,String id) throws ParseException;
 
-    public List<Weibo> getWeiboListByid(String id);
+    public JSONArray getWeiboListByid(long fid,String weibouserid) throws ParseException;
 }

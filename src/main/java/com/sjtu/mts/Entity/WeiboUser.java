@@ -54,12 +54,12 @@ public class WeiboUser {
     @Field(type = FieldType.Text)
     private String work;
 
-    @Field(type = FieldType.Text)
+    @Field(type = FieldType.Integer)
     private Integer weibo_num;
 
-    @Field(type = FieldType.Text)
+    @Field(type = FieldType.Integer)
     private Integer following;
 
-    @Field(type = FieldType.Text)
+    @Field(type = FieldType.Integer)
     private Integer followers;
 }

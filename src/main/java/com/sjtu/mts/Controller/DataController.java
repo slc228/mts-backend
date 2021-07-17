@@ -1,9 +1,6 @@
 package com.sjtu.mts.Controller;
 
-import com.sjtu.mts.Entity.Cluster;
-import com.sjtu.mts.Entity.Data;
-import com.sjtu.mts.Entity.FangAnWeiboUser;
-import com.sjtu.mts.Entity.Weibo;
+import com.sjtu.mts.Entity.*;
 import com.sjtu.mts.EventTrack.EventTreeNode;
 import com.sjtu.mts.Keyword.KeywordResponse;
 import com.sjtu.mts.Repository.DataRepository;
@@ -538,11 +535,12 @@ public class DataController {
    */
     @GetMapping("/searchBriefWeiboUser")
     @ResponseBody
-    public JSONObject searchBriefWeiboUser (
+    public List<BriefWeiboUser> searchBriefWeiboUser (
+            @RequestParam("fid") long fid,
             @RequestParam("WeiboUserForSearch") String WeiboUserForSearch
     ) throws UnsupportedEncodingException {
         String weiboUserForSearch = java.net.URLDecoder.decode(WeiboUserForSearch, "utf-8");
-        return searchService.searchBriefWeiboUser(WeiboUserForSearch);
+        return searchService.searchBriefWeiboUser(fid,weiboUserForSearch);
     }
 
     /*添加方案监测的微博用户
@@ -588,9 +586,10 @@ public class DataController {
    */
     @GetMapping("/getWeiboListByid")
     @ResponseBody
-    public List<Weibo> getWeiboListByid (
-            @RequestParam("id") String id
-    ) throws UnsupportedEncodingException {
-        return searchService.getWeiboListByid(id);
+    public JSONArray getWeiboListByid (
+            @RequestParam("fid") long fid,
+            @RequestParam("weibouserid") String weibouserid
+    ) throws UnsupportedEncodingException, ParseException {
+        return searchService.getWeiboListByid(fid,weibouserid);
     }
 }

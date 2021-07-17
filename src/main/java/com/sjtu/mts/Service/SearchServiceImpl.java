@@ -1214,23 +1214,21 @@ public class SearchServiceImpl implements SearchService {
     }
 
     @Override
-    public JSONObject searchBriefWeiboUser(String WeiboUserForSearch)
+    public List<BriefWeiboUser> searchBriefWeiboUser(long fid,String WeiboUserForSearch)
     {
         Criteria criteria = new Criteria();
-        criteria.subCriteria(new Criteria("uri").in(WeiboUserForSearch).or("nickname").in(WeiboUserForSearch));
+        criteria.subCriteria(new Criteria("nickname").in(WeiboUserForSearch).or("uri").in(WeiboUserForSearch));
         CriteriaQuery query = new CriteriaQuery(criteria);
         SearchHits<BriefWeiboUser> searchHits = this.elasticsearchOperations.search(query, BriefWeiboUser.class);
-        long hitNumber = this.elasticsearchOperations.count(query, BriefWeiboUser.class);
 
-        List<BriefWeiboUser> WeiboUserContent = new ArrayList<>();
+        List<BriefWeiboUser> result = new ArrayList<>();
         for (SearchHit<BriefWeiboUser> hit : searchHits.getSearchHits())
         {
-            WeiboUserContent.add(hit.getContent());
+            if (!fangAnWeiboUserDAO.existsByFidAndWeibouserid(fid,hit.getContent().getUri()))
+            {
+                result.add(hit.getContent());
+            }
         }
-
-        JSONObject result = new JSONObject();
-        result.put("hitNumber",hitNumber);
-        result.put("Content",WeiboUserContent);
 
         return result;
     }
@@ -1259,30 +1257,8 @@ public class SearchServiceImpl implements SearchService {
             return result;
         }
         try {
-            Criteria criteria = new Criteria();
-            criteria.subCriteria(new Criteria("userid").contains(Weibouserid));
-            CriteriaQuery query = new CriteriaQuery(criteria);
-            query.setPageable(PageRequest.of(0, 10, Sort.by(Sort.Direction.DESC, "publish_time")));
-            SearchHits<Weibo> searchHits = this.elasticsearchOperations.search(query, Weibo.class);
-            SearchPage<Weibo> searchPage = SearchHitSupport.searchPageFor(searchHits, query.getPageable());
-            List<Weibo> pageContent = new ArrayList<>();
-            for (SearchHit<Weibo> hit : searchPage.getSearchHits()) {
-                pageContent.add(hit.getContent());
-            }
-            Date PublishDay = null;
 
-            if (pageContent.size() > 0) {
-                SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
-                String PublishDayStr = pageContent.get(0).getPublish_time();
-                PublishDayStr = PublishDayStr.substring(0, PublishDayStr.length() - 1);
-                PublishDayStr = PublishDayStr + ":00";
-                PublishDayStr = PublishDayStr.substring(0, 10) + " " + PublishDayStr.substring(11);
-                PublishDay = sdf.parse(PublishDayStr);
-            }
-            else {
-                PublishDay=new Date();
-            }
-
+            Date PublishDay=new Date();
             FangAnWeiboUser fangAnWeiboUser = new FangAnWeiboUser(fid, Weibousernickname, Weibouserid, PublishDay);
             fangAnWeiboUserDAO.save(fangAnWeiboUser);
 
@@ -1297,7 +1273,13 @@ public class SearchServiceImpl implements SearchService {
             result.put("addweibouser", 1);
             return result;
         }catch (Exception e){
-            result.put("addweibouser", 0);
+            if (fangAnWeiboUserDAO.existsByFidAndWeibouserid(fid,Weibouserid))
+            {
+                result.put("addweibouser", 1);
+            }
+            else {
+                result.put("addweibouser", 0);
+            }
             e.printStackTrace();
         }
         return result;
@@ -1310,19 +1292,38 @@ public class SearchServiceImpl implements SearchService {
         for (FangAnWeiboUser fangAnWeiboUser:fangAnWeiboUsers)
         {
             JSONObject jsonObject=new JSONObject();
-            jsonObject.put("weibouserid",fangAnWeiboUser.getWeibouserid());
-            jsonObject.put("weibousernickname",fangAnWeiboUser.getWeibousernickname());;
             jsonObject.put("fid",fangAnWeiboUser.getFid());
 
             Criteria criteria = new Criteria();
             criteria.subCriteria(new Criteria("userid").contains(fangAnWeiboUser.getWeibouserid()));
             CriteriaQuery query = new CriteriaQuery(criteria);
+            SearchHits<WeiboUser> searchHits = this.elasticsearchOperations.search(query, WeiboUser.class);
+            for (SearchHit<WeiboUser> hit : searchHits.getSearchHits()) {
+                jsonObject.put("userid",hit.getContent().getUserid());
+                jsonObject.put("nickname",hit.getContent().getNickname());
+                jsonObject.put("user_avatar",hit.getContent().getUser_avatar());
+                jsonObject.put("tags",hit.getContent().getTags());
+                jsonObject.put("gender",hit.getContent().getGender());
+                jsonObject.put("location",hit.getContent().getLocation());
+                jsonObject.put("birthday",hit.getContent().getBirthday());
+                jsonObject.put("description",hit.getContent().getDescription());
+                jsonObject.put("verified_reason",hit.getContent().getVerified_reason());
+                jsonObject.put("talent",hit.getContent().getTalent());
+                jsonObject.put("education",hit.getContent().getEducation());
+                jsonObject.put("work",hit.getContent().getWork());
+                jsonObject.put("weibo_num",hit.getContent().getWeibo_num());
+                jsonObject.put("following",hit.getContent().getFollowing());
+                jsonObject.put("followers",hit.getContent().getFollowers());
+            }
+            Criteria criteriaForWeibo = new Criteria();
+            criteriaForWeibo.subCriteria(new Criteria("userid").contains(fangAnWeiboUser.getWeibouserid()));
+            CriteriaQuery queryForWeibo = new CriteriaQuery(criteriaForWeibo);
             query.setPageable(PageRequest.of(0, 10, Sort.by(Sort.Direction.DESC, "publish_time")));
-            SearchHits<Weibo> searchHits = this.elasticsearchOperations.search(query, Weibo.class);
-            SearchPage<Weibo> searchPage = SearchHitSupport.searchPageFor(searchHits, query.getPageable());
+            SearchHits<Weibo> searchHitsForWeibo = this.elasticsearchOperations.search(queryForWeibo, Weibo.class);
+            SearchPage<Weibo> searchPageForWeibo = SearchHitSupport.searchPageFor(searchHitsForWeibo, queryForWeibo.getPageable());
             List<Weibo> pageContent = new ArrayList<>();
-            for (SearchHit<Weibo> hit : searchPage.getSearchHits()) {
-                pageContent.add(hit.getContent());
+            for (SearchHit<Weibo> hitForWeibo : searchPageForWeibo.getSearchHits()) {
+                pageContent.add(hitForWeibo.getContent());
             }
             SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
             if (pageContent.size()==0) {
@@ -1330,9 +1331,7 @@ public class SearchServiceImpl implements SearchService {
             }
             else {
                 String PublishDayStr=pageContent.get(0).getPublish_time();
-                PublishDayStr=PublishDayStr.substring(0,PublishDayStr.length()-1);
                 PublishDayStr=PublishDayStr+":00";
-                PublishDayStr=PublishDayStr.substring(0,10)+" "+PublishDayStr.substring(11);
                 Date PublishDay = sdf.parse(PublishDayStr);
                 if (fangAnWeiboUser.getNewweibotime().before(PublishDay)) {
                     jsonObject.put("isnew",1);
@@ -1385,9 +1384,7 @@ public class SearchServiceImpl implements SearchService {
         }
         else {
             String PublishDayStr=pageContent.get(0).getPublish_time();
-            PublishDayStr=PublishDayStr.substring(0,PublishDayStr.length()-1);
             PublishDayStr=PublishDayStr+":00";
-            PublishDayStr=PublishDayStr.substring(0,10)+" "+PublishDayStr.substring(11);
             Date PublishDay = sdf.parse(PublishDayStr);
             fangAnWeiboUser.setNewweibotime(PublishDay);
             fangAnWeiboUserDAO.save(fangAnWeiboUser);
@@ -1397,20 +1394,64 @@ public class SearchServiceImpl implements SearchService {
     };
 
     @Override
-    public List<Weibo> getWeiboListByid(String id){
-        System.out.println(id);
-        Criteria criteria = new Criteria();
-        criteria.subCriteria(new Criteria("userid").contains(id));
-        CriteriaQuery query = new CriteriaQuery(criteria);
-        SearchHits<Weibo> searchHits = this.elasticsearchOperations.search(query, Weibo.class);
-        long hitNumber = this.elasticsearchOperations.count(query, Weibo.class);
+    public JSONArray getWeiboListByid(long fid,String weibouserid) throws ParseException {
+        Criteria criteriaForWeiboUser = new Criteria();
+        criteriaForWeiboUser.subCriteria(new Criteria("userid").contains(weibouserid));
+        CriteriaQuery queryForWeiboUser = new CriteriaQuery(criteriaForWeiboUser);
+        SearchHits<WeiboUser> searchHitsForWeiboUser = this.elasticsearchOperations.search(queryForWeiboUser, WeiboUser.class);
 
-        List<Weibo> WeiboUserContent=new ArrayList<>();
-        for (SearchHit<Weibo> hit : searchHits.getSearchHits())
+        JSONArray Res=new JSONArray();
+        JSONObject jsonObject=new JSONObject();
+        for (SearchHit<WeiboUser> hit : searchHitsForWeiboUser.getSearchHits())
         {
-            WeiboUserContent.add(hit.getContent());
+            jsonObject.put("id",hit.getContent().getUserid());
+            jsonObject.put("nickname",hit.getContent().getNickname());
+            jsonObject.put("user_avatar",hit.getContent().getUser_avatar());
         }
 
-        return WeiboUserContent;
+        Criteria criteriaForWeibo = new Criteria();
+        criteriaForWeibo.subCriteria(new Criteria("userid").contains("id"));
+        CriteriaQuery queryForWeibo = new CriteriaQuery(criteriaForWeibo);
+        SearchHits<Weibo> searchHitsForWeibo = this.elasticsearchOperations.search(queryForWeibo, Weibo.class);
+
+        for (SearchHit<Weibo> hit : searchHitsForWeibo.getSearchHits())
+        {
+            jsonObject.put("retweet_num",hit.getContent().getRetweet_num());
+            jsonObject.put("comment_num",hit.getContent().getComment_num());
+            jsonObject.put("up_num",hit.getContent().getUp_num());
+            jsonObject.put("publish_time",hit.getContent().getPublish_time());
+            jsonObject.put("publish_tool",hit.getContent().getPublish_tool());
+            jsonObject.put("publish_place",hit.getContent().getPublish_place());
+            jsonObject.put("article_url",hit.getContent().getArticle_url());
+            jsonObject.put("content",hit.getContent().getContent());
+            jsonObject.put("original_pictures",hit.getContent().getOriginal_pictures());
+            jsonObject.put("weiboid",hit.getContent().getWeiboid());
+            Res.appendElement(jsonObject);
+        }
+
+        FangAnWeiboUser fangAnWeiboUser=fangAnWeiboUserDAO.findByFidAndWeibouserid(fid,weibouserid);
+        Criteria criteria1 = new Criteria();
+        criteria1.subCriteria(new Criteria("userid").contains(fangAnWeiboUser.getWeibouserid()));
+        CriteriaQuery query1 = new CriteriaQuery(criteria1);
+        query1.setPageable(PageRequest.of(0, 10, Sort.by(Sort.Direction.DESC, "publish_time")));
+        SearchHits<Weibo> searchHits1 = this.elasticsearchOperations.search(query1, Weibo.class);
+        SearchPage<Weibo> searchPage = SearchHitSupport.searchPageFor(searchHits1, query1.getPageable());
+        List<Weibo> pageContent = new ArrayList<>();
+        for (SearchHit<Weibo> hit : searchPage.getSearchHits()) {
+            pageContent.add(hit.getContent());
+        }
+        SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+        if (pageContent.size()==0) {
+
+        }
+        else {
+            String PublishDayStr=pageContent.get(0).getPublish_time();
+            PublishDayStr=PublishDayStr+":00";
+            Date PublishDay = sdf.parse(PublishDayStr);
+            fangAnWeiboUser.setNewweibotime(PublishDay);
+            fangAnWeiboUserDAO.save(fangAnWeiboUser);
+        }
+
+        return Res;
     };
 }
