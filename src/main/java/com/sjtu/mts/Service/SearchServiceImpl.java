@@ -27,10 +27,20 @@ import org.springframework.security.core.parameters.P;
 import org.springframework.stereotype.Service;
 
 import java.io.UnsupportedEncodingException;
+import java.net.MalformedURLException;
+import java.net.URL;
+import java.sql.Array;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.*;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
+
+import org.openqa.selenium.By;
+import org.openqa.selenium.WebDriver;
+import org.openqa.selenium.chrome.ChromeOptions;
+import org.openqa.selenium.remote.DesiredCapabilities;
+import org.openqa.selenium.remote.RemoteWebDriver;
 
 import static com.sjtu.mts.Keyword.Wrapper.min;
 
@@ -61,6 +71,40 @@ public class SearchServiceImpl implements SearchService {
         this.areaRepository = areaRepository;
         this.sensitiveWordRepository = sensitiveWordRepository;
         this.swordFidRepository = swordFidRepository;
+    }
+
+    public int SensitiveTypeToInt(String SensitiveType)
+    {
+        if (SensitiveType.indexOf("政治敏感")!=-1)
+        {
+            return 5;
+        }
+        if (SensitiveType.indexOf("人身攻击")!=-1)
+        {
+            return 4;
+        }
+        if (SensitiveType.indexOf("正常信息")!=-1)
+        {
+            return 0;
+        }
+        return 1;
+    }
+
+    public int EmotionToInt(String Emotion)
+    {
+        if (Emotion.indexOf("angry")!=-1)
+        {
+            return 5;
+        }
+        if (Emotion.indexOf("fear")!=-1)
+        {
+            return 4;
+        }
+        if (Emotion.indexOf("neutral")!=-1)
+        {
+            return 0;
+        }
+        return 1;
     }
 
     @Override
@@ -223,13 +267,18 @@ public class SearchServiceImpl implements SearchService {
             }
         }
 
-
         if (timeOrder == 0) {
             Collections.sort(pageDataContent , (Data b1, Data b2) -> b2.getPublishedDay().compareTo(b1.getPublishedDay()));
         }
         else {
             Collections.sort(pageDataContent , (Data b1, Data b2) -> b1.getPublishedDay().compareTo(b2.getPublishedDay()));
         }
+
+        Collections.sort(pageDataContent,(Data b1, Data b2) -> (EmotionToInt(b1.getEmotion())>EmotionToInt(b2.getEmotion()))?-1:
+            ((EmotionToInt(b1.getEmotion())==EmotionToInt(b2.getEmotion()))?0:1));
+
+        Collections.sort(pageDataContent,(Data b1, Data b2) -> (SensitiveTypeToInt(b1.getSensitiveType())>SensitiveTypeToInt(b2.getSensitiveType()))?-1:
+                ((SensitiveTypeToInt(b1.getSensitiveType())==SensitiveTypeToInt(b2.getSensitiveType()))?0:1));
 
         int hitNumber=pageDataContent.size();
 
@@ -809,6 +858,12 @@ public class SearchServiceImpl implements SearchService {
         else {
             Collections.sort(pageDataContent , (Data b1, Data b2) -> b1.getPublishedDay().compareTo(b2.getPublishedDay()));
         }
+
+        Collections.sort(pageDataContent,(Data b1, Data b2) -> (EmotionToInt(b1.getEmotion())>EmotionToInt(b2.getEmotion()))?-1:
+                ((EmotionToInt(b1.getEmotion())==EmotionToInt(b2.getEmotion()))?0:1));
+
+        Collections.sort(pageDataContent,(Data b1, Data b2) -> (SensitiveTypeToInt(b1.getSensitiveType())>SensitiveTypeToInt(b2.getSensitiveType()))?-1:
+                ((SensitiveTypeToInt(b1.getSensitiveType())==SensitiveTypeToInt(b2.getSensitiveType()))?0:1));
 
         int hitNumber=pageDataContent.size();
 
@@ -1398,27 +1453,36 @@ public class SearchServiceImpl implements SearchService {
 
     @Override
     public JSONArray getWeiboListByid(long fid,String weibouserid) throws ParseException {
+        System.out.println(fid);
+        System.out.println(weibouserid);
         Criteria criteriaForWeiboUser = new Criteria();
         criteriaForWeiboUser.subCriteria(new Criteria("userid").contains(weibouserid));
         CriteriaQuery queryForWeiboUser = new CriteriaQuery(criteriaForWeiboUser);
         SearchHits<WeiboUser> searchHitsForWeiboUser = this.elasticsearchOperations.search(queryForWeiboUser, WeiboUser.class);
 
         JSONArray Res=new JSONArray();
-        JSONObject jsonObject=new JSONObject();
+
+        String id="";
+        String nickname="";
+        String user_avatar="";
         for (SearchHit<WeiboUser> hit : searchHitsForWeiboUser.getSearchHits())
         {
-            jsonObject.put("id",hit.getContent().getUserid());
-            jsonObject.put("nickname",hit.getContent().getNickname());
-            jsonObject.put("user_avatar",hit.getContent().getUser_avatar());
+            System.out.println(hit.getContent().getNickname());
+            id=hit.getContent().getUserid();
+            nickname=hit.getContent().getNickname();
+            user_avatar=hit.getContent().getUser_avatar();
         }
-
         Criteria criteriaForWeibo = new Criteria();
-        criteriaForWeibo.subCriteria(new Criteria("userid").contains("id"));
+        criteriaForWeibo.subCriteria(new Criteria("userid").contains(weibouserid));
         CriteriaQuery queryForWeibo = new CriteriaQuery(criteriaForWeibo);
         SearchHits<Weibo> searchHitsForWeibo = this.elasticsearchOperations.search(queryForWeibo, Weibo.class);
 
         for (SearchHit<Weibo> hit : searchHitsForWeibo.getSearchHits())
         {
+            JSONObject jsonObject=new JSONObject();
+            jsonObject.put("id",id);
+            jsonObject.put("nickname",nickname);
+            jsonObject.put("user_avatar",user_avatar);
             jsonObject.put("retweet_num",hit.getContent().getRetweet_num());
             jsonObject.put("comment_num",hit.getContent().getComment_num());
             jsonObject.put("up_num",hit.getContent().getUp_num());
@@ -1427,8 +1491,27 @@ public class SearchServiceImpl implements SearchService {
             jsonObject.put("publish_place",hit.getContent().getPublish_place());
             jsonObject.put("article_url",hit.getContent().getArticle_url());
             jsonObject.put("content",hit.getContent().getContent());
-            jsonObject.put("original_pictures",hit.getContent().getOriginal_pictures());
             jsonObject.put("weiboid",hit.getContent().getWeiboid());
+
+            JSONArray picturesArray=new JSONArray();
+            String original_pictures=hit.getContent().getOriginal_pictures();
+            if (original_pictures.equals("无"))
+            {
+                jsonObject.put("original_pictures",picturesArray);
+            }
+            else
+            {
+                original_pictures=original_pictures+',';
+                System.out.println(original_pictures);
+                while(original_pictures.length()>0)
+                {
+                    int tag=original_pictures.indexOf(',');
+                    picturesArray.appendElement(original_pictures.substring(0,tag));
+                    original_pictures=original_pictures.substring(tag+1);
+                }
+                jsonObject.put("original_pictures",picturesArray);
+            }
+
             Res.appendElement(jsonObject);
         }
 
@@ -1456,5 +1539,154 @@ public class SearchServiceImpl implements SearchService {
         }
 
         return Res;
+    };
+
+    @Override
+    public JSONArray getOverallDatOnNetwork(String keyword,Integer pageId) throws MalformedURLException, InterruptedException {
+        System.out.println("sjdygfk");
+        System.out.println(keyword);
+        System.out.println(pageId);
+        JSONArray jsonArray=new JSONArray();
+        ChromeOptions options = new ChromeOptions();
+        options.addArguments("--no-sandbox");
+        options.addArguments("--headless");
+        options.addArguments("--window-size=4000,1600");
+        options.addArguments("User-Agent=Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/63.0.3239.132 Safari/537.36 QIHU 360SE");
+        DesiredCapabilities capabilities = DesiredCapabilities.chrome();
+        capabilities.setCapability(ChromeOptions.CAPABILITY, options);
+        WebDriver webDriver = new RemoteWebDriver(new URL("http://192.168.0.3:4444/wd/hub"), capabilities);
+        webDriver.manage().timeouts().implicitlyWait(10, TimeUnit.SECONDS);
+
+        JSONArray Arraybaidu=new JSONArray();
+        webDriver.get("https://www.baidu.com/s?wd=java&pn=10");
+        Thread.sleep(1000);
+
+        webDriver.findElements(By.className("t")).forEach(x -> {
+            JSONObject jsonObject =new JSONObject();
+            jsonObject.put("title",x.getText());
+            jsonObject.put("url",x.findElement(By.xpath(".//a")).getAttribute("href"));
+            Arraybaidu.appendElement(jsonObject);
+            //System.out.println(x.getText());
+            //System.out.println(x.findElement(By.xpath(".//a")).getAttribute("href"));
+        });
+
+        JSONArray Array360=new JSONArray();
+        webDriver.get("https://www.so.com/s?q=java&pn=2");
+        Thread.sleep(1000);
+
+        webDriver.findElements(By.className("res-title")).forEach(x -> {
+            JSONObject jsonObject =new JSONObject();
+            jsonObject.put("title",x.getText());
+            jsonObject.put("url",x.findElement(By.xpath(".//a")).getAttribute("href"));
+            Array360.appendElement(jsonObject);
+            //System.out.println(x.getText());
+            //System.out.println(x.findElement(By.xpath(".//a")).getAttribute("href"));
+        });
+
+        JSONArray Arraybing=new JSONArray();
+        webDriver.get("https://cn.bing.com/search?q=java&first=9");
+        Thread.sleep(1000);
+
+        webDriver.findElements(By.className("b_algo")).forEach(x -> {
+            JSONObject jsonObject =new JSONObject();
+            jsonObject.put("title",x.findElement(By.xpath(".//h2")).getText());
+            jsonObject.put("url",x.findElement(By.xpath(".//h2")).findElement(By.xpath(".//a")).getAttribute("href"));
+            Arraybing.appendElement(jsonObject);
+            //System.out.println(x.findElement(By.xpath(".//h2")).getText());
+            //System.out.println(x.findElement(By.xpath(".//h2")).findElement(By.xpath(".//a")).getAttribute("href"));
+        });
+
+        webDriver.quit();
+
+        jsonArray.appendElement(Arraybaidu);
+        jsonArray.appendElement(Array360);
+        jsonArray.appendElement(Arraybing);
+        return jsonArray;
+    }
+
+    @Override
+    public JSONArray getOverallDataBaidu(String keyword,Integer pageId) throws MalformedURLException, InterruptedException
+    {
+        ChromeOptions options = new ChromeOptions();
+        options.addArguments("--no-sandbox");
+        options.addArguments("--headless");
+        options.addArguments("--window-size=4000,1600");
+        options.addArguments("User-Agent=Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/63.0.3239.132 Safari/537.36 QIHU 360SE");
+        DesiredCapabilities capabilities = DesiredCapabilities.chrome();
+        capabilities.setCapability(ChromeOptions.CAPABILITY, options);
+        WebDriver webDriver = new RemoteWebDriver(new URL("http://192.168.0.3:4444/wd/hub"), capabilities);
+        webDriver.manage().timeouts().implicitlyWait(10, TimeUnit.SECONDS);
+
+        JSONArray Arraybaidu=new JSONArray();
+        String url="https://www.baidu.com/s?wd="+keyword+"&pn="+String.valueOf(pageId*10);
+        //"https://www.baidu.com/s?wd=java&pn=10"
+        webDriver.get(url);
+        Thread.sleep(1000);
+
+        webDriver.findElements(By.className("t")).forEach(x -> {
+            JSONObject jsonObject =new JSONObject();
+            jsonObject.put("title",x.getText());
+            jsonObject.put("url",x.findElement(By.xpath(".//a")).getAttribute("href"));
+            Arraybaidu.appendElement(jsonObject);
+        });
+        webDriver.quit();
+        return Arraybaidu;
+    };
+
+    @Override
+    public JSONArray getOverallData360(String keyword,Integer pageId) throws MalformedURLException, InterruptedException
+    {
+        ChromeOptions options = new ChromeOptions();
+        options.addArguments("--no-sandbox");
+        options.addArguments("--headless");
+        options.addArguments("--window-size=4000,1600");
+        options.addArguments("User-Agent=Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/63.0.3239.132 Safari/537.36 QIHU 360SE");
+        DesiredCapabilities capabilities = DesiredCapabilities.chrome();
+        capabilities.setCapability(ChromeOptions.CAPABILITY, options);
+        WebDriver webDriver = new RemoteWebDriver(new URL("http://192.168.0.3:4444/wd/hub"), capabilities);
+        webDriver.manage().timeouts().implicitlyWait(10, TimeUnit.SECONDS);
+
+        JSONArray Array360=new JSONArray();
+        String url="https://www.so.com/s?q="+keyword+"&pn="+String.valueOf(pageId+1);
+        //"https://www.so.com/s?q=java&pn=2"
+        webDriver.get(url);
+        Thread.sleep(1000);
+
+        webDriver.findElements(By.className("res-title")).forEach(x -> {
+            JSONObject jsonObject =new JSONObject();
+            jsonObject.put("title",x.getText());
+            jsonObject.put("url",x.findElement(By.xpath(".//a")).getAttribute("href"));
+            Array360.appendElement(jsonObject);
+        });
+        webDriver.quit();
+        return Array360;
+    };
+
+    @Override
+    public JSONArray getOverallDataBing(String keyword,Integer pageId) throws MalformedURLException, InterruptedException
+    {
+        ChromeOptions options = new ChromeOptions();
+        options.addArguments("--no-sandbox");
+        options.addArguments("--headless");
+        options.addArguments("--window-size=4000,1600");
+        options.addArguments("User-Agent=Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/63.0.3239.132 Safari/537.36 QIHU 360SE");
+        DesiredCapabilities capabilities = DesiredCapabilities.chrome();
+        capabilities.setCapability(ChromeOptions.CAPABILITY, options);
+        WebDriver webDriver = new RemoteWebDriver(new URL("http://192.168.0.3:4444/wd/hub"), capabilities);
+        webDriver.manage().timeouts().implicitlyWait(10, TimeUnit.SECONDS);
+
+        JSONArray Arraybing=new JSONArray();
+        String url="https://cn.bing.com/search?q="+keyword+"&first="+String.valueOf(pageId*10+1);
+        webDriver.get(url);
+        Thread.sleep(1000);
+
+        webDriver.findElements(By.className("b_algo")).forEach(x -> {
+            JSONObject jsonObject =new JSONObject();
+            jsonObject.put("title",x.findElement(By.xpath(".//h2")).getText());
+            jsonObject.put("url",x.findElement(By.xpath(".//h2")).findElement(By.xpath(".//a")).getAttribute("href"));
+            Arraybing.appendElement(jsonObject);
+        });
+        webDriver.quit();
+        return Arraybing;
     };
 }

@@ -13,6 +13,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
 import java.io.UnsupportedEncodingException;
+import java.net.MalformedURLException;
 import java.text.ParseException;
 import java.util.List;
 import java.util.Map;
@@ -591,5 +592,44 @@ public class DataController {
             @RequestParam("weibouserid") String weibouserid
     ) throws UnsupportedEncodingException, ParseException {
         return searchService.getWeiboListByid(fid,weibouserid);
+    }
+
+    @GetMapping("/getOverallDatOnNetwork")
+    @ResponseBody
+    public JSONArray getOverallDatOnNetwork (
+            @RequestParam("keyword") String keyword,
+            @RequestParam("pageId") int pageId
+    ) throws MalformedURLException, InterruptedException {
+        return searchService.getOverallDatOnNetwork(keyword,pageId);
+    }
+
+    @GetMapping("/getOverallDataBing")
+    @ResponseBody
+    public JSONArray getOverallDataBing (
+            @RequestParam("keyword") String keyword,
+            @RequestParam("pageId") int pageId
+    ) throws MalformedURLException, InterruptedException, UnsupportedEncodingException {
+        String kword = java.net.URLDecoder.decode(keyword, "utf-8");
+        return searchService.getOverallDataBing(kword,pageId);
+    }
+
+    @GetMapping("/getOverallData360")
+    @ResponseBody
+    public JSONArray getOverallData360 (
+            @RequestParam("keyword") String keyword,
+            @RequestParam("pageId") int pageId
+    ) throws MalformedURLException, InterruptedException, UnsupportedEncodingException {
+        String kword = java.net.URLDecoder.decode(keyword, "utf-8");
+        return searchService.getOverallData360(kword,pageId);
+    }
+
+    @GetMapping("/getOverallDataBaidu")
+    @ResponseBody
+    public JSONArray getOverallDataBaidu (
+            @RequestParam("keyword") String keyword,
+            @RequestParam("pageId") int pageId
+    ) throws MalformedURLException, InterruptedException, UnsupportedEncodingException {
+        String kword = java.net.URLDecoder.decode(keyword, "utf-8");
+        return searchService.getOverallDataBaidu(kword,pageId);
     }
 }
