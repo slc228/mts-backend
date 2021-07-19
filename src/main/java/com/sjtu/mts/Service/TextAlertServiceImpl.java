@@ -65,7 +65,7 @@ public class TextAlertServiceImpl implements TextAlertService {
         List<Criteria> criterias=fangAnDao.FindCriteriasByFid(fid);
         for(Criteria criteria:criterias)
         {
-            criteria.subCriteria(new Criteria().and("fromType").is("3"));
+            //criteria.subCriteria(new Criteria().and("fromType").is("3"));
             CriteriaQuery query = new CriteriaQuery(criteria);
             SearchHits<Data> searchHits = this.elasticsearchOperations.search(query, Data.class);
 

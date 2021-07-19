@@ -10,6 +10,7 @@ import net.minidev.json.JSONArray;
 import net.minidev.json.JSONObject;
 
 import java.io.UnsupportedEncodingException;
+import java.net.MalformedURLException;
 import java.text.ParseException;
 import java.util.List;
 import java.util.Map;
@@ -82,4 +83,13 @@ public interface SearchService {
     public JSONObject getWeiboByid(long fid,String id) throws ParseException;
 
     public JSONArray getWeiboListByid(long fid,String weibouserid) throws ParseException;
+
+    public JSONArray getOverallDatOnNetwork(String keyword,Integer pageId) throws MalformedURLException, InterruptedException;
+
+    public JSONArray getOverallDataBing(String keyword,Integer pageId) throws MalformedURLException, InterruptedException;
+
+    public JSONArray getOverallData360(String keyword,Integer pageId) throws MalformedURLException, InterruptedException;
+
+    public JSONArray getOverallDataBaidu(String keyword,Integer pageId) throws MalformedURLException, InterruptedException;
+
 }
