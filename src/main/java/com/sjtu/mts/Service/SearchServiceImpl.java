@@ -75,6 +75,10 @@ public class SearchServiceImpl implements SearchService {
 
     public int SensitiveTypeToInt(String SensitiveType)
     {
+        if (SensitiveType==null)
+        {
+            return 0;
+        }
         if (SensitiveType.indexOf("政治敏感")!=-1)
         {
             return 5;
@@ -92,6 +96,10 @@ public class SearchServiceImpl implements SearchService {
 
     public int EmotionToInt(String Emotion)
     {
+        if (Emotion==null)
+        {
+            return 0;
+        }
         if (Emotion.indexOf("angry")!=-1)
         {
             return 5;
@@ -105,6 +113,70 @@ public class SearchServiceImpl implements SearchService {
             return 0;
         }
         return 1;
+    }
+
+    public String SensitiveTypeStr(String SensitiveType)
+    {
+        if (SensitiveType==null){
+            return null;
+        }
+        if (SensitiveType.equals("1"))
+        {
+            return "正常信息";
+        }
+        if (SensitiveType.equals("2"))
+        {
+            return "政治敏感";
+        }
+        if (SensitiveType.equals("3"))
+        {
+            return "广告营销";
+        }
+        if (SensitiveType.equals("4"))
+        {
+            return "不实信息";
+        }
+        if (SensitiveType.equals("5"))
+        {
+            return "人身攻击";
+        }
+        if (SensitiveType.equals("6"))
+        {
+            return "低俗信息";
+        }
+        return null;
+    }
+
+    public String EmotionStr(String Emotion)
+    {
+        if (Emotion == null) {
+            return null;
+        }
+        if (Emotion.equals("1"))
+        {
+            return "neutral";
+        }
+        if (Emotion.equals("2"))
+        {
+            return "angry";
+        }
+        if (Emotion.equals("3"))
+        {
+            return "fear";
+        }
+        if (Emotion.equals("4"))
+        {
+            return "surprise";
+        }
+        if (Emotion.equals("5"))
+        {
+            return "sad";
+        }
+        if (Emotion.equals("6"))
+        {
+            return "happy";
+        }
+        return null;
     }
 
     @Override
@@ -161,10 +233,11 @@ public class SearchServiceImpl implements SearchService {
         return result;
     }
     @Override
-    public DataResponse SearchWithObject(String keyword, String cflag, String startPublishedDay, String endPublishedDay,
+    public DataResponse SearchWithObject(String keyword, String sensitiveType, String emotion, String startPublishedDay, String endPublishedDay,
                                          String fromType, int page, int pageSize, int timeOrder,String keywords)
     {
         String eventKeyword = keywords;
+        System.out.println(eventKeyword);
         eventKeyword=eventKeyword.substring(1,eventKeyword.length()-1);
         List<String> events=new ArrayList<String>();
         if (eventKeyword.length()!=0)
@@ -187,11 +260,15 @@ public class SearchServiceImpl implements SearchService {
                 List<String>searchSplitArray = Arrays.asList(searchSplitArray1);
                 criteria.subCriteria(new Criteria("content").in(searchSplitArray).or("title").in(searchSplitArray));
             }
-            if (!cflag.isEmpty())
+            if (!sensitiveType.isEmpty())
             {
-                criteria.subCriteria(new Criteria().and("cflag").is(cflag));
+                criteria.subCriteria(new Criteria("sensitiveType").contains(SensitiveTypeStr(sensitiveType)));
             }
-            if (!startPublishedDay.isEmpty() && !endPublishedDay.isEmpty())
+            if (!emotion.isEmpty())
+            {
+                criteria.subCriteria(new Criteria("emotion").contains(EmotionStr(emotion)));
+            }
+            if (!startPublishedDay.equals("null")&& !endPublishedDay.equals("null"))
             {
                 SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
                 try {
@@ -214,15 +291,12 @@ public class SearchServiceImpl implements SearchService {
                     for (String searchString : searchSplitArray) {
                         List<String> subArray = new LinkedList<>();
                         subArray.add(searchString);
-                        //criteria.subCriteria(new Criteria("content").in(subArray).or("title").in(subArray));
-                        criteria.subCriteria(new Criteria("title").in(subArray));
+                        criteria.subCriteria(new Criteria("content").in(subArray).or("title").in(subArray));
                     }
                 }else {
-                    //criteria.subCriteria(new Criteria("content").in(searchSplitArray).or("title").in(searchSplitArray));
-                    criteria.subCriteria(new Criteria("title").in(searchSplitArray));
+                    criteria.subCriteria(new Criteria("content").in(searchSplitArray).or("title").in(searchSplitArray));
                 }
             }
-            System.out.println(criteria);
             CriteriaQuery query = new CriteriaQuery(criteria);
             SearchHits<Data> searchHits = this.elasticsearchOperations.search(query, Data.class);
             for (SearchHit<Data> hit : searchHits.getSearchHits())
@@ -239,11 +313,15 @@ public class SearchServiceImpl implements SearchService {
                 List<String>searchSplitArray = Arrays.asList(searchSplitArray1);
                 criteria.subCriteria(new Criteria("content").in(searchSplitArray).or("title").in(searchSplitArray));
             }
-            if (!cflag.isEmpty())
+            if (!sensitiveType.isEmpty())
             {
-                criteria.subCriteria(new Criteria().and("cflag").is(cflag));
+                criteria.subCriteria(new Criteria("sensitiveType").contains(SensitiveTypeStr(sensitiveType)));
             }
-            if (!startPublishedDay.isEmpty() && !endPublishedDay.isEmpty())
+            if (!emotion.isEmpty())
+            {
+                criteria.subCriteria(new Criteria("emotion").contains(EmotionStr(emotion)));
+            }
+            if (!startPublishedDay.equals("null")&& !endPublishedDay.equals("null"))
             {
                 SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
                 try {
@@ -258,7 +336,6 @@ public class SearchServiceImpl implements SearchService {
             {
                 criteria.subCriteria(new Criteria().and("fromType").is(fromType));
             }
-            System.out.println(criteria);
             CriteriaQuery query = new CriteriaQuery(criteria);
             SearchHits<Data> searchHits = this.elasticsearchOperations.search(query, Data.class);
             for (SearchHit<Data> hit : searchHits.getSearchHits())
@@ -274,11 +351,11 @@ public class SearchServiceImpl implements SearchService {
             Collections.sort(pageDataContent , (Data b1, Data b2) -> b1.getPublishedDay().compareTo(b2.getPublishedDay()));
         }
 
-        Collections.sort(pageDataContent,(Data b1, Data b2) -> (EmotionToInt(b1.getEmotion())>EmotionToInt(b2.getEmotion()))?-1:
+        /*Collections.sort(pageDataContent,(Data b1, Data b2) -> (EmotionToInt(b1.getEmotion())>EmotionToInt(b2.getEmotion()))?-1:
             ((EmotionToInt(b1.getEmotion())==EmotionToInt(b2.getEmotion()))?0:1));
 
         Collections.sort(pageDataContent,(Data b1, Data b2) -> (SensitiveTypeToInt(b1.getSensitiveType())>SensitiveTypeToInt(b2.getSensitiveType()))?-1:
-                ((SensitiveTypeToInt(b1.getSensitiveType())==SensitiveTypeToInt(b2.getSensitiveType()))?0:1));
+                ((SensitiveTypeToInt(b1.getSensitiveType())==SensitiveTypeToInt(b2.getSensitiveType()))?0:1));*/
 
         int hitNumber=pageDataContent.size();
 
@@ -807,7 +884,7 @@ public class SearchServiceImpl implements SearchService {
 
 
     @Override
-    public DataResponse fangAnSearch2(long fid,String keyword,String cflag, String startPublishedDay, String endPublishedDay,
+    public DataResponse fangAnSearch2(long fid,String keyword,String sensitiveType,String emotion, String startPublishedDay, String endPublishedDay,
                                      String fromType, int page, int pageSize, int timeOrder){
         List<Criteria> criterias=fangAnDao.FindCriteriasByFid(fid);
         List<Data> pageDataContent = new ArrayList<>();
@@ -818,9 +895,13 @@ public class SearchServiceImpl implements SearchService {
                 List<String>searchSplitArray = Arrays.asList(searchSplitArray1);
                 criteria.subCriteria(new Criteria("content").in(searchSplitArray).or("title").in(searchSplitArray));
             }
-            if (!cflag.isEmpty())
+            if (!sensitiveType.isEmpty())
             {
-                criteria.subCriteria(new Criteria().and("cflag").is(cflag));
+                criteria.subCriteria(new Criteria("sensitiveType").contains(SensitiveTypeStr(sensitiveType)));
+            }
+            if (!emotion.isEmpty())
+            {
+                criteria.subCriteria(new Criteria("emotion").contains(EmotionStr(emotion)));
             }
             if (!startPublishedDay.isEmpty() && !endPublishedDay.isEmpty())
             {
@@ -858,12 +939,12 @@ public class SearchServiceImpl implements SearchService {
         else {
             Collections.sort(pageDataContent , (Data b1, Data b2) -> b1.getPublishedDay().compareTo(b2.getPublishedDay()));
         }
-
+/*
         Collections.sort(pageDataContent,(Data b1, Data b2) -> (EmotionToInt(b1.getEmotion())>EmotionToInt(b2.getEmotion()))?-1:
                 ((EmotionToInt(b1.getEmotion())==EmotionToInt(b2.getEmotion()))?0:1));
 
         Collections.sort(pageDataContent,(Data b1, Data b2) -> (SensitiveTypeToInt(b1.getSensitiveType())>SensitiveTypeToInt(b2.getSensitiveType()))?-1:
-                ((SensitiveTypeToInt(b1.getSensitiveType())==SensitiveTypeToInt(b2.getSensitiveType()))?0:1));
+                ((SensitiveTypeToInt(b1.getSensitiveType())==SensitiveTypeToInt(b2.getSensitiveType()))?0:1));*/
 
         int hitNumber=pageDataContent.size();
 
@@ -1338,6 +1419,21 @@ public class SearchServiceImpl implements SearchService {
             else {
                 result.put("addweibouser", 0);
             }
+            e.printStackTrace();
+        }
+        return result;
+    };
+
+    @Override
+    public JSONObject deleteWeiboUser(long fid,String Weibouserid,String Weibousernickname)
+    {
+        JSONObject result = new JSONObject();
+        result.put("deleteWeiboUser", 0);
+        try {
+            fangAnWeiboUserDAO.deleteByFidAndWeibousernickname(fid,Weibousernickname);
+            result.put("deleteWeiboUser", 1);
+        }catch (Exception e){
+            result.put("deleteWeiboUser", 0);
             e.printStackTrace();
         }
         return result;

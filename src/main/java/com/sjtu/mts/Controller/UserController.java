@@ -123,16 +123,6 @@ public class UserController {
     @PostMapping(path = "/saveFangAn")
     @ResponseBody
     public JSONObject saveFangAn(@RequestBody Map<String,String> fangAnInfo ) {
-        String event = fangAnInfo.get("eventKeyword");
-        String eventKeyword="";
-        event=event.substring(1,event.length()-1);
-        event=event+",";
-        while(event.length()>0)
-        {
-            int tag=event.indexOf(',');
-            eventKeyword=eventKeyword+event.substring(1,tag-1)+"+";
-            event=event.substring(tag+1);
-        }
         return fangAnService.saveFangAn(
                 fangAnInfo.get("username"),
                 fangAnInfo.get("programmeName"),
@@ -141,7 +131,7 @@ public class UserController {
                 Integer.parseInt(fangAnInfo.get("regionKeywordMatch")),
                 fangAnInfo.get("roleKeyword"),
                 Integer.parseInt(fangAnInfo.get("roleKeywordMatch")),
-                eventKeyword,
+                fangAnInfo.get("eventKeyword"),
                 Integer.parseInt(fangAnInfo.get("eventKeywordMatch")),
                 Boolean.parseBoolean(fangAnInfo.get("enableAlert")),
                 fangAnInfo.get("sensitiveWord")

@@ -106,7 +106,8 @@ public class DataController {
     @ResponseBody
     public DataResponse dataSearchWithObject(
             @RequestParam("keyword") String keyword,
-            @RequestParam("cflag") String cflag,
+            @RequestParam("sensitiveType") String sensitiveType,
+            @RequestParam("emotion") String emotion,
             @RequestParam("startPublishedDay") String startPublishedDay,
             @RequestParam("endPublishedDay") String endPublishedDay,
             @RequestParam("fromType") String fromType,
@@ -125,7 +126,7 @@ public class DataController {
         }catch (Exception e){
             System.out.println(e);
         }
-        return searchService.SearchWithObject(decodeKeyword, cflag, startPublishedDay, endPublishedDay, fromType,page, pageSize, timeOrder,decodeKeywords);
+        return searchService.SearchWithObject(decodeKeyword, sensitiveType, emotion, startPublishedDay, endPublishedDay, fromType,page, pageSize, timeOrder,decodeKeywords);
     }
 
     @GetMapping("/globalSearch/resourceCount")
@@ -248,7 +249,8 @@ public class DataController {
     public DataResponse fangAnSearch2(
             @RequestParam("fid") long fid,
             @RequestParam("keyword")String keyword,
-            @RequestParam("cflag") String cflag,
+            @RequestParam("sensitiveType") String sensitiveType,
+            @RequestParam("emotion") String emotion,
             @RequestParam("startPublishedDay") String startPublishedDay,
             @RequestParam("endPublishedDay") String endPublishedDay,
             @RequestParam("fromType") String fromType,
@@ -264,7 +266,7 @@ public class DataController {
             System.out.println(e);
         }
 
-        return searchService.fangAnSearch2(fid,decodeKeyword,cflag,startPublishedDay,endPublishedDay,fromType,page,pageSize,timeOrder);
+        return searchService.fangAnSearch2(fid,decodeKeyword,sensitiveType,emotion,startPublishedDay,endPublishedDay,fromType,page,pageSize,timeOrder);
     }
 
     /*溯源微博，生成并返回微博转发关系树
@@ -557,6 +559,21 @@ public class DataController {
         String Weibouserid = java.net.URLDecoder.decode(id, "utf-8");
         String Weibousernickname = java.net.URLDecoder.decode(nickname, "utf-8");
         return searchService.addWeiboUser(fid, Weibouserid, Weibousernickname);
+    }
+
+    /*删除方案监测的微博用户
+       @author Sun liangchen
+   */
+    @GetMapping("/deleteWeiboUser")
+    @ResponseBody
+    public JSONObject deleteWeiboUser (
+            @RequestParam("fid") long fid,
+            @RequestParam("id") String id,
+            @RequestParam("nickname") String nickname
+    ) throws UnsupportedEncodingException {
+        String Weibouserid = java.net.URLDecoder.decode(id, "utf-8");
+        String Weibousernickname = java.net.URLDecoder.decode(nickname, "utf-8");
+        return searchService.deleteWeiboUser(fid, Weibouserid, Weibousernickname);
     }
 
      /*获得方案监测的微博用户

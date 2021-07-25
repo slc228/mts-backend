@@ -20,7 +20,7 @@ public interface SearchService {
     public DataResponse Search(String keyword, String cflag, String startPublishedDay, String endPublishedDay,
                                String fromType, int page, int pageSize, int timeOrder);
 
-    public DataResponse SearchWithObject(String keyword, String cflag, String startPublishedDay, String endPublishedDay,
+    public DataResponse SearchWithObject(String keyword, String sensitiveType, String emotion, String startPublishedDay, String endPublishedDay,
                                String fromType, int page, int pageSize, int timeOrder,String keywords);
 
     public ResourceCountResponse globalSearchResourceCount(String keyword, String startPublishedDay,
@@ -49,7 +49,7 @@ public interface SearchService {
 
     public DataResponse fangAnSearch(long fid,String cflag, String startPublishedDay, String endPublishedDay,
                                      String fromType, int page, int pageSize, int timeOrder);
-    public DataResponse fangAnSearch2(long fid,String keyword,String cflag, String startPublishedDay, String endPublishedDay,
+    public DataResponse fangAnSearch2(long fid,String keyword,String sensitiveType,String emotion, String startPublishedDay, String endPublishedDay,
                                      String fromType, int page, int pageSize, int timeOrder);
 
     public JSONObject addSensitiveWord(String sensitiveWord);
@@ -77,6 +77,8 @@ public interface SearchService {
     public List<BriefWeiboUser> searchBriefWeiboUser(long fid, String WeiboUserForSearch);
 
     public JSONObject addWeiboUser(long fid,String Weibouserid,String Weibousernickname);
+
+    public JSONObject deleteWeiboUser(long fid,String Weibouserid,String Weibousernickname);
 
     public JSONArray getFangAnMonitor(long fid) throws ParseException;
 
