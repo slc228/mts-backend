@@ -315,7 +315,6 @@ public class SearchServiceImpl implements SearchService {
             }
             if (!sensitiveType.isEmpty())
             {
-                System.out.println(SensitiveTypeStr(sensitiveType));
                 criteria.subCriteria(new Criteria("sensitiveType").in(SensitiveTypeStr(sensitiveType)));
             }
             if (!emotion.isEmpty())
@@ -898,7 +897,7 @@ public class SearchServiceImpl implements SearchService {
             }
             if (!sensitiveType.isEmpty())
             {
-                criteria.subCriteria(new Criteria("sensitiveType").contains(SensitiveTypeStr(sensitiveType)));
+                criteria.subCriteria(new Criteria("sensitiveType").in(SensitiveTypeStr(sensitiveType)));
             }
             if (!emotion.isEmpty())
             {

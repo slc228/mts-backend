@@ -94,7 +94,6 @@ public class DataController {
         String decodeKeyword = "";
         try{
             decodeKeyword = java.net.URLDecoder.decode(keyword, "utf-8");
-            System.out.println("Decoded keyword: "+decodeKeyword);
         }catch (Exception e){
             System.out.println(e);
         }
@@ -121,8 +120,6 @@ public class DataController {
         try{
             decodeKeyword = java.net.URLDecoder.decode(keyword, "utf-8");
             decodeKeywords = java.net.URLDecoder.decode(keywords, "utf-8");
-            System.out.println("Decoded keyword: "+decodeKeyword);
-            System.out.println(decodeKeywords);
         }catch (Exception e){
             System.out.println(e);
         }
@@ -261,7 +258,6 @@ public class DataController {
         String decodeKeyword = "";
         try{
              decodeKeyword = java.net.URLDecoder.decode(keyword, "utf-8");
-             System.out.println(decodeKeyword);
         }catch (Exception e){
             System.out.println(e);
         }
@@ -366,7 +362,6 @@ public class DataController {
     @ResponseBody
     public com.alibaba.fastjson.JSONObject textAlert(@RequestBody Map<String,List<String>> textInfo)
     {
-        System.out.println(textInfo.get("textList"));
         return textAlertService.textAlert(textInfo.get("textList"));
     }
 
