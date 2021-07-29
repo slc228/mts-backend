@@ -17,6 +17,7 @@ import org.elasticsearch.index.query.QueryBuilder;
 import org.elasticsearch.index.query.QueryBuilders;
 import org.elasticsearch.index.query.QueryShardContext;
 import org.joda.time.DateTime;
+import org.openqa.selenium.WebElement;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
@@ -237,7 +238,6 @@ public class SearchServiceImpl implements SearchService {
                                          String fromType, int page, int pageSize, int timeOrder,String keywords)
     {
         String eventKeyword = keywords;
-        System.out.println(eventKeyword);
         eventKeyword=eventKeyword.substring(1,eventKeyword.length()-1);
         List<String> events=new ArrayList<String>();
         if (eventKeyword.length()!=0)
@@ -268,7 +268,7 @@ public class SearchServiceImpl implements SearchService {
             {
                 criteria.subCriteria(new Criteria("emotion").contains(EmotionStr(emotion)));
             }
-            if (!startPublishedDay.equals("null")&& !endPublishedDay.equals("null"))
+            if (!startPublishedDay.equals("null")&& !endPublishedDay.equals("null")&&!startPublishedDay.isEmpty()&&!endPublishedDay.isEmpty())
             {
                 SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
                 try {
@@ -321,7 +321,7 @@ public class SearchServiceImpl implements SearchService {
             {
                 criteria.subCriteria(new Criteria("emotion").contains(EmotionStr(emotion)));
             }
-            if (!startPublishedDay.equals("null")&& !endPublishedDay.equals("null"))
+            if (!startPublishedDay.equals("null")&& !endPublishedDay.equals("null")&&!startPublishedDay.isEmpty()&&!endPublishedDay.isEmpty())
             {
                 SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
                 try {
@@ -1722,7 +1722,7 @@ public class SearchServiceImpl implements SearchService {
         webDriver.findElements(By.className("t")).forEach(x -> {
             JSONObject jsonObject =new JSONObject();
             jsonObject.put("title",x.getText());
-            jsonObject.put("url",x.findElement(By.xpath(".//a")).getAttribute("href"));
+            jsonObject.put("url",x.findElement(By.xpath("./a")).getAttribute("href"));
             Arraybaidu.appendElement(jsonObject);
         });
         webDriver.quit();
@@ -1748,10 +1748,11 @@ public class SearchServiceImpl implements SearchService {
         webDriver.get(url);
         Thread.sleep(1000);
 
-        webDriver.findElements(By.className("res-title")).forEach(x -> {
+        //*[@id="main"]/ul/li/h3/a
+        webDriver.findElements(By.xpath("//*[@id=\"main\"]/ul/li/h3/a")).forEach(x -> {
             JSONObject jsonObject =new JSONObject();
             jsonObject.put("title",x.getText());
-            jsonObject.put("url",x.findElement(By.xpath(".//a")).getAttribute("href"));
+            jsonObject.put("url",x.getAttribute("href"));
             Array360.appendElement(jsonObject);
         });
         webDriver.quit();
@@ -1761,6 +1762,9 @@ public class SearchServiceImpl implements SearchService {
     @Override
     public JSONArray getOverallDataBing(String keyword,Integer pageId) throws MalformedURLException, InterruptedException
     {
+        System.out.println("Bingherer");
+        System.out.println(keyword);
+        System.out.println(pageId);
         ChromeOptions options = new ChromeOptions();
         options.addArguments("--no-sandbox");
         options.addArguments("--headless");
@@ -1775,13 +1779,17 @@ public class SearchServiceImpl implements SearchService {
         String url="https://cn.bing.com/search?q="+keyword+"&first="+String.valueOf(pageId*10+1);
         webDriver.get(url);
         Thread.sleep(1000);
+        WebElement webElement= webDriver.findElement(By.id("b_results"));
+        //*[@id="b_results"]/li/h2/a
+        for (WebElement x : webDriver.findElements(By.xpath(" //*[@id=\"b_results\"]/li/h2/a"))) {
+            JSONObject jsonObject = new JSONObject();
 
-        webDriver.findElements(By.className("b_algo")).forEach(x -> {
-            JSONObject jsonObject =new JSONObject();
-            jsonObject.put("title",x.findElement(By.xpath(".//h2")).getText());
-            jsonObject.put("url",x.findElement(By.xpath(".//h2")).findElement(By.xpath(".//a")).getAttribute("href"));
-            Arraybing.appendElement(jsonObject);
-        });
+                jsonObject.put("title", x.getText());
+                jsonObject.put("url", x.getAttribute("href"));
+                Arraybing.appendElement(jsonObject);
+
+        }
+        //h3/a
         webDriver.quit();
         return Arraybing;
     };

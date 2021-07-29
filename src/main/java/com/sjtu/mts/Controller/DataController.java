@@ -117,9 +117,11 @@ public class DataController {
     ) {
         String decodeKeyword = "";
         String decodeKeywords = "";
+        String start="";
         try{
             decodeKeyword = java.net.URLDecoder.decode(keyword, "utf-8");
             decodeKeywords = java.net.URLDecoder.decode(keywords, "utf-8");
+            start= java.net.URLDecoder.decode(startPublishedDay, "utf-8");
         }catch (Exception e){
             System.out.println(e);
         }
