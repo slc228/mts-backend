@@ -2,6 +2,7 @@ package com.sjtu.mts.Service;
 
 import com.alibaba.fastjson.JSON;
 import com.sjtu.mts.Entity.BriefWeiboUser;
+import com.sjtu.mts.Entity.FangAnTemplate;
 import com.sjtu.mts.Entity.FangAnWeiboUser;
 import com.sjtu.mts.Entity.Weibo;
 import com.sjtu.mts.Keyword.KeywordResponse;
@@ -94,4 +95,9 @@ public interface SearchService {
 
     public JSONArray getOverallDataBaidu(String keyword,Integer pageId) throws MalformedURLException, InterruptedException;
 
+    public List<FangAnTemplate> getBriefingTemplate(long fid);
+
+    public JSONObject saveBriefingTemplate(int id,long fid,String decodeTitle,String decodeVersion,String decodeInstitution,String time,String keylist) throws ParseException;
+
+    public JSONObject deleteBriefingTemplate(int id);
 }

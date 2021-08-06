@@ -28,6 +28,12 @@ public class FangAnTemplateDAOImpl implements FangAnTemplateDAO {
     };
 
     @Override
+    public FangAnTemplate findById(int id)
+    {
+        return fangAnTemplateRepository.findById(id);
+    }
+
+    @Override
     public Boolean existsById(int id)
     {
         return fangAnTemplateRepository.existsById(id);

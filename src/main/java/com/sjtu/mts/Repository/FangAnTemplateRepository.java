@@ -11,6 +11,8 @@ public interface FangAnTemplateRepository extends JpaRepository<FangAnTemplate, 
 
     Boolean existsById(int id);
 
+    FangAnTemplate findById(int id);
+
     @Transactional(rollbackOn = Exception.class)
     void deleteById(int id);
 }

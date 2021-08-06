@@ -646,4 +646,51 @@ public class DataController {
         String kword = java.net.URLDecoder.decode(keyword, "utf-8");
         return searchService.getOverallDataBaidu(kword,pageId);
     }
+
+    @GetMapping("/getBriefingTemplate")
+    @ResponseBody
+    public List<FangAnTemplate> getBriefingTemplate (
+            @RequestParam("fid") long fid
+    ) {
+        return searchService.getBriefingTemplate(fid);
+    }
+
+    @GetMapping("/saveBriefingTemplate")
+    @ResponseBody
+    public JSONObject saveBriefingTemplate (
+            @RequestParam("id") int id,
+            @RequestParam("fid") long fid,
+            @RequestParam("title")String title,
+            @RequestParam("version") String version,
+            @RequestParam("institution") String institution,
+            @RequestParam("time") String time,
+            @RequestParam("keylist") String keylist
+    ) throws ParseException {
+        System.out.println("hhhhhhhhhhhh");
+        String decodeTitle = "";
+        String decodeVersion = "";
+        String decodeInstitution = "";
+        String decodeTime = "";
+        String decodeKeylist = "";
+        System.out.println(keylist);
+        try{
+            decodeTitle = java.net.URLDecoder.decode(title, "utf-8");
+            decodeVersion = java.net.URLDecoder.decode(version, "utf-8");
+            decodeInstitution = java.net.URLDecoder.decode(institution, "utf-8");
+            decodeTime = java.net.URLDecoder.decode(time, "utf-8");
+            decodeKeylist = java.net.URLDecoder.decode(keylist, "utf-8");
+        }catch (Exception e){
+            System.out.println(e);
+        }
+        return searchService.saveBriefingTemplate(id,fid,decodeTitle,decodeVersion,decodeInstitution,decodeTime,decodeKeylist);
+    }
+
+
+    @GetMapping("/deleteBriefingTemplate")
+    @ResponseBody
+    public JSONObject deleteBriefingTemplate (
+            @RequestParam("id") int id
+    ) throws ParseException {
+        return searchService.deleteBriefingTemplate(id);
+    }
 }

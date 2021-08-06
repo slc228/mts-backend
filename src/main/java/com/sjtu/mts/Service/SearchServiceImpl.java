@@ -1,6 +1,7 @@
 package com.sjtu.mts.Service;
 
 import com.sjtu.mts.Dao.FangAnDao;
+import com.sjtu.mts.Dao.FangAnTemplateDAO;
 import com.sjtu.mts.Dao.FangAnWeiboUserDAO;
 import com.sjtu.mts.Entity.*;
 import com.sjtu.mts.Keyword.KeywordResponse;
@@ -62,6 +63,9 @@ public class SearchServiceImpl implements SearchService {
 
     @Autowired
     private FangAnWeiboUserDAO fangAnWeiboUserDAO;
+
+    @Autowired
+    private FangAnTemplateDAO fangAnTemplateDAO;
 
     @Autowired
     private WeiboSpiderRpc weiboSpiderRpc;
@@ -1793,4 +1797,77 @@ public class SearchServiceImpl implements SearchService {
         webDriver.quit();
         return Arraybing;
     };
+
+    @Override
+    public List<FangAnTemplate> getBriefingTemplate(long fid)
+    {
+        return fangAnTemplateDAO.findAllByFid(fid);
+    }
+
+    @Override
+    public JSONObject saveBriefingTemplate(int id,long fid,String decodeTitle,String decodeVersion,String decodeInstitution,String time,String keylist) throws ParseException {
+        JSONObject result = new JSONObject();
+        result.put("savebriefingtemplate", 0);
+        Boolean ifExist = fangAnTemplateDAO.existsById(id);
+        if(ifExist){
+            try {
+                FangAnTemplate fangAnTemplate = fangAnTemplateDAO.findById(id);
+                fangAnTemplate.setFid(fid);
+                fangAnTemplate.setTitle(decodeTitle);
+                fangAnTemplate.setVersion(decodeVersion);
+                fangAnTemplate.setInstitution(decodeInstitution);
+                SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm");
+                Date dateTime = sdf.parse(time);
+                fangAnTemplate.setTime(dateTime);
+                fangAnTemplate.setKeylist(keylist);
+                fangAnTemplateDAO.save(fangAnTemplate);
+                result.put("savebriefingtemplate", 1);
+                return result;
+            }
+            catch (Exception e) {
+                if (fangAnTemplateDAO.existsById(id)) {
+                    result.put("savebriefingtemplate", 1);
+                }
+                else {
+                    result.put("savebriefingtemplate", 0);
+                }
+                e.printStackTrace();
+            }
+        }
+        else {
+            try {
+                SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm");
+                Date dateTime = sdf.parse(time);
+                FangAnTemplate fangAnTemplate=new FangAnTemplate(fid,decodeTitle,decodeVersion,decodeInstitution,dateTime,keylist);
+                fangAnTemplateDAO.save(fangAnTemplate);
+                result.put("savebriefingtemplate", 1);
+                return result;
+            }
+            catch (Exception e) {
+                if (fangAnTemplateDAO.existsById(id)) {
+                    result.put("savebriefingtemplate", 1);
+                }
+                else {
+                    result.put("savebriefingtemplate", 0);
+                }
+                e.printStackTrace();
+            }
+        }
+        return result;
+    }
+
+    @Override
+    public JSONObject deleteBriefingTemplate(int id)
+    {
+        JSONObject result = new JSONObject();
+        result.put("deletebriefingtemplate", 0);
+        try {
+            fangAnTemplateDAO.deleteById(id);
+            result.put("deletebriefingtemplate", 1);
+        }catch (Exception e){
+            result.put("deletebriefingtemplate", 0);
+            e.printStackTrace();
+        }
+        return result;
+    }
 }

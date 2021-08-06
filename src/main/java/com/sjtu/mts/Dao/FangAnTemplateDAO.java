@@ -9,6 +9,8 @@ public interface FangAnTemplateDAO {
 
     List<FangAnTemplate> findAllByFid(long fid);
 
+    FangAnTemplate findById(int id);
+
     Boolean existsById(int id);
 
     void deleteById(int id);
