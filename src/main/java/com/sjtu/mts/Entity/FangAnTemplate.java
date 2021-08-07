@@ -32,6 +32,9 @@ public class FangAnTemplate {
     @Column(name = "keylist")
     private String keylist;
 
+    @Column(name = "text")
+    private String text;
+
     public FangAnTemplate(){}
     public FangAnTemplate(
             long fid,
@@ -39,7 +42,8 @@ public class FangAnTemplate {
             String version,
             String institution,
             Date time,
-            String keylist
+            String keylist,
+            String text
     ){
         this.fid = fid;
         this.title=title;
@@ -47,6 +51,7 @@ public class FangAnTemplate {
         this.institution=institution;
         this.time=time;
         this.keylist=keylist;
+        this.text=text;
     }
 
     public Integer getId() {
@@ -84,4 +89,8 @@ public class FangAnTemplate {
     public String getKeylist(){return keylist;}
 
     public void setKeylist(String keylist){this.keylist=keylist;}
+
+    public String getText(){return text;}
+
+    public void setText(String text){this.text=text;}
 }

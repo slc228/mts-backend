@@ -97,7 +97,7 @@ public interface SearchService {
 
     public List<FangAnTemplate> getBriefingTemplate(long fid);
 
-    public JSONObject saveBriefingTemplate(int id,long fid,String decodeTitle,String decodeVersion,String decodeInstitution,String time,String keylist) throws ParseException;
+    public JSONObject saveBriefingTemplate(int id,long fid,String decodeTitle,String decodeVersion,String decodeInstitution,String time,String keylist,String text) throws ParseException;
 
     public JSONObject deleteBriefingTemplate(int id);
 }

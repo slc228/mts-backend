@@ -1805,7 +1805,7 @@ public class SearchServiceImpl implements SearchService {
     }
 
     @Override
-    public JSONObject saveBriefingTemplate(int id,long fid,String decodeTitle,String decodeVersion,String decodeInstitution,String time,String keylist) throws ParseException {
+    public JSONObject saveBriefingTemplate(int id,long fid,String decodeTitle,String decodeVersion,String decodeInstitution,String time,String keylist,String text) throws ParseException {
         JSONObject result = new JSONObject();
         result.put("savebriefingtemplate", 0);
         Boolean ifExist = fangAnTemplateDAO.existsById(id);
@@ -1820,6 +1820,7 @@ public class SearchServiceImpl implements SearchService {
                 Date dateTime = sdf.parse(time);
                 fangAnTemplate.setTime(dateTime);
                 fangAnTemplate.setKeylist(keylist);
+                fangAnTemplate.setText(text);
                 fangAnTemplateDAO.save(fangAnTemplate);
                 result.put("savebriefingtemplate", 1);
                 return result;
@@ -1838,7 +1839,7 @@ public class SearchServiceImpl implements SearchService {
             try {
                 SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm");
                 Date dateTime = sdf.parse(time);
-                FangAnTemplate fangAnTemplate=new FangAnTemplate(fid,decodeTitle,decodeVersion,decodeInstitution,dateTime,keylist);
+                FangAnTemplate fangAnTemplate=new FangAnTemplate(fid,decodeTitle,decodeVersion,decodeInstitution,dateTime,keylist,text);
                 fangAnTemplateDAO.save(fangAnTemplate);
                 result.put("savebriefingtemplate", 1);
                 return result;

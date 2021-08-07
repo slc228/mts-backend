@@ -664,7 +664,8 @@ public class DataController {
             @RequestParam("version") String version,
             @RequestParam("institution") String institution,
             @RequestParam("time") String time,
-            @RequestParam("keylist") String keylist
+            @RequestParam("keylist") String keylist,
+            @RequestParam("text") String text
     ) throws ParseException {
         System.out.println("hhhhhhhhhhhh");
         String decodeTitle = "";
@@ -672,17 +673,20 @@ public class DataController {
         String decodeInstitution = "";
         String decodeTime = "";
         String decodeKeylist = "";
-        System.out.println(keylist);
+        String decodeText = "";
+        System.out.println(text);
         try{
             decodeTitle = java.net.URLDecoder.decode(title, "utf-8");
             decodeVersion = java.net.URLDecoder.decode(version, "utf-8");
             decodeInstitution = java.net.URLDecoder.decode(institution, "utf-8");
             decodeTime = java.net.URLDecoder.decode(time, "utf-8");
             decodeKeylist = java.net.URLDecoder.decode(keylist, "utf-8");
+            decodeText = java.net.URLDecoder.decode(text, "utf-8");
+            System.out.println(decodeText);
         }catch (Exception e){
             System.out.println(e);
         }
-        return searchService.saveBriefingTemplate(id,fid,decodeTitle,decodeVersion,decodeInstitution,decodeTime,decodeKeylist);
+        return searchService.saveBriefingTemplate(id,fid,decodeTitle,decodeVersion,decodeInstitution,decodeTime,decodeKeylist,decodeText);
     }
 
 
