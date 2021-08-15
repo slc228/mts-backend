@@ -1,6 +1,7 @@
 package com.sjtu.mts.Service;
 
 import com.sjtu.mts.Dao.FangAnDao;
+import com.sjtu.mts.Dao.FangAnMaterialDAO;
 import com.sjtu.mts.Dao.FangAnTemplateDAO;
 import com.sjtu.mts.Dao.FangAnWeiboUserDAO;
 import com.sjtu.mts.Entity.*;
@@ -14,10 +15,6 @@ import com.sjtu.mts.Response.*;
 import com.sjtu.mts.rpc.WeiboSpiderRpc;
 import net.minidev.json.JSONArray;
 import net.minidev.json.JSONObject;
-import org.elasticsearch.index.query.QueryBuilder;
-import org.elasticsearch.index.query.QueryBuilders;
-import org.elasticsearch.index.query.QueryShardContext;
-import org.joda.time.DateTime;
 import org.openqa.selenium.WebElement;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.PageRequest;
@@ -25,13 +22,11 @@ import org.springframework.data.domain.Sort;
 import org.springframework.data.elasticsearch.core.*;
 import org.springframework.data.elasticsearch.core.query.Criteria;
 import org.springframework.data.elasticsearch.core.query.CriteriaQuery;
-import org.springframework.security.core.parameters.P;
 import org.springframework.stereotype.Service;
 
 import java.io.UnsupportedEncodingException;
 import java.net.MalformedURLException;
 import java.net.URL;
-import java.sql.Array;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.*;
@@ -66,6 +61,9 @@ public class SearchServiceImpl implements SearchService {
 
     @Autowired
     private FangAnTemplateDAO fangAnTemplateDAO;
+
+    @Autowired
+    private FangAnMaterialDAO fangAnMaterialDAO;
 
     @Autowired
     private WeiboSpiderRpc weiboSpiderRpc;
@@ -897,6 +895,9 @@ public class SearchServiceImpl implements SearchService {
             if (!keyword.isEmpty()){
                 String[] searchSplitArray1 = keyword.trim().split("\\s+");
                 List<String>searchSplitArray = Arrays.asList(searchSplitArray1);
+                System.out.println("herereeeeeeeeee");
+                System.out.println(searchSplitArray1);
+                System.out.println(searchSplitArray);
                 criteria.subCriteria(new Criteria("content").in(searchSplitArray).or("title").in(searchSplitArray));
             }
             if (!sensitiveType.isEmpty())
@@ -1868,6 +1869,98 @@ public class SearchServiceImpl implements SearchService {
         }catch (Exception e){
             result.put("deletebriefingtemplate", 0);
             e.printStackTrace();
+        }
+        return result;
+    }
+
+    @Override
+    public JSONObject getMaterial(long fid)
+    {
+        JSONObject ret=new JSONObject();
+        if (fangAnMaterialDAO.existsByFid(fid))
+        {
+            ret.put("ids",fangAnMaterialDAO.findByFid(fid).getIds());
+        }else {
+            ret.put("ids","");
+        }
+        return ret;
+    }
+
+    @Override
+    public DataResponse getMaterialDetail(long fid)
+    {
+        if (fangAnMaterialDAO.existsByFid(fid))
+        {
+            System.out.println("hhhhhhhhhhhhhhhhhh");
+            FangAnMaterial fangAnMaterial=fangAnMaterialDAO.findByFid(fid);
+            String ids=fangAnMaterial.getIds();
+            String[] idarray = ids.trim().split("\\,");
+            List<String>searchSplitArray = Arrays.asList(idarray);
+            System.out.println(ids);
+            System.out.println(searchSplitArray);
+            Criteria criteria = new Criteria();
+            criteria.subCriteria(new Criteria().and("_id").matches(searchSplitArray));
+            CriteriaQuery query = new CriteriaQuery(criteria);
+            SearchHits<Data> searchHits = this.elasticsearchOperations.search(query, Data.class);
+            long hitNumber = this.elasticsearchOperations.count(query, Data.class);
+
+            List<Data> pageDataContent = new ArrayList<>();
+            for (SearchHit<Data> hit : searchHits.getSearchHits())
+            {
+                pageDataContent.add(hit.getContent());
+                System.out.println(hit.getContent());
+            }
+
+            DataResponse result = new DataResponse();
+            result.setHitNumber(hitNumber);
+            result.setDataContent(pageDataContent);
+
+            return result;
+        }else {
+            return new DataResponse();
+        }
+    }
+
+    @Override
+    public JSONObject modeifyMaterial(long fid,String decodeIds)
+    {
+        JSONObject result = new JSONObject();
+        result.put("modeifyMaterial", 0);
+        Boolean ifExist = fangAnMaterialDAO.existsByFid(fid);
+        if(ifExist){
+            try {
+                FangAnMaterial fangAnMaterial = fangAnMaterialDAO.findByFid(fid);
+                fangAnMaterial.setIds(decodeIds);
+                fangAnMaterialDAO.save(fangAnMaterial);
+                result.put("modeifyMaterial", 1);
+                return result;
+            }
+            catch (Exception e) {
+                if (fangAnMaterialDAO.existsByFid(fid)) {
+                    result.put("modeifyMaterial", 1);
+                }
+                else {
+                    result.put("modeifyMaterial", 0);
+                }
+                e.printStackTrace();
+            }
+        }
+        else {
+            try {
+                FangAnMaterial fangAnMaterial=new FangAnMaterial(fid,decodeIds);
+                fangAnMaterialDAO.save(fangAnMaterial);
+                result.put("modeifyMaterial", 1);
+                return result;
+            }
+            catch (Exception e) {
+                if (fangAnMaterialDAO.existsByFid(fid)) {
+                    result.put("modeifyMaterial", 1);
+                }
+                else {
+                    result.put("modeifyMaterial", 0);
+                }
+                e.printStackTrace();
+            }
         }
         return result;
     }

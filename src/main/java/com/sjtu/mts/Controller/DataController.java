@@ -667,14 +667,12 @@ public class DataController {
             @RequestParam("keylist") String keylist,
             @RequestParam("text") String text
     ) throws ParseException {
-        System.out.println("hhhhhhhhhhhh");
         String decodeTitle = "";
         String decodeVersion = "";
         String decodeInstitution = "";
         String decodeTime = "";
         String decodeKeylist = "";
         String decodeText = "";
-        System.out.println(text);
         try{
             decodeTitle = java.net.URLDecoder.decode(title, "utf-8");
             decodeVersion = java.net.URLDecoder.decode(version, "utf-8");
@@ -682,7 +680,6 @@ public class DataController {
             decodeTime = java.net.URLDecoder.decode(time, "utf-8");
             decodeKeylist = java.net.URLDecoder.decode(keylist, "utf-8");
             decodeText = java.net.URLDecoder.decode(text, "utf-8");
-            System.out.println(decodeText);
         }catch (Exception e){
             System.out.println(e);
         }
@@ -696,5 +693,38 @@ public class DataController {
             @RequestParam("id") int id
     ) throws ParseException {
         return searchService.deleteBriefingTemplate(id);
+    }
+
+
+    @GetMapping("/getMaterial")
+    @ResponseBody
+    public JSONObject getMaterial (
+            @RequestParam("fid") long fid
+    ) {
+        return searchService.getMaterial(fid);
+    }
+
+    @GetMapping("/getMaterialDetail")
+    @ResponseBody
+    public DataResponse getMaterialDetail (
+            @RequestParam("fid") long fid
+    ) {
+        return searchService.getMaterialDetail(fid);
+    }
+
+
+    @PostMapping("/modeifyMaterial")
+    @ResponseBody
+    public JSONObject modeifyMaterial (@RequestBody Map<String,String> modeifyMaterialInfo
+    ) throws ParseException {
+        long fid = Long.parseLong(modeifyMaterialInfo.get("fid"));
+        String ids = modeifyMaterialInfo.get("ids");
+        String decodeIds = "";
+        try{
+            decodeIds = java.net.URLDecoder.decode(ids, "utf-8");
+        }catch (Exception e){
+            System.out.println(e);
+        }
+        return searchService.modeifyMaterial(fid,decodeIds);
     }
 }

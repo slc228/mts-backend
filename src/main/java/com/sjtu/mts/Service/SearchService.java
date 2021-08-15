@@ -1,10 +1,7 @@
 package com.sjtu.mts.Service;
 
 import com.alibaba.fastjson.JSON;
-import com.sjtu.mts.Entity.BriefWeiboUser;
-import com.sjtu.mts.Entity.FangAnTemplate;
-import com.sjtu.mts.Entity.FangAnWeiboUser;
-import com.sjtu.mts.Entity.Weibo;
+import com.sjtu.mts.Entity.*;
 import com.sjtu.mts.Keyword.KeywordResponse;
 import com.sjtu.mts.Response.*;
 import net.minidev.json.JSONArray;
@@ -100,4 +97,10 @@ public interface SearchService {
     public JSONObject saveBriefingTemplate(int id,long fid,String decodeTitle,String decodeVersion,String decodeInstitution,String time,String keylist,String text) throws ParseException;
 
     public JSONObject deleteBriefingTemplate(int id);
+
+    public JSONObject getMaterial(long fid);
+
+    public DataResponse getMaterialDetail(long fid);
+
+    public JSONObject modeifyMaterial(long fid,String decodeIds);
 }
