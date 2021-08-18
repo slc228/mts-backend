@@ -1874,32 +1874,42 @@ public class SearchServiceImpl implements SearchService {
     }
 
     @Override
-    public JSONObject getMaterial(long fid)
+    public JSONArray getMaterial(long fid)
     {
-        JSONObject ret=new JSONObject();
-        if (fangAnMaterialDAO.existsByFid(fid))
+        JSONArray jsonArray=new JSONArray();
+        List<FangAnMaterial> fangAnMaterialList=fangAnMaterialDAO.findAllByFid(fid);
+        for(FangAnMaterial fangAnMaterial:fangAnMaterialList)
         {
-            ret.put("ids",fangAnMaterialDAO.findByFid(fid).getIds());
-        }else {
-            ret.put("ids","");
+            JSONObject jsonObject=new JSONObject();
+            jsonObject.put("materiallib",fangAnMaterial.getMateriallib());
+            String ids=fangAnMaterial.getIds();
+            if (ids.length()==0)
+            {
+                jsonObject.put("num",0);
+            }
+            else {
+                String[] idarray = ids.trim().split("\\,");
+                List<String> idArray = Arrays.asList(idarray);
+                jsonObject.put("num",idArray.size());
+            }
+            jsonArray.appendElement(jsonObject);
         }
-        return ret;
+        return jsonArray;
     }
 
     @Override
-    public DataResponse getMaterialDetail(long fid)
+    public DataResponse getMaterialDetail(long fid,String materiallib)
     {
-        if (fangAnMaterialDAO.existsByFid(fid))
+        if (fangAnMaterialDAO.existsByFidAndMateriallib(fid,materiallib))
         {
-            System.out.println("hhhhhhhhhhhhhhhhhh");
-            FangAnMaterial fangAnMaterial=fangAnMaterialDAO.findByFid(fid);
+            FangAnMaterial fangAnMaterial=fangAnMaterialDAO.findByFidAndMateriallib(fid,materiallib);
             String ids=fangAnMaterial.getIds();
-            String[] idarray = ids.trim().split("\\,");
-            List<String>searchSplitArray = Arrays.asList(idarray);
             System.out.println(ids);
-            System.out.println(searchSplitArray);
+            String[] idarray = ids.trim().split("\\,");
+            System.out.println(idarray.length);
+            List<String>searchSplitArray = Arrays.asList(idarray);
             Criteria criteria = new Criteria();
-            criteria.subCriteria(new Criteria().and("_id").matches(searchSplitArray));
+            criteria.subCriteria(new Criteria("_id").in(searchSplitArray));
             CriteriaQuery query = new CriteriaQuery(criteria);
             SearchHits<Data> searchHits = this.elasticsearchOperations.search(query, Data.class);
             long hitNumber = this.elasticsearchOperations.count(query, Data.class);
@@ -1908,7 +1918,6 @@ public class SearchServiceImpl implements SearchService {
             for (SearchHit<Data> hit : searchHits.getSearchHits())
             {
                 pageDataContent.add(hit.getContent());
-                System.out.println(hit.getContent());
             }
 
             DataResponse result = new DataResponse();
@@ -1922,15 +1931,178 @@ public class SearchServiceImpl implements SearchService {
     }
 
     @Override
-    public JSONObject modeifyMaterial(long fid,String decodeIds)
+    public JSONObject addNewMaterialLib(long fid,String decodemateriallib)
+    {
+        System.out.println("addNewMaterialLib");
+        JSONObject ret=new JSONObject();
+        if (fangAnMaterialDAO.existsByFidAndMateriallib(fid,decodemateriallib))
+        {
+            ret.put("isexisted",1);
+            ret.put("addNewMaterialLib",0);
+        }else
+        {
+            try {
+                FangAnMaterial fangAnMaterial=new FangAnMaterial(fid,decodemateriallib,"");
+                fangAnMaterialDAO.save(fangAnMaterial);
+                ret.put("addNewMaterialLib",1);
+            }
+            catch (Exception e) {
+                if (fangAnMaterialDAO.existsByFidAndMateriallib(fid,decodemateriallib)) {
+                    ret.put("addNewMaterialLib", 1);
+                }
+                else {
+                    ret.put("addNewMaterialLib", 0);
+                }
+                e.printStackTrace();
+            }
+        }
+        System.out.println(ret.get("addNewMaterialLib"));
+        return ret;
+    }
+
+    @Override
+    public JSONObject renameMaterial(long fid,String decodeoldname,String decodenewname)
+    {
+        System.out.println("renameMaterial");
+        JSONObject ret=new JSONObject();
+
+        try {
+            FangAnMaterial fangAnMaterial = fangAnMaterialDAO.findByFidAndMateriallib(fid, decodeoldname);
+            fangAnMaterial.setMateriallib(decodenewname);
+            fangAnMaterialDAO.save(fangAnMaterial);
+            ret.put("renameMaterial", 1);
+        } catch (Exception e) {
+            if (fangAnMaterialDAO.existsByFidAndMateriallib(fid, decodenewname)) {
+                ret.put("renameMaterial", 1);
+            } else {
+                ret.put("renameMaterial", 0);
+            }
+            e.printStackTrace();
+        }
+
+        System.out.println(ret.get("renameMaterial"));
+        return ret;
+    }
+
+    @Override
+    public JSONObject deleteMaterial(long fid,String decodemateriallib)
+    {
+        System.out.println("deleteMaterial");
+        JSONObject ret=new JSONObject();
+
+        try {
+            fangAnMaterialDAO.deleteByFidAndMateriallib(fid,decodemateriallib);
+            ret.put("deleteMaterial", 1);
+        } catch (Exception e) {
+            if (fangAnMaterialDAO.existsByFidAndMateriallib(fid, decodemateriallib)) {
+                ret.put("deleteMaterial", 0);
+            } else {
+                ret.put("deleteMaterial", 1);
+            }
+            e.printStackTrace();
+        }
+
+        System.out.println(ret.get("deleteMaterial"));
+        return ret;
+    }
+
+    @Override
+    public JSONObject deleteMaterialIDs(long fid,String decodemateriallib,String decodeIds)
+    {
+        System.out.println("deleteMaterialIDs");
+        JSONObject ret=new JSONObject();
+
+        try {
+            FangAnMaterial fangAnMaterial= fangAnMaterialDAO.findByFidAndMateriallib(fid,decodemateriallib);
+            String nowids=fangAnMaterial.getIds();
+            String[] nowidarray = nowids.trim().split("\\,");
+            System.out.println(nowids);
+            List<String> nowIdarray = new ArrayList<>(Arrays.asList(nowidarray));
+
+            String[] deleteIds = decodeIds.trim().split("\\,");
+            System.out.println(deleteIds);
+            List<String> DeleteIds = new ArrayList<>(Arrays.asList(deleteIds));
+            for (String deleteid:DeleteIds)
+            {
+                int index=nowIdarray.indexOf(deleteid);
+                if (index!=-1)
+                {
+                    nowIdarray.remove(index);
+                }
+            }
+            StringBuilder stringBuilder= new StringBuilder();
+            for (String id:nowIdarray)
+            {
+                if (!id.equals("") && !id.equals(" "))
+                {
+                    stringBuilder.append(id).append(",");
+                }
+            }
+            String ids= stringBuilder.toString();
+            if (!ids.equals(""))
+            {
+                ids=ids.substring(0,ids.length()-1);
+            }
+
+
+            System.out.println(ids);
+            fangAnMaterial.setIds(ids);
+            fangAnMaterialDAO.save(fangAnMaterial);
+
+            ret.put("deleteMaterialIDs", 1);
+        } catch (Exception e) {
+            ret.put("deleteMaterialIDs", 0);
+            e.printStackTrace();
+        }
+
+        System.out.println(ret.get("deleteMaterialIDs"));
+        return ret;
+    }
+
+    @Override
+    public JSONObject modeifyMaterial(long fid,String materiallib,String decodeIds)
     {
         JSONObject result = new JSONObject();
         result.put("modeifyMaterial", 0);
-        Boolean ifExist = fangAnMaterialDAO.existsByFid(fid);
+        Boolean ifExist = fangAnMaterialDAO.existsByFidAndMateriallib(fid,materiallib);
         if(ifExist){
             try {
-                FangAnMaterial fangAnMaterial = fangAnMaterialDAO.findByFid(fid);
-                fangAnMaterial.setIds(decodeIds);
+                FangAnMaterial fangAnMaterial = fangAnMaterialDAO.findByFidAndMateriallib(fid,materiallib);
+                fangAnMaterial.setMateriallib(materiallib);
+
+                String nowids=fangAnMaterial.getIds();
+                String[] nowidarray = nowids.trim().split("\\,");
+                System.out.println(nowids);
+                List<String> nowIdarray = new ArrayList<>(Arrays.asList(nowidarray));
+
+                String[] newIds = decodeIds.trim().split("\\,");
+                System.out.println(newIds);
+                List<String> NewIds = new ArrayList<>(Arrays.asList(newIds));
+                for (String newid:NewIds)
+                {
+                    int index=nowIdarray.indexOf(newid);
+                    if (index==-1)
+                    {
+                        nowIdarray.add(newid);
+                    }
+                }
+
+                StringBuilder stringBuilder= new StringBuilder();
+                for (String id:nowIdarray)
+                {
+                    if (!id.equals("") && !id.equals(" "))
+                    {
+                        stringBuilder.append(id).append(",");
+                    }
+                }
+                String ids= stringBuilder.toString();
+                if (!ids.equals(""))
+                {
+                    ids=ids.substring(0,ids.length()-1);
+                }
+
+                System.out.println(ids);
+                fangAnMaterial.setIds(ids);
                 fangAnMaterialDAO.save(fangAnMaterial);
                 result.put("modeifyMaterial", 1);
                 return result;
@@ -1947,7 +2119,7 @@ public class SearchServiceImpl implements SearchService {
         }
         else {
             try {
-                FangAnMaterial fangAnMaterial=new FangAnMaterial(fid,decodeIds);
+                FangAnMaterial fangAnMaterial=new FangAnMaterial(fid,materiallib,decodeIds);
                 fangAnMaterialDAO.save(fangAnMaterial);
                 result.put("modeifyMaterial", 1);
                 return result;

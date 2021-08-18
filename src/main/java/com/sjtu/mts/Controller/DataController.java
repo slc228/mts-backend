@@ -698,7 +698,7 @@ public class DataController {
 
     @GetMapping("/getMaterial")
     @ResponseBody
-    public JSONObject getMaterial (
+    public JSONArray getMaterial (
             @RequestParam("fid") long fid
     ) {
         return searchService.getMaterial(fid);
@@ -707,9 +707,82 @@ public class DataController {
     @GetMapping("/getMaterialDetail")
     @ResponseBody
     public DataResponse getMaterialDetail (
-            @RequestParam("fid") long fid
+            @RequestParam("fid") long fid,
+            @RequestParam("materiallib") String materiallib
     ) {
-        return searchService.getMaterialDetail(fid);
+        String decodemateriallib="";
+        try{
+            decodemateriallib= java.net.URLDecoder.decode(materiallib, "utf-8");
+        }catch (Exception e){
+            System.out.println(e);
+        }
+        return searchService.getMaterialDetail(fid,decodemateriallib);
+    }
+
+    @GetMapping("/addNewMaterialLib")
+    @ResponseBody
+    public JSONObject addNewMaterialLib (
+            @RequestParam("fid") long fid,
+            @RequestParam("materiallib") String materiallib
+    ) {
+        String decodemateriallib="";
+        try{
+            decodemateriallib= java.net.URLDecoder.decode(materiallib, "utf-8");
+        }catch (Exception e){
+            System.out.println(e);
+        }
+        return searchService.addNewMaterialLib(fid,decodemateriallib);
+    }
+
+    @GetMapping("/renameMaterial")
+    @ResponseBody
+    public JSONObject renameMaterial (
+            @RequestParam("fid") long fid,
+            @RequestParam("oldname") String oldname,
+            @RequestParam("newname") String newname
+    ) {
+        String decodeoldname="";
+        String decodenewname="";
+        try{
+            decodeoldname= java.net.URLDecoder.decode(oldname, "utf-8");
+            decodenewname= java.net.URLDecoder.decode(newname, "utf-8");
+        }catch (Exception e){
+            System.out.println(e);
+        }
+        return searchService.renameMaterial(fid,decodeoldname,decodenewname);
+    }
+
+    @GetMapping("/deleteMaterial")
+    @ResponseBody
+    public JSONObject deleteMaterial (
+            @RequestParam("fid") long fid,
+            @RequestParam("materiallib") String materiallib
+    ) {
+        String decodemateriallib="";
+        try{
+            decodemateriallib= java.net.URLDecoder.decode(materiallib, "utf-8");
+        }catch (Exception e){
+            System.out.println(e);
+        }
+        return searchService.deleteMaterial(fid,decodemateriallib);
+    }
+
+    @PostMapping("/deleteMaterialIDs")
+    @ResponseBody
+    public JSONObject deleteMaterialIDs (@RequestBody Map<String,String> deleteyMaterialInfo
+    ) throws ParseException {
+        long fid = Long.parseLong(deleteyMaterialInfo.get("fid"));
+        String materiallib=deleteyMaterialInfo.get("materiallib");
+        String ids = deleteyMaterialInfo.get("ids");
+        String decodeIds = "";
+        String decodemateriallib="";
+        try{
+            decodeIds = java.net.URLDecoder.decode(ids, "utf-8");
+            decodemateriallib= java.net.URLDecoder.decode(materiallib, "utf-8");
+        }catch (Exception e){
+            System.out.println(e);
+        }
+        return searchService.deleteMaterialIDs(fid,decodemateriallib,decodeIds);
     }
 
 
@@ -718,13 +791,16 @@ public class DataController {
     public JSONObject modeifyMaterial (@RequestBody Map<String,String> modeifyMaterialInfo
     ) throws ParseException {
         long fid = Long.parseLong(modeifyMaterialInfo.get("fid"));
+        String materiallib=modeifyMaterialInfo.get("materiallib");
         String ids = modeifyMaterialInfo.get("ids");
         String decodeIds = "";
+        String decodemateriallib="";
         try{
             decodeIds = java.net.URLDecoder.decode(ids, "utf-8");
+            decodemateriallib= java.net.URLDecoder.decode(materiallib, "utf-8");
         }catch (Exception e){
             System.out.println(e);
         }
-        return searchService.modeifyMaterial(fid,decodeIds);
+        return searchService.modeifyMaterial(fid,decodemateriallib,decodeIds);
     }
 }

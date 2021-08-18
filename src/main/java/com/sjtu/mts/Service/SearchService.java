@@ -98,9 +98,17 @@ public interface SearchService {
 
     public JSONObject deleteBriefingTemplate(int id);
 
-    public JSONObject getMaterial(long fid);
+    public JSONArray getMaterial(long fid);
 
-    public DataResponse getMaterialDetail(long fid);
+    public DataResponse getMaterialDetail(long fid,String materiallib);
 
-    public JSONObject modeifyMaterial(long fid,String decodeIds);
+    public JSONObject addNewMaterialLib(long fid,String decodemateriallib);
+
+    public JSONObject renameMaterial(long fid,String decodeoldname,String decodenewname);
+
+    public JSONObject deleteMaterial(long fid,String decodemateriallib);
+
+    public JSONObject deleteMaterialIDs(long fid,String decodemateriallib,String decodeIds);
+
+    public JSONObject modeifyMaterial(long fid,String materiallib,String decodeIds);
 }

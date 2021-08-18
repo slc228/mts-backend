@@ -15,6 +15,7 @@ import java.util.Date;
 @Getter
 public class Data {
     @Id
+    @Field(type = FieldType.Text)
     private String id;
 
     @Field(type = FieldType.Text)
