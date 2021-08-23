@@ -1,9 +1,7 @@
 package com.sjtu.mts.Service;
 
-import com.sjtu.mts.Dao.FangAnDao;
-import com.sjtu.mts.Dao.FangAnMaterialDAO;
-import com.sjtu.mts.Dao.FangAnTemplateDAO;
-import com.sjtu.mts.Dao.FangAnWeiboUserDAO;
+import com.alibaba.fastjson.JSON;
+import com.sjtu.mts.Dao.*;
 import com.sjtu.mts.Entity.*;
 import com.sjtu.mts.Keyword.KeywordResponse;
 import com.sjtu.mts.Keyword.MultipleThreadExtraction;
@@ -13,6 +11,10 @@ import com.sjtu.mts.Repository.SensitiveWordRepository;
 import com.sjtu.mts.Repository.SwordFidRepository;
 import com.sjtu.mts.Response.*;
 import com.sjtu.mts.rpc.WeiboSpiderRpc;
+import com.sjtu.mts.util.EchartsUtil;
+import com.sjtu.mts.util.FreemarkerUtil;
+import com.sjtu.mts.util.GenOptionUtil;
+import com.sjtu.mts.util.HttpUtil;
 import net.minidev.json.JSONArray;
 import net.minidev.json.JSONObject;
 import org.openqa.selenium.WebElement;
@@ -24,7 +26,7 @@ import org.springframework.data.elasticsearch.core.query.Criteria;
 import org.springframework.data.elasticsearch.core.query.CriteriaQuery;
 import org.springframework.stereotype.Service;
 
-import java.io.UnsupportedEncodingException;
+import java.io.*;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.text.ParseException;
@@ -38,6 +40,12 @@ import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.chrome.ChromeOptions;
 import org.openqa.selenium.remote.DesiredCapabilities;
 import org.openqa.selenium.remote.RemoteWebDriver;
+
+import freemarker.template.Configuration;
+import freemarker.template.Template;
+import freemarker.template.TemplateException;
+import org.apache.commons.codec.digest.DigestUtils;
+import sun.misc.BASE64Decoder;
 
 import static com.sjtu.mts.Keyword.Wrapper.min;
 
@@ -64,6 +72,9 @@ public class SearchServiceImpl implements SearchService {
 
     @Autowired
     private FangAnMaterialDAO fangAnMaterialDAO;
+
+    @Autowired
+    private DimensionDao dimensionDao;
 
     @Autowired
     private WeiboSpiderRpc weiboSpiderRpc;
@@ -2135,5 +2146,340 @@ public class SearchServiceImpl implements SearchService {
             }
         }
         return result;
+    }
+
+    public String totalAmountTrend(long fid,String timeStart,String timeEnd) throws ParseException, TemplateException, IOException {
+        String strDateFormat = "yyyy-MM-dd HH:mm:ss";
+        SimpleDateFormat sdf = new SimpleDateFormat(strDateFormat);
+
+        AmountTrendResponse amountTrendResponse=globalSearchTrendCount2(fid,timeStart,timeEnd);
+        List<String> xAxis=new ArrayList<>();
+        for (String time:amountTrendResponse.getTimeRange())
+        {
+            String[] moments = time.trim().split(" to ");
+            Date fromMoment=sdf.parse(moments[0]);
+            Date toMoment=sdf.parse(moments[1]);
+            String avgTime=sdf.format(fromMoment)+"~\\n"+sdf.format(toMoment);
+            xAxis.add(avgTime);
+        }
+        String[] xValue= xAxis.toArray(new String[0]);
+        String title = "总量趋势";
+        List<Long> yAxis = amountTrendResponse.getTotalAmountTrend();
+        Long[] yValue= yAxis.toArray(new Long[0]);
+
+        // 模板参数
+        HashMap<String, Object> datas = new HashMap<>();
+        datas.put("yValue", JSON.toJSONString(yAxis));
+        datas.put("xValue", JSON.toJSONString(xAxis));
+        datas.put("title", title);
+
+        // 生成option字符串
+        String option = FreemarkerUtil.generateString("totalAmountTrend.ftl", "/com/sjtu/mts/template", datas);
+
+        // 根据option参数
+        String base64 = EchartsUtil.generateEchartsBase64(option);
+
+        System.out.println("BASE64:" + base64);
+
+        return base64;
+    }
+
+    public String sourceAmountTrend(long fid,String timeStart,String timeEnd) throws ParseException, TemplateException, IOException {
+        String strDateFormat = "yyyy-MM-dd HH:mm:ss";
+        SimpleDateFormat sdf = new SimpleDateFormat(strDateFormat);
+        AmountTrendResponse amountTrendResponse=globalSearchTrendCount2(fid,timeStart,timeEnd);
+
+        List<String> yAxis=new ArrayList<>();
+        for (String time:amountTrendResponse.getTimeRange())
+        {
+            String[] moments = time.trim().split(" to ");
+            Date fromMoment=sdf.parse(moments[0]);
+            Date toMoment=sdf.parse(moments[1]);
+            String avgTime=sdf.format(fromMoment)+"~\\n"+sdf.format(toMoment);
+            yAxis.add(avgTime);
+        }
+        String[] yValue= yAxis.toArray(new String[0]);
+        String title = "来源趋势";
+
+        com.alibaba.fastjson.JSONArray options = new com.alibaba.fastjson.JSONArray();
+        com.alibaba.fastjson.JSONObject jsonObject=new com.alibaba.fastjson.JSONObject();
+        options.add(jsonObject);
+        jsonObject.put("label","网站");
+        jsonObject.put("name","网站");
+        jsonObject.put("value",amountTrendResponse.getFromTypeAmountTrend1());
+        options.add(jsonObject);
+        jsonObject.put("label","论坛");
+        jsonObject.put("name","论坛");
+        jsonObject.put("value",amountTrendResponse.getFromTypeAmountTrend2());
+        options.add(jsonObject);
+        jsonObject.put("label","微博");
+        jsonObject.put("name","微博");
+        jsonObject.put("value",amountTrendResponse.getFromTypeAmountTrend3());
+        options.add(jsonObject);
+        jsonObject.put("label","微信");
+        jsonObject.put("name","微信");
+        jsonObject.put("value",amountTrendResponse.getFromTypeAmountTrend4());
+        options.add(jsonObject);
+        jsonObject.put("label","博客");
+        jsonObject.put("name","微信");
+        jsonObject.put("value",amountTrendResponse.getFromTypeAmountTrend5());
+        options.add(jsonObject);
+        jsonObject.put("label","外媒");
+        jsonObject.put("name","外媒");
+        jsonObject.put("value",amountTrendResponse.getFromTypeAmountTrend6());
+        options.add(jsonObject);
+        jsonObject.put("label","新闻");
+        jsonObject.put("name","新闻");
+        jsonObject.put("value",amountTrendResponse.getFromTypeAmountTrend7());
+        options.add(jsonObject);
+
+        // 模板参数
+        HashMap<String, Object> datas = new HashMap<>();
+        datas.put("yAxis", JSON.toJSONString(yValue));
+        datas.put("xAxis", JSON.toJSONString(options));
+        datas.put("title", title);
+
+        // 生成option字符串
+        String option = FreemarkerUtil.generateString("sourceAmountTrend.ftl", "/com/sjtu/mts/template", datas);
+
+        // 根据option参数
+        String base64 = EchartsUtil.generateEchartsBase64(option);
+
+        System.out.println("BASE64:" + base64);
+
+        return base64;
+    }
+
+    public String regionLayout(long fid,String timeStart,String timeEnd) throws ParseException, TemplateException, IOException {
+        String strDateFormat = "yyyy-MM-dd HH:mm:ss";
+        SimpleDateFormat sdf = new SimpleDateFormat(strDateFormat);
+        AreaAnalysisResponse areaAnalysisResponse=countAreaByFid(fid,timeStart,timeEnd);
+
+        com.alibaba.fastjson.JSONArray jsonArray=new com.alibaba.fastjson.JSONArray();
+        com.alibaba.fastjson.JSONObject jsonObject=new com.alibaba.fastjson.JSONObject();
+        jsonObject.put("name","北京");
+        jsonObject.put("value",areaAnalysisResponse.getFrom11());
+        jsonArray.add(jsonObject);
+        jsonObject.put("name","天津");
+        jsonObject.put("value",areaAnalysisResponse.getFrom12());
+        jsonArray.add(jsonObject);
+        jsonObject.put("name","河北");
+        jsonObject.put("value",areaAnalysisResponse.getFrom13());
+        jsonArray.add(jsonObject);
+        jsonObject.put("name","山西");
+        jsonObject.put("value",areaAnalysisResponse.getFrom14());
+        jsonArray.add(jsonObject);
+        jsonObject.put("name","内蒙古");
+        jsonObject.put("value",areaAnalysisResponse.getFrom15());
+        jsonArray.add(jsonObject);
+        jsonObject.put("name","辽宁");
+        jsonObject.put("value",areaAnalysisResponse.getFrom21());
+        jsonArray.add(jsonObject);
+        jsonObject.put("name","吉林");
+        jsonObject.put("value",areaAnalysisResponse.getFrom22());
+        jsonArray.add(jsonObject);
+        jsonObject.put("name","黑龙江");
+        jsonObject.put("value",areaAnalysisResponse.getFrom23());
+        jsonArray.add(jsonObject);
+        jsonObject.put("name","上海");
+        jsonObject.put("value",areaAnalysisResponse.getFrom31());
+        jsonArray.add(jsonObject);
+        jsonObject.put("name","江苏");
+        jsonObject.put("value",areaAnalysisResponse.getFrom32());
+        jsonArray.add(jsonObject);
+        jsonObject.put("name","浙江");
+        jsonObject.put("value",areaAnalysisResponse.getFrom33());
+        jsonArray.add(jsonObject);
+        jsonObject.put("name","安徽");
+        jsonObject.put("value",areaAnalysisResponse.getFrom34());
+        jsonArray.add(jsonObject);
+        jsonObject.put("name","福建");
+        jsonObject.put("value",areaAnalysisResponse.getFrom35());
+        jsonArray.add(jsonObject);
+        jsonObject.put("name","江西");
+        jsonObject.put("value",areaAnalysisResponse.getFrom36());
+        jsonArray.add(jsonObject);
+        jsonObject.put("name","山东");
+        jsonObject.put("value",areaAnalysisResponse.getFrom37());
+        jsonArray.add(jsonObject);
+        jsonObject.put("name","河南");
+        jsonObject.put("value",areaAnalysisResponse.getFrom41());
+        jsonArray.add(jsonObject);
+        jsonObject.put("name","湖北");
+        jsonObject.put("value",areaAnalysisResponse.getFrom42());
+        jsonArray.add(jsonObject);
+        jsonObject.put("name","湖南");
+        jsonObject.put("value",areaAnalysisResponse.getFrom43());
+        jsonArray.add(jsonObject);
+        jsonObject.put("name","广东");
+        jsonObject.put("value",areaAnalysisResponse.getFrom44());
+        jsonArray.add(jsonObject);
+        jsonObject.put("name","广西");
+        jsonObject.put("value",areaAnalysisResponse.getFrom45());
+        jsonArray.add(jsonObject);
+        jsonObject.put("name","海南");
+        jsonObject.put("value",areaAnalysisResponse.getFrom46());
+        jsonArray.add(jsonObject);
+        jsonObject.put("name","重庆");
+        jsonObject.put("value",areaAnalysisResponse.getFrom50());
+        jsonArray.add(jsonObject);
+        jsonObject.put("name","四川");
+        jsonObject.put("value",areaAnalysisResponse.getFrom51());
+        jsonArray.add(jsonObject);
+        jsonObject.put("name","贵州");
+        jsonObject.put("value",areaAnalysisResponse.getFrom52());
+        jsonArray.add(jsonObject);
+        jsonObject.put("name","云南");
+        jsonObject.put("value",areaAnalysisResponse.getFrom53());
+        jsonArray.add(jsonObject);
+        jsonObject.put("name","西藏");
+        jsonObject.put("value",areaAnalysisResponse.getFrom54());
+        jsonArray.add(jsonObject);
+        jsonObject.put("name","陕西");
+        jsonObject.put("value",areaAnalysisResponse.getFrom61());
+        jsonArray.add(jsonObject);
+        jsonObject.put("name","甘肃");
+        jsonObject.put("value",areaAnalysisResponse.getFrom62());
+        jsonArray.add(jsonObject);
+        jsonObject.put("name","青海");
+        jsonObject.put("value",areaAnalysisResponse.getFrom63());
+        jsonArray.add(jsonObject);
+        jsonObject.put("name","宁夏");
+        jsonObject.put("value",areaAnalysisResponse.getFrom64());
+        jsonArray.add(jsonObject);
+        jsonObject.put("name","新疆");
+        jsonObject.put("value",areaAnalysisResponse.getFrom65());
+        jsonArray.add(jsonObject);
+        jsonObject.put("name","台湾");
+        jsonObject.put("value",areaAnalysisResponse.getFrom71());
+        jsonArray.add(jsonObject);
+        jsonObject.put("name","香港");
+        jsonObject.put("value",areaAnalysisResponse.getFrom81());
+        jsonArray.add(jsonObject);
+        jsonObject.put("name","澳门");
+        jsonObject.put("value",areaAnalysisResponse.getFrom91());
+        jsonArray.add(jsonObject);
+
+        long min=0;
+        long max=0;
+        for(int i=0;i<jsonArray.size();i++)
+        {
+            if (Integer.parseInt(jsonArray.getJSONObject(i).get("value").toString())<min){
+                min=Integer.parseInt(jsonArray.getJSONObject(i).get("value").toString());
+            }
+            if (Integer.parseInt(jsonArray.getJSONObject(i).get("value").toString())>min){
+                max=Integer.parseInt(jsonArray.getJSONObject(i).get("value").toString());
+            }
+        }
+        // 模板参数
+        HashMap<String, Object> datas = new HashMap<>();
+        datas.put("regions", JSON.toJSONString(jsonArray));
+        datas.put("min", JSON.toJSONString(min));
+        datas.put("max", JSON.toJSONString(max));
+        datas.put("title", "地域分布");
+
+        // 生成option字符串
+        String option = FreemarkerUtil.generateString("regionLayout.ftl", "/com/sjtu/mts/template", datas);
+
+        // 根据option参数
+        String base64 = EchartsUtil.generateEchartsBase64(option);
+
+        System.out.println("BASE64:" + base64);
+
+        return base64;
+    }
+
+    @Override
+    public JSONObject generateFile(long fid,int templateId,String decodeTitle,String decodeInstitution,String decodeYuQingIds) throws TemplateException, IOException, ParseException {
+        System.out.println(fid);
+        System.out.println(templateId);
+        System.out.println(decodeTitle);
+        System.out.println(decodeInstitution);
+        System.out.println(decodeYuQingIds);
+        JSONObject ret=new JSONObject();
+        ret.put("generateFile",1);
+        String classPath = "/home/pubsys/jar_dir/";
+        String downloadPath = classPath+"pdfTemp/";
+
+        System.out.println(classPath);
+        System.out.println(downloadPath);
+
+        Configuration configuration = new Configuration();
+        /* 设置编码 */
+        configuration.setDefaultEncoding("utf-8");
+        String fileDirectory = classPath + "pdf/";
+        Template template = null;
+        try {
+            /* 加载文件 */
+            configuration.setDirectoryForTemplateLoading(new File(fileDirectory));
+
+            /* 加载模板 */
+            template = configuration.getTemplate("2.ftl");
+        } catch (IOException ex) {
+            System.out.println("找不到模板文件，路径为:") ;
+            System.out.println(fileDirectory);
+        }
+        Map<String,Object> dataMap = new HashMap<>();
+        FangAnTemplate fangAnTemplate=fangAnTemplateDAO.findById(templateId);
+        dataMap.put("title", decodeTitle);
+        dataMap.put("version", fangAnTemplate.getVersion());
+        dataMap.put("institution", decodeInstitution);
+        String strDateFormat = "yyyy-MM-dd HH:mm:ss";
+        SimpleDateFormat sdf = new SimpleDateFormat(strDateFormat);
+        dataMap.put("time", sdf.format(fangAnTemplate.getTime()));
+
+        String keylistString=fangAnTemplate.getKeylist();
+        String[] keylistStrings = keylistString.trim().split("\\,");
+        System.out.println(keylistString);
+        List<String> keylist = new ArrayList<>(Arrays.asList(keylistStrings));
+        List<Dimension> dimensions=dimensionDao.findAllByKeyIn(keylist);
+
+        dataMap.put("dimensions",dimensions);
+
+        String[] idarray = decodeYuQingIds.trim().split("\\,");
+        List<String>searchSplitArray = Arrays.asList(idarray);
+        Criteria criteria = new Criteria();
+        criteria.subCriteria(new Criteria("_id").in(searchSplitArray));
+        CriteriaQuery query = new CriteriaQuery(criteria);
+        SearchHits<Data> searchHits = this.elasticsearchOperations.search(query, Data.class);
+
+        List<Data> pageDataContent = new ArrayList<>();
+        for (SearchHit<Data> hit : searchHits.getSearchHits())
+        {
+            pageDataContent.add(hit.getContent());
+        }
+        dataMap.put("data",pageDataContent);
+
+        String timeEnd=sdf.format(new Date());
+        String timeStart=sdf.format(new Date((long) (new Date().getTime()-2592000*Math.pow(10,3))));
+        String base64= totalAmountTrend(fid,timeStart,timeEnd);
+        System.out.println("BASE64:" + base64);
+
+        dataMap.put("img",base64);
+
+        String rnd = DigestUtils.sha1Hex(new Date().toString());
+        String outFilePath = String.format("%s%s-%s.html", downloadPath , "aaa", rnd);
+        File docFile = new File(outFilePath);
+        FileOutputStream fos;
+        Writer out = null;
+        try {
+            fos = new FileOutputStream(docFile);
+            out = new BufferedWriter(new OutputStreamWriter(fos, "utf-8"),10240);
+            template.process(dataMap,out);
+            System.out.println(outFilePath);
+        } catch (FileNotFoundException ex) {
+            System.out.println("找不到输出文件路径，路径为：{}");
+        } catch (TemplateException | IOException ex) {
+            System.out.println("找不到输出文件路径，路径为：{}");
+        } finally {
+            if(out != null){
+                try {
+                    out.close();
+                } catch (IOException ex) {
+                    System.out.println("找不到输出文件路径，路径为：{}");
+                }
+            }
+        }
+        return ret;
     }
 }

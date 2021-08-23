@@ -7,12 +7,16 @@ import com.sjtu.mts.Repository.DataRepository;
 import com.sjtu.mts.Response.*;
 import com.sjtu.mts.Service.*;
 import com.sjtu.mts.WeiboTrack.WeiboRepostTree;
+import freemarker.template.TemplateException;
 import net.minidev.json.JSONArray;
 import net.minidev.json.JSONObject;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
-import java.io.UnsupportedEncodingException;
+
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+import java.io.*;
 import java.net.MalformedURLException;
 import java.text.ParseException;
 import java.util.List;
@@ -803,4 +807,57 @@ public class DataController {
         }
         return searchService.modeifyMaterial(fid,decodemateriallib,decodeIds);
     }
+
+
+    @PostMapping("/generateFile")
+    @ResponseBody
+    public JSONObject generateFile (@RequestBody Map<String,String> modeifyMaterialInfo
+    ) throws ParseException, TemplateException, IOException {
+        long fid = Long.parseLong(modeifyMaterialInfo.get("fid"));
+        int templateId=Integer.parseInt(modeifyMaterialInfo.get("templateId"));
+        String title=modeifyMaterialInfo.get("title");
+        String institution=modeifyMaterialInfo.get("institution");
+        String yuQingIds = modeifyMaterialInfo.get("yuQingIds");
+        String decodeTitle = "";
+        String decodeInstitution="";
+        String decodeYuQingIds = "";
+        try{
+            decodeTitle = java.net.URLDecoder.decode(title, "utf-8");
+            decodeInstitution= java.net.URLDecoder.decode(institution, "utf-8");
+            decodeYuQingIds= java.net.URLDecoder.decode(yuQingIds, "utf-8");
+        }catch (Exception e){
+            System.out.println(e);
+        }
+        return searchService.generateFile(fid,templateId,decodeTitle,decodeInstitution,decodeYuQingIds);
+    }
+
+    @GetMapping("/download")
+    @ResponseBody
+    public void download(HttpServletRequest request, HttpServletResponse response) throws Exception {
+        response.setContentType("text/html;charset=UTF-8");
+        request.setCharacterEncoding("UTF-8");
+        BufferedInputStream bis = null;
+        BufferedOutputStream bos = null;
+
+        File file = new File("/home/pubsys/jar_dir/pdfTemp/aaa-b7a733acd30792a13e306bc8334d70c6374ee964.html");
+        long fileLength = file.length();
+        String storeName = file.getName();
+
+        response.setContentType("application/octet-stream");
+        response.setHeader("Content-disposition", "attachment; filename="
+                + new String(storeName.getBytes("utf-8"), "ISO8859-1"));
+        response.setHeader("Content-Length", String.valueOf(fileLength));
+
+
+        bis = new BufferedInputStream(new FileInputStream("/home/pubsys/jar_dir/pdfTemp/aaa-b7a733acd30792a13e306bc8334d70c6374ee964.html"));
+        bos = new BufferedOutputStream(response.getOutputStream());
+        byte[] buff = new byte[1024];
+        int bytesRead;
+        while (-1 != (bytesRead = bis.read(buff, 0, buff.length))) {
+            bos.write(buff, 0, bytesRead);
+        }
+        bis.close();
+        bos.close();
+    }
+
 }

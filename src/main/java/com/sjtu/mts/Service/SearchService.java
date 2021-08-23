@@ -4,9 +4,11 @@ import com.alibaba.fastjson.JSON;
 import com.sjtu.mts.Entity.*;
 import com.sjtu.mts.Keyword.KeywordResponse;
 import com.sjtu.mts.Response.*;
+import freemarker.template.TemplateException;
 import net.minidev.json.JSONArray;
 import net.minidev.json.JSONObject;
 
+import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.net.MalformedURLException;
 import java.text.ParseException;
@@ -111,4 +113,7 @@ public interface SearchService {
     public JSONObject deleteMaterialIDs(long fid,String decodemateriallib,String decodeIds);
 
     public JSONObject modeifyMaterial(long fid,String materiallib,String decodeIds);
+
+    public JSONObject generateFile(long fid,int templateId,String decodeTitle,String decodeInstitution,String decodeYuQingIds) throws TemplateException, IOException, ParseException;
+
 }
