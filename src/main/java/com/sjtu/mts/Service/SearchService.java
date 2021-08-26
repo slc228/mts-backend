@@ -1,6 +1,7 @@
 package com.sjtu.mts.Service;
 
 import com.alibaba.fastjson.JSON;
+import com.itextpdf.text.DocumentException;
 import com.sjtu.mts.Entity.*;
 import com.sjtu.mts.Keyword.KeywordResponse;
 import com.sjtu.mts.Response.*;
@@ -114,6 +115,6 @@ public interface SearchService {
 
     public JSONObject modeifyMaterial(long fid,String materiallib,String decodeIds);
 
-    public JSONObject generateFile(long fid,int templateId,String decodeTitle,String decodeInstitution,String decodeYuQingIds) throws TemplateException, IOException, ParseException;
+    public JSONObject generateFile(long fid,int templateId,String decodeTitle,String decodeInstitution,String decodeYuQingIds,String echartsData) throws TemplateException, IOException, ParseException, DocumentException, com.lowagie.text.DocumentException;
 
 }

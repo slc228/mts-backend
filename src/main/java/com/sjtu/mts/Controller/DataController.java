@@ -1,5 +1,6 @@
 package com.sjtu.mts.Controller;
 
+import com.itextpdf.text.DocumentException;
 import com.sjtu.mts.Entity.*;
 import com.sjtu.mts.EventTrack.EventTreeNode;
 import com.sjtu.mts.Keyword.KeywordResponse;
@@ -812,12 +813,13 @@ public class DataController {
     @PostMapping("/generateFile")
     @ResponseBody
     public JSONObject generateFile (@RequestBody Map<String,String> modeifyMaterialInfo
-    ) throws ParseException, TemplateException, IOException {
+    ) throws ParseException, TemplateException, IOException, DocumentException, com.lowagie.text.DocumentException {
         long fid = Long.parseLong(modeifyMaterialInfo.get("fid"));
         int templateId=Integer.parseInt(modeifyMaterialInfo.get("templateId"));
         String title=modeifyMaterialInfo.get("title");
         String institution=modeifyMaterialInfo.get("institution");
         String yuQingIds = modeifyMaterialInfo.get("yuQingIds");
+        String echartsData = modeifyMaterialInfo.get("echartsData");
         String decodeTitle = "";
         String decodeInstitution="";
         String decodeYuQingIds = "";
@@ -828,7 +830,7 @@ public class DataController {
         }catch (Exception e){
             System.out.println(e);
         }
-        return searchService.generateFile(fid,templateId,decodeTitle,decodeInstitution,decodeYuQingIds);
+        return searchService.generateFile(fid,templateId,decodeTitle,decodeInstitution,decodeYuQingIds,echartsData);
     }
 
     @GetMapping("/download")
