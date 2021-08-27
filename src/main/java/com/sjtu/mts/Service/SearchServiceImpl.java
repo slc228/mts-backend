@@ -1,12 +1,8 @@
 package com.sjtu.mts.Service;
 
-import com.alibaba.fastjson.JSON;
-import com.itextpdf.text.Document;
 import com.itextpdf.text.DocumentException;
 import com.itextpdf.text.pdf.BaseFont;
-import com.itextpdf.text.pdf.PdfWriter;
-import com.itextpdf.tool.xml.XMLWorkerFontProvider;
-import com.itextpdf.tool.xml.XMLWorkerHelper;
+
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import com.sjtu.mts.Dao.*;
@@ -19,18 +15,13 @@ import com.sjtu.mts.Repository.SensitiveWordRepository;
 import com.sjtu.mts.Repository.SwordFidRepository;
 import com.sjtu.mts.Response.*;
 import com.sjtu.mts.rpc.WeiboSpiderRpc;
-import com.sjtu.mts.util.EchartsUtil;
-import com.sjtu.mts.util.FreemarkerUtil;
-import com.sjtu.mts.util.GenOptionUtil;
-import com.sjtu.mts.util.HttpUtil;
 import net.minidev.json.JSONArray;
 import net.minidev.json.JSONObject;
-import org.apache.pdfbox.pdmodel.PDDocument;
-import org.apache.pdfbox.text.PDFTextStripper;
 import org.apache.poi.hssf.usermodel.HSSFWorkbook;
 import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.ss.usermodel.Sheet;
 import org.apache.poi.ss.usermodel.Workbook;
+import org.hibernate.Hibernate;
 import org.openqa.selenium.WebElement;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.PageRequest;
@@ -43,7 +34,6 @@ import org.springframework.stereotype.Service;
 import java.io.*;
 import java.net.MalformedURLException;
 import java.net.URL;
-import java.nio.charset.Charset;
 import java.sql.Blob;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
@@ -63,7 +53,6 @@ import freemarker.template.TemplateException;
 import org.apache.commons.codec.digest.DigestUtils;
 import org.xhtmlrenderer.pdf.ITextFontResolver;
 import org.xhtmlrenderer.pdf.ITextRenderer;
-import sun.misc.BASE64Decoder;
 
 import static com.sjtu.mts.Keyword.Wrapper.min;
 
@@ -93,6 +82,9 @@ public class SearchServiceImpl implements SearchService {
 
     @Autowired
     private DimensionDao dimensionDao;
+
+    @Autowired
+    private BriefingFileDao briefingFileDao;
 
     @Autowired
     private WeiboSpiderRpc weiboSpiderRpc;
@@ -2166,367 +2158,60 @@ public class SearchServiceImpl implements SearchService {
         return result;
     }
 
-    public String totalAmountTrend(long fid,String timeStart,String timeEnd) throws ParseException, TemplateException, IOException {
-        String strDateFormat = "yyyy-MM-dd HH:mm:ss";
-        SimpleDateFormat sdf = new SimpleDateFormat(strDateFormat);
-
-        AmountTrendResponse amountTrendResponse=globalSearchTrendCount2(fid,timeStart,timeEnd);
-        List<String> xAxis=new ArrayList<>();
-        for (String time:amountTrendResponse.getTimeRange())
-        {
-            String[] moments = time.trim().split(" to ");
-            Date fromMoment=sdf.parse(moments[0]);
-            Date toMoment=sdf.parse(moments[1]);
-            String avgTime=sdf.format(fromMoment)+"~\\n"+sdf.format(toMoment);
-            xAxis.add(avgTime);
-        }
-        String[] xValue= xAxis.toArray(new String[0]);
-        String title = "总量趋势";
-        List<Long> yAxis = amountTrendResponse.getTotalAmountTrend();
-        Long[] yValue= yAxis.toArray(new Long[0]);
-
-        // 模板参数
-        HashMap<String, Object> datas = new HashMap<>();
-        datas.put("yValue", JSON.toJSONString(yAxis));
-        datas.put("xValue", JSON.toJSONString(xAxis));
-        datas.put("title", title);
-
-        // 生成option字符串
-        String option = FreemarkerUtil.generateString("totalAmountTrend.ftl", "/com/sjtu/mts/template", datas);
-
-        // 根据option参数
-        String base64 = EchartsUtil.generateEchartsBase64(option);
-
-        System.out.println("BASE64:" + base64);
-
-        return base64;
-    }
-
-    public String sourceAmountTrend(long fid,String timeStart,String timeEnd) throws ParseException, TemplateException, IOException {
-        String strDateFormat = "yyyy-MM-dd HH:mm:ss";
-        SimpleDateFormat sdf = new SimpleDateFormat(strDateFormat);
-        AmountTrendResponse amountTrendResponse=globalSearchTrendCount2(fid,timeStart,timeEnd);
-
-        List<String> yAxis=new ArrayList<>();
-        for (String time:amountTrendResponse.getTimeRange())
-        {
-            String[] moments = time.trim().split(" to ");
-            Date fromMoment=sdf.parse(moments[0]);
-            Date toMoment=sdf.parse(moments[1]);
-            String avgTime=sdf.format(fromMoment)+"~\\n"+sdf.format(toMoment);
-            yAxis.add(avgTime);
-        }
-        String[] yValue= yAxis.toArray(new String[0]);
-        String title = "来源趋势";
-
-        com.alibaba.fastjson.JSONArray options = new com.alibaba.fastjson.JSONArray();
-        com.alibaba.fastjson.JSONObject jsonObject=new com.alibaba.fastjson.JSONObject();
-        options.add(jsonObject);
-        jsonObject.put("label","网站");
-        jsonObject.put("name","网站");
-        jsonObject.put("value",amountTrendResponse.getFromTypeAmountTrend1());
-        options.add(jsonObject);
-        jsonObject.put("label","论坛");
-        jsonObject.put("name","论坛");
-        jsonObject.put("value",amountTrendResponse.getFromTypeAmountTrend2());
-        options.add(jsonObject);
-        jsonObject.put("label","微博");
-        jsonObject.put("name","微博");
-        jsonObject.put("value",amountTrendResponse.getFromTypeAmountTrend3());
-        options.add(jsonObject);
-        jsonObject.put("label","微信");
-        jsonObject.put("name","微信");
-        jsonObject.put("value",amountTrendResponse.getFromTypeAmountTrend4());
-        options.add(jsonObject);
-        jsonObject.put("label","博客");
-        jsonObject.put("name","微信");
-        jsonObject.put("value",amountTrendResponse.getFromTypeAmountTrend5());
-        options.add(jsonObject);
-        jsonObject.put("label","外媒");
-        jsonObject.put("name","外媒");
-        jsonObject.put("value",amountTrendResponse.getFromTypeAmountTrend6());
-        options.add(jsonObject);
-        jsonObject.put("label","新闻");
-        jsonObject.put("name","新闻");
-        jsonObject.put("value",amountTrendResponse.getFromTypeAmountTrend7());
-        options.add(jsonObject);
-
-        // 模板参数
-        HashMap<String, Object> datas = new HashMap<>();
-        datas.put("yAxis", JSON.toJSONString(yValue));
-        datas.put("xAxis", JSON.toJSONString(options));
-        datas.put("title", title);
-
-        // 生成option字符串
-        String option = FreemarkerUtil.generateString("sourceAmountTrend.ftl", "/com/sjtu/mts/template", datas);
-
-        // 根据option参数
-        String base64 = EchartsUtil.generateEchartsBase64(option);
-
-        System.out.println("BASE64:" + base64);
-
-        return base64;
-    }
-
-    public String regionLayout(long fid,String timeStart,String timeEnd) throws ParseException, TemplateException, IOException {
-        String strDateFormat = "yyyy-MM-dd HH:mm:ss";
-        SimpleDateFormat sdf = new SimpleDateFormat(strDateFormat);
-        AreaAnalysisResponse areaAnalysisResponse=countAreaByFid(fid,timeStart,timeEnd);
-
-        System.out.println(areaAnalysisResponse);
-        com.alibaba.fastjson.JSONArray jsonArray=new com.alibaba.fastjson.JSONArray();
-
-        com.alibaba.fastjson.JSONObject jsonObject1=new com.alibaba.fastjson.JSONObject();
-        jsonObject1.put("name","北京");
-        jsonObject1.put("value",areaAnalysisResponse.getFrom11());
-        jsonArray.add(jsonObject1);
-
-        com.alibaba.fastjson.JSONObject jsonObject2=new com.alibaba.fastjson.JSONObject();
-        jsonObject2.put("name","天津");
-        jsonObject2.put("value",areaAnalysisResponse.getFrom12());
-        jsonArray.add(jsonObject2);
-
-        com.alibaba.fastjson.JSONObject jsonObject3=new com.alibaba.fastjson.JSONObject();
-        jsonObject3.put("name","河北");
-        jsonObject3.put("value",areaAnalysisResponse.getFrom13());
-        jsonArray.add(jsonObject3);
-
-        com.alibaba.fastjson.JSONObject jsonObject4=new com.alibaba.fastjson.JSONObject();
-        jsonObject4.put("name","山西");
-        jsonObject4.put("value",areaAnalysisResponse.getFrom14());
-        jsonArray.add(jsonObject4);
-
-        com.alibaba.fastjson.JSONObject jsonObject5=new com.alibaba.fastjson.JSONObject();
-        jsonObject5.put("name","内蒙古");
-        jsonObject5.put("value",areaAnalysisResponse.getFrom15());
-        jsonArray.add(jsonObject5);
-
-        com.alibaba.fastjson.JSONObject jsonObject6=new com.alibaba.fastjson.JSONObject();
-        jsonObject6.put("name","辽宁");
-        jsonObject6.put("value",areaAnalysisResponse.getFrom21());
-        jsonArray.add(jsonObject6);
-
-        com.alibaba.fastjson.JSONObject jsonObject7=new com.alibaba.fastjson.JSONObject();
-        jsonObject7.put("name","吉林");
-        jsonObject7.put("value",areaAnalysisResponse.getFrom22());
-        jsonArray.add(jsonObject7);
-
-        com.alibaba.fastjson.JSONObject jsonObject8=new com.alibaba.fastjson.JSONObject();
-        jsonObject8.put("name","黑龙江");
-        jsonObject8.put("value",areaAnalysisResponse.getFrom23());
-        jsonArray.add(jsonObject8);
-
-        com.alibaba.fastjson.JSONObject jsonObject9=new com.alibaba.fastjson.JSONObject();
-        jsonObject9.put("name","上海");
-        jsonObject9.put("value",areaAnalysisResponse.getFrom31());
-        jsonArray.add(jsonObject9);
-
-        com.alibaba.fastjson.JSONObject jsonObject10=new com.alibaba.fastjson.JSONObject();
-        jsonObject10.put("name","江苏");
-        jsonObject10.put("value",areaAnalysisResponse.getFrom32());
-        jsonArray.add(jsonObject10);
-
-        com.alibaba.fastjson.JSONObject jsonObject11=new com.alibaba.fastjson.JSONObject();
-        jsonObject11.put("name","浙江");
-        jsonObject11.put("value",areaAnalysisResponse.getFrom33());
-        jsonArray.add(jsonObject11);
-
-        com.alibaba.fastjson.JSONObject jsonObject12=new com.alibaba.fastjson.JSONObject();
-        jsonObject12.put("name","安徽");
-        jsonObject12.put("value",areaAnalysisResponse.getFrom34());
-        jsonArray.add(jsonObject12);
-
-        com.alibaba.fastjson.JSONObject jsonObject13=new com.alibaba.fastjson.JSONObject();
-        jsonObject13.put("name","福建");
-        jsonObject13.put("value",areaAnalysisResponse.getFrom35());
-        jsonArray.add(jsonObject13);
-
-        com.alibaba.fastjson.JSONObject jsonObject14=new com.alibaba.fastjson.JSONObject();
-        jsonObject14.put("name","江西");
-        jsonObject14.put("value",areaAnalysisResponse.getFrom36());
-        jsonArray.add(jsonObject14);
-
-        com.alibaba.fastjson.JSONObject jsonObject15=new com.alibaba.fastjson.JSONObject();
-        jsonObject15.put("name","山东");
-        jsonObject15.put("value",areaAnalysisResponse.getFrom37());
-        jsonArray.add(jsonObject15);
-
-        com.alibaba.fastjson.JSONObject jsonObject16=new com.alibaba.fastjson.JSONObject();
-        jsonObject16.put("name","河南");
-        jsonObject16.put("value",areaAnalysisResponse.getFrom41());
-        jsonArray.add(jsonObject16);
-
-        com.alibaba.fastjson.JSONObject jsonObject17=new com.alibaba.fastjson.JSONObject();
-        jsonObject17.put("name","湖北");
-        jsonObject17.put("value",areaAnalysisResponse.getFrom42());
-        jsonArray.add(jsonObject17);
-
-        com.alibaba.fastjson.JSONObject jsonObject18=new com.alibaba.fastjson.JSONObject();
-        jsonObject18.put("name","湖南");
-        jsonObject18.put("value",areaAnalysisResponse.getFrom43());
-        jsonArray.add(jsonObject18);
-
-        com.alibaba.fastjson.JSONObject jsonObject19=new com.alibaba.fastjson.JSONObject();
-        jsonObject19.put("name","广东");
-        jsonObject19.put("value",areaAnalysisResponse.getFrom44());
-        jsonArray.add(jsonObject19);
-
-        com.alibaba.fastjson.JSONObject jsonObject20=new com.alibaba.fastjson.JSONObject();
-        jsonObject20.put("name","广西");
-        jsonObject20.put("value",areaAnalysisResponse.getFrom45());
-        jsonArray.add(jsonObject20);
-
-        com.alibaba.fastjson.JSONObject jsonObject21=new com.alibaba.fastjson.JSONObject();
-        jsonObject21.put("name","海南");
-        jsonObject21.put("value",areaAnalysisResponse.getFrom46());
-        jsonArray.add(jsonObject21);
-
-        com.alibaba.fastjson.JSONObject jsonObject22=new com.alibaba.fastjson.JSONObject();
-        jsonObject22.put("name","重庆");
-        jsonObject22.put("value",areaAnalysisResponse.getFrom50());
-        jsonArray.add(jsonObject22);
-
-        com.alibaba.fastjson.JSONObject jsonObject23=new com.alibaba.fastjson.JSONObject();
-        jsonObject23.put("name","四川");
-        jsonObject23.put("value",areaAnalysisResponse.getFrom51());
-        jsonArray.add(jsonObject23);
-
-        com.alibaba.fastjson.JSONObject jsonObject24=new com.alibaba.fastjson.JSONObject();
-        jsonObject24.put("name","贵州");
-        jsonObject24.put("value",areaAnalysisResponse.getFrom52());
-        jsonArray.add(jsonObject24);
-
-        com.alibaba.fastjson.JSONObject jsonObject25=new com.alibaba.fastjson.JSONObject();
-        jsonObject25.put("name","云南");
-        jsonObject25.put("value",areaAnalysisResponse.getFrom53());
-        jsonArray.add(jsonObject25);
-
-        com.alibaba.fastjson.JSONObject jsonObject26=new com.alibaba.fastjson.JSONObject();
-        jsonObject26.put("name","西藏");
-        jsonObject26.put("value",areaAnalysisResponse.getFrom54());
-        jsonArray.add(jsonObject26);
-
-        com.alibaba.fastjson.JSONObject jsonObject27=new com.alibaba.fastjson.JSONObject();
-        jsonObject27.put("name","陕西");
-        jsonObject27.put("value",areaAnalysisResponse.getFrom61());
-        jsonArray.add(jsonObject27);
-
-        com.alibaba.fastjson.JSONObject jsonObject28=new com.alibaba.fastjson.JSONObject();
-        jsonObject28.put("name","甘肃");
-        jsonObject28.put("value",areaAnalysisResponse.getFrom62());
-        jsonArray.add(jsonObject28);
-
-        com.alibaba.fastjson.JSONObject jsonObject29=new com.alibaba.fastjson.JSONObject();
-        jsonObject29.put("name","青海");
-        jsonObject29.put("value",areaAnalysisResponse.getFrom63());
-        jsonArray.add(jsonObject29);
-
-        com.alibaba.fastjson.JSONObject jsonObject30=new com.alibaba.fastjson.JSONObject();
-        jsonObject30.put("name","宁夏");
-        jsonObject30.put("value",areaAnalysisResponse.getFrom64());
-        jsonArray.add(jsonObject30);
-
-        com.alibaba.fastjson.JSONObject jsonObject31=new com.alibaba.fastjson.JSONObject();
-        jsonObject31.put("name","新疆");
-        jsonObject31.put("value",areaAnalysisResponse.getFrom65());
-        jsonArray.add(jsonObject31);
-
-        com.alibaba.fastjson.JSONObject jsonObject32=new com.alibaba.fastjson.JSONObject();
-        jsonObject32.put("name","台湾");
-        jsonObject32.put("value",areaAnalysisResponse.getFrom71());
-        jsonArray.add(jsonObject32);
-
-        com.alibaba.fastjson.JSONObject jsonObject33=new com.alibaba.fastjson.JSONObject();
-        jsonObject33.put("name","香港");
-        jsonObject33.put("value",areaAnalysisResponse.getFrom81());
-        jsonArray.add(jsonObject33);
-
-        com.alibaba.fastjson.JSONObject jsonObject34=new com.alibaba.fastjson.JSONObject();
-        jsonObject34.put("name","澳门");
-        jsonObject34.put("value",areaAnalysisResponse.getFrom91());
-        jsonArray.add(jsonObject34);
-
-        long min=0;
-        long max=0;
-
-        // 模板参数
-        HashMap<String, Object> datas = new HashMap<>();
-        datas.put("regions", JSON.toJSONString(jsonArray));
-        datas.put("min", JSON.toJSONString(min));
-        datas.put("max", JSON.toJSONString(max));
-        datas.put("title", "地域分布");
-
-        System.out.println(JSON.toJSONString(jsonArray));
-        System.out.println(max);
-        System.out.println(min);
-
-        // 生成option字符串
-        String option = FreemarkerUtil.generateString("regionLayout.ftl", "/com/sjtu/mts/template", datas);
-
-        System.out.println(option);
-
-        // 根据option参数
-        String base64 = EchartsUtil.generateEchartsBase64(option);
-
-        System.out.println("BASE64:" + base64);
-
-        return base64;
-    }
-
     @Override
     public JSONObject generateFile(long fid,int templateId,String decodeTitle,String decodeInstitution,String decodeYuQingIds,String echartsData) throws TemplateException, IOException, ParseException, DocumentException, com.lowagie.text.DocumentException {
-        System.out.println(fid);
-        System.out.println(templateId);
-        System.out.println(decodeTitle);
-        System.out.println(decodeInstitution);
-        System.out.println(decodeYuQingIds);
         JSONObject ret=new JSONObject();
         ret.put("generateFile",1);
-        String classPath = "/home/pubsys/jar_dir/";
-        String downloadPath = classPath+"pdfTemp/";
-
-        System.out.println(classPath);
-        System.out.println(downloadPath);
+        String rnd = DigestUtils.sha1Hex(new Date().toString());
+        String wordOutFilePath = String.format("%s%s-%s.doc", "/home/pubsys/jar_dir/fileTemp/" , "word", rnd);
+        String pdfOutFilePath = String.format("%s%s-%s.pdf", "/home/pubsys/jar_dir/fileTemp/" , "pdf", rnd);
+        String excelOutFilePath = String.format("%s%s-%s.xls", "/home/pubsys/jar_dir/fileTemp/" , "excel", rnd);
 
         Configuration configuration = new Configuration();
         /* 设置编码 */
         configuration.setDefaultEncoding("utf-8");
-        String fileDirectory = classPath + "pdf/";
+        String fileDirectory = "/home/pubsys/jar_dir/fileTemplate/";
         Template template = null;
         try {
             /* 加载文件 */
             configuration.setDirectoryForTemplateLoading(new File(fileDirectory));
-
             /* 加载模板 */
-            template = configuration.getTemplate("2.ftl");
+            template = configuration.getTemplate("pdf.ftl");
         } catch (IOException ex) {
             System.out.println("找不到模板文件，路径为:") ;
             System.out.println(fileDirectory);
         }
+
+        /* 组装数据 */
         Map<String,Object> dataMap = new HashMap<>();
+
+        // 标题数据
         FangAnTemplate fangAnTemplate=fangAnTemplateDAO.findById(templateId);
         dataMap.put("title", decodeTitle);
         dataMap.put("version", fangAnTemplate.getVersion());
         dataMap.put("institution", decodeInstitution);
-       String strDateFormat = "yyyy-MM-dd HH:mm:ss";
+        String strDateFormat = "yyyy-MM-dd HH:mm";
         SimpleDateFormat sdf = new SimpleDateFormat(strDateFormat);
         dataMap.put("time", sdf.format(fangAnTemplate.getTime()));
 
+        // 维度数据
         String keylistString=fangAnTemplate.getKeylist();
         String[] keylistStrings = keylistString.trim().split("\\,");
-        System.out.println(keylistString);
         List<String> keylist = new ArrayList<>(Arrays.asList(keylistStrings));
         List<Dimension> dimensions=dimensionDao.findAllByKeyIn(keylist);
         dataMap.put("dimensions",dimensions);
+
+        // echarts图片数据
         com.alibaba.fastjson.JSONArray echarts = com.alibaba.fastjson.JSONArray.parseArray(echartsData);
         dataMap.put("echarts",echarts);
+
+        // 舆情信息数据
         String[] idarray = decodeYuQingIds.trim().split("\\,");
         List<String>searchSplitArray = Arrays.asList(idarray);
         Criteria criteria = new Criteria();
         criteria.subCriteria(new Criteria("_id").in(searchSplitArray));
         CriteriaQuery query = new CriteriaQuery(criteria);
         SearchHits<Data> searchHits = this.elasticsearchOperations.search(query, Data.class);
-
         List<Data> pageDataContent = new ArrayList<>();
         for (SearchHit<Data> hit : searchHits.getSearchHits())
         {
@@ -2535,6 +2220,7 @@ public class SearchServiceImpl implements SearchService {
         dataMap.put("data",pageDataContent);
 
 
+        /* 生成excel */
         Field[] declaredFields = Data.class.getDeclaredFields();
         String[] fieldNames = new String[declaredFields.length];
         for (int i = 0; i < declaredFields.length; i++) {
@@ -2579,7 +2265,7 @@ public class SearchServiceImpl implements SearchService {
         }
         OutputStream outputStream = null;
         try {
-            outputStream = new FileOutputStream("/home/pubsys/jar_dir/pdfTemp/aaa.xls");
+            outputStream = new FileOutputStream(excelOutFilePath);
             wb.write(outputStream);
         } catch (Exception e) {
 
@@ -2601,69 +2287,36 @@ public class SearchServiceImpl implements SearchService {
             }
         }
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-//       String timeEnd=sdf.format(new Date());
-//        String timeStart=sdf.format(new Date((long) (new Date().getTime()-2592000*Math.pow(10,3))));
-//        String base64= totalAmountTrend(fid,timeStart,timeEnd);
-//        System.out.println("BASE64:" + base64);
-        String base64="";
-
-        dataMap.put("img",base64);
-
-        String rnd = DigestUtils.sha1Hex(new Date().toString());
-        String outFilePath = String.format("%s%s-%s.doc", downloadPath , "aaa", rnd);
-        File docFile = new File(outFilePath);
+        /* 按照模板生成doc和html数据 */
+        File docFile = new File(wordOutFilePath);
         FileOutputStream fos;
-        Writer out2 = null;
-        Writer out = new StringWriter();
+        Writer outDoc = null;
+        Writer outPdf = new StringWriter();
         String content = null;
         try {
             fos = new FileOutputStream(docFile);
-            out2 = new BufferedWriter(new OutputStreamWriter(fos, "utf-8"),10240);
-            template.process(dataMap,out2);
-            System.out.println(outFilePath);
-
+            outDoc = new BufferedWriter(new OutputStreamWriter(fos, "utf-8"),10240);
+            template.process(dataMap,outDoc);
             
-            template.process(dataMap, out); //将合并后的数据和模板写入到流中，这里使用的字符流
-            out.flush();
-            content=out.toString();
-            
+            template.process(dataMap, outPdf); //将合并后的数据和模板写入到流中，这里使用的字符流
+            outPdf.flush();
+            content=outPdf.toString();
         } catch (FileNotFoundException ex) {
             System.out.println("找不到输出文件路径，路径为：{}");
         } catch (TemplateException | IOException ex) {
             System.out.println("找不到输出文件路径，路径为：{}");
         } finally {
-            if(out != null){
+            if(outPdf != null){
                 try {
-                    out.close();
+                    outPdf.close();
                 } catch (IOException ex) {
                     System.out.println("找不到输出文件路径，路径为：{}");
                 }
             }
         }
 
-        String DEST = "/home/pubsys/jar_dir/pdfTemp/HelloWorld_CN_HTML.pdf";
-       String FONT = "/home/pubsys/jar_dir/font/SimHei.ttf";
+        /* 解析html数据生成pdf */
+        String FONT = "/home/pubsys/jar_dir/font/SimHei.ttf";
 
         ITextRenderer render = new ITextRenderer();
         ITextFontResolver fontResolver = render.getFontResolver();
@@ -2672,31 +2325,69 @@ public class SearchServiceImpl implements SearchService {
         render.setDocumentFromString(content);
         //解决图片相对路径的问题
         render.layout();
-        render.createPDF(new FileOutputStream(DEST));
+        render.createPDF(new FileOutputStream(pdfOutFilePath));
 
+        /* 将生成的文件存到mysql中 */
+        File pdffile = new File(pdfOutFilePath);
+        InputStream pdffileInputStream = new FileInputStream(pdffile);
+        byte[] pdfByteArray = new byte[pdffileInputStream.available()];
+        pdffileInputStream.read(pdfByteArray);
 
+        File wordfile = new File(wordOutFilePath);
+        InputStream wordFileInputStream = new FileInputStream(wordfile);
+        byte[] wordByteArray = new byte[wordFileInputStream.available()];
+        wordFileInputStream.read(wordByteArray);
 
+        File excelfile = new File(excelOutFilePath);
+        InputStream excelFileInputStream = new FileInputStream(excelfile);
+        byte[] excelByteArray = new byte[excelFileInputStream.available()];
+        excelFileInputStream.read(excelByteArray);
 
-
-
-
-//        String DEST = "/home/pubsys/jar_dir/pdfTemp/HelloWorld_CN_HTML.pdf";
-//        String FONT = "/home/pubsys/jar_dir/font/SimHei.ttf";
-//        String HTML=outFilePath;
-//
-//        Document document = new Document();
-//        // step 2
-//        PdfWriter writer = PdfWriter.getInstance(document, new FileOutputStream(DEST));
-//        // step 3
-//        document.open();
-//        // step 4
-//        XMLWorkerFontProvider fontImp = new XMLWorkerFontProvider(XMLWorkerFontProvider.DONTLOOKFORFONTS);
-//        fontImp.register(FONT);
-//        XMLWorkerHelper.getInstance().parseXHtml(writer, document,
-//                new FileInputStream(HTML), null, Charset.forName("UTF-8"), fontImp);
-//        // step 5
-//        document.close();
+        try {
+            BriefingFile briefingFile = new BriefingFile(fid,decodeTitle,new Date(),pdfByteArray,wordByteArray,excelByteArray);
+            briefingFileDao.save(briefingFile);
+            ret.put("generateFile",1);
+        }catch (Exception e){
+            ret.put("generateFile",0);
+        }
 
         return ret;
+    }
+
+    @Override
+    public JSONArray getBriefingFiles(long fid)
+    {
+        JSONArray ret =new JSONArray();
+        List<BriefingFile> briefingFiles=briefingFileDao.findAllByFid(fid);
+        for(BriefingFile briefingFile:briefingFiles)
+        {
+            JSONObject jsonObject=new JSONObject();
+            jsonObject.put("id",briefingFile.getId());
+            jsonObject.put("briefingName",briefingFile.getName());
+            jsonObject.put("briefingTime",briefingFile.getGeneratetime());
+            ret.appendElement(jsonObject);
+        }
+        return ret;
+    }
+
+    @Override
+    public JSONObject deleteBriefingFiles(int id)
+    {
+        JSONObject ret=new JSONObject();
+        try {
+            briefingFileDao.deleteById(id);
+            ret.put("deleteBriefingFiles", 1);
+        } catch (Exception e) {
+            if (briefingFileDao.existsById(id)) {
+                ret.put("deleteBriefingFiles", 0);
+            } else {
+                ret.put("deleteBriefingFiles", 1);
+            }
+            e.printStackTrace();
+        }
+
+        System.out.println(ret.get("deleteBriefingFiles"));
+        return ret;
+
     }
 }

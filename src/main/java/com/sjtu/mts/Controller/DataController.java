@@ -833,6 +833,22 @@ public class DataController {
         return searchService.generateFile(fid,templateId,decodeTitle,decodeInstitution,decodeYuQingIds,echartsData);
     }
 
+    @GetMapping("/getBriefingFiles")
+    @ResponseBody
+    public JSONArray getBriefingFiles (
+            @RequestParam("fid") long fid
+    ) {
+        return searchService.getBriefingFiles(fid);
+    }
+
+    @GetMapping("/deleteBriefingFiles")
+    @ResponseBody
+    public JSONObject deleteBriefingFiles (
+            @RequestParam("id") int id
+    ) {
+        return searchService.deleteBriefingFiles(id);
+    }
+
     @GetMapping("/download")
     @ResponseBody
     public void download(HttpServletRequest request, HttpServletResponse response) throws Exception {

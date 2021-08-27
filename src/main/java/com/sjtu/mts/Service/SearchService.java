@@ -117,4 +117,7 @@ public interface SearchService {
 
     public JSONObject generateFile(long fid,int templateId,String decodeTitle,String decodeInstitution,String decodeYuQingIds,String echartsData) throws TemplateException, IOException, ParseException, DocumentException, com.lowagie.text.DocumentException;
 
+    public JSONArray getBriefingFiles(long fid);
+
+    public JSONObject deleteBriefingFiles(int id);
 }
