@@ -9,6 +9,9 @@ import freemarker.template.TemplateException;
 import net.minidev.json.JSONArray;
 import net.minidev.json.JSONObject;
 
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.net.MalformedURLException;
@@ -120,4 +123,6 @@ public interface SearchService {
     public JSONArray getBriefingFiles(long fid);
 
     public JSONObject deleteBriefingFiles(int id);
+
+    public void downloadBriefingFiles(int id, String type, HttpServletRequest request, HttpServletResponse response) throws IOException;
 }

@@ -849,6 +849,17 @@ public class DataController {
         return searchService.deleteBriefingFiles(id);
     }
 
+    @GetMapping("/downloadBriefingFiles")
+    @ResponseBody
+    public void downloadBriefingFiles (
+            @RequestParam("id") int id,
+            @RequestParam("type") String type,
+            HttpServletRequest request,
+            HttpServletResponse response
+    ) throws Exception {
+        searchService.downloadBriefingFiles(id,type,request,response);
+    }
+
     @GetMapping("/download")
     @ResponseBody
     public void download(HttpServletRequest request, HttpServletResponse response) throws Exception {
@@ -857,7 +868,7 @@ public class DataController {
         BufferedInputStream bis = null;
         BufferedOutputStream bos = null;
 
-        File file = new File("/home/pubsys/jar_dir/pdfTemp/aaa-b7a733acd30792a13e306bc8334d70c6374ee964.html");
+        File file = new File("/home/pubsys/jar_dir/fileTemp/word-70612c9accf1d0289516d1b7b5f1d61fc4c3ce15.doc");
         long fileLength = file.length();
         String storeName = file.getName();
 
@@ -867,7 +878,7 @@ public class DataController {
         response.setHeader("Content-Length", String.valueOf(fileLength));
 
 
-        bis = new BufferedInputStream(new FileInputStream("/home/pubsys/jar_dir/pdfTemp/aaa-b7a733acd30792a13e306bc8334d70c6374ee964.html"));
+        bis = new BufferedInputStream(new FileInputStream("/home/pubsys/jar_dir/fileTemp/word-70612c9accf1d0289516d1b7b5f1d61fc4c3ce15.doc"));
         bos = new BufferedOutputStream(response.getOutputStream());
         byte[] buff = new byte[1024];
         int bytesRead;

@@ -54,6 +54,9 @@ import org.apache.commons.codec.digest.DigestUtils;
 import org.xhtmlrenderer.pdf.ITextFontResolver;
 import org.xhtmlrenderer.pdf.ITextRenderer;
 
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+
 import static com.sjtu.mts.Keyword.Wrapper.min;
 
 
@@ -2389,5 +2392,56 @@ public class SearchServiceImpl implements SearchService {
         System.out.println(ret.get("deleteBriefingFiles"));
         return ret;
 
+    }
+
+    @Override
+    public void downloadBriefingFiles(int id, String type, HttpServletRequest request, HttpServletResponse response) throws IOException {
+        BriefingFile briefingFile=briefingFileDao.findById(id);
+        byte[] retFile = new byte[0];
+        String storeName = null;
+        SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm");
+        System.out.println(id);
+        System.out.println(type);
+        if (type.equals("pdf"))
+        {
+            System.out.println("here");
+            retFile=briefingFile.getPdf();
+            System.out.println(briefingFile);
+            storeName=briefingFile.getName()+"_"+sdf.format(briefingFile.getGeneratetime())+"_pdf.pdf";
+        }
+        if (type.equals("word"))
+        {
+            retFile=briefingFile.getWord();
+            storeName=briefingFile.getName()+"_"+sdf.format(briefingFile.getGeneratetime())+"_doc.doc";
+        }
+        if (type.equals("excel"))
+        {
+            retFile=briefingFile.getExcel();
+            storeName=briefingFile.getName()+"_"+sdf.format(briefingFile.getGeneratetime())+"_excel.xls";
+        }
+        long length=retFile.length;
+        System.out.println(storeName);
+        System.out.println(length);
+
+        ByteArrayInputStream ret=new ByteArrayInputStream(retFile);
+
+        response.setContentType("text/html;charset=UTF-8");
+        request.setCharacterEncoding("UTF-8");
+        BufferedInputStream bis = null;
+        BufferedOutputStream bos = null;
+
+        response.setContentType("application/octet-stream");
+        response.setHeader("Content-disposition", "attachment; filename="
+                + new String(storeName.getBytes("utf-8"), "ISO8859-1"));
+        response.setHeader("Content-Length", String.valueOf(length));
+        bis = new BufferedInputStream(ret);
+        bos = new BufferedOutputStream(response.getOutputStream());
+        byte[] buff = new byte[1024];
+        int bytesRead;
+        while (-1 != (bytesRead = bis.read(buff, 0, buff.length))) {
+            bos.write(buff, 0, bytesRead);
+        }
+        bis.close();
+        bos.close();
     }
 }
