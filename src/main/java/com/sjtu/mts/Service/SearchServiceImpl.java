@@ -142,6 +142,17 @@ public class SearchServiceImpl implements SearchService {
         return 1;
     }
 
+    public String EmotionToChinese(String text)
+    {
+        if (text.equals("happy")) return "积极 🥰";
+        if (text.equals("angry")) return "愤怒 😡";
+        if (text.equals("sad")) return "悲伤 😭";
+        if (text.equals("fear")) return "恐惧 😰";
+        if (text.equals("surprise")) return "惊讶 😮";
+        if (text.equals("neutral")) return "中立 😐";
+        return "";
+    }
+
     public String SensitiveTypeStr(String SensitiveType)
     {
         if (SensitiveType==null){
@@ -2230,14 +2241,15 @@ public class SearchServiceImpl implements SearchService {
             fieldNames[i] = declaredFields[i].getName(); //通过反射获取属性名
         }
 
+        String[] headerCode={"标题","内容","网址","敏感类型","分类","情感","发布日期"};
         String[] header = {"title","content", "webpageUrl", "sensitiveType", "tag", "emotion", "publishedDay" };
 
         Workbook wb = new HSSFWorkbook();
         int rowSize = 0;
         Sheet sheet = wb.createSheet();
         Row row = sheet.createRow(rowSize);
-        for (int i = 0; i < header.length; i++) {
-            row.createCell(i).setCellValue(header[i]);
+        for (int i = 0; i < headerCode.length; i++) {
+            row.createCell(i).setCellValue(headerCode[i]);
         }
 
         try {
@@ -2256,7 +2268,13 @@ public class SearchServiceImpl implements SearchService {
                                 rowNew.createCell(i).setCellValue("");
                             }
                             else {
-                                rowNew.createCell(i).setCellValue(invoke.toString());
+                                if (fieldName.equals("emotion"))
+                                {
+                                    rowNew.createCell(i).setCellValue(EmotionToChinese(invoke.toString()));
+                                }
+                                else {
+                                    rowNew.createCell(i).setCellValue(invoke.toString());
+                                }
                             }
                             break;
                         }
@@ -2362,12 +2380,14 @@ public class SearchServiceImpl implements SearchService {
     {
         JSONArray ret =new JSONArray();
         List<BriefingFile> briefingFiles=briefingFileDao.findAllByFid(fid);
+        String strDateFormat = "yyyy-MM-dd HH:mm";
+        SimpleDateFormat sdf = new SimpleDateFormat(strDateFormat);
         for(BriefingFile briefingFile:briefingFiles)
         {
             JSONObject jsonObject=new JSONObject();
             jsonObject.put("id",briefingFile.getId());
             jsonObject.put("briefingName",briefingFile.getName());
-            jsonObject.put("briefingTime",briefingFile.getGeneratetime());
+            jsonObject.put("briefingTime",sdf.format(briefingFile.getGeneratetime()));
             ret.appendElement(jsonObject);
         }
         return ret;
