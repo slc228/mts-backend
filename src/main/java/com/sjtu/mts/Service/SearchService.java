@@ -118,9 +118,13 @@ public interface SearchService {
 
     public JSONObject modeifyMaterial(long fid,String materiallib,String decodeIds);
 
-    public JSONObject generateFile(long fid,int templateId,String decodeTitle,String decodeInstitution,String decodeYuQingIds,String echartsData) throws TemplateException, IOException, ParseException, DocumentException, com.lowagie.text.DocumentException;
+    public JSONObject generateFile(int fileID,long fid,int templateId,String decodeTitle,String decodeInstitution,String decodeYuQingIds,String echartsData) throws TemplateException, IOException, ParseException, DocumentException, com.lowagie.text.DocumentException;
 
     public JSONArray getBriefingFiles(long fid);
+
+    public JSONObject addNewBriefingFileRecord(long fid, String title);
+
+    public JSONObject updateBriefingFileProgess(int id,int percent);
 
     public JSONObject deleteBriefingFiles(int id);
 

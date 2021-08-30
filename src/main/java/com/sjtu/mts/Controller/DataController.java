@@ -814,6 +814,7 @@ public class DataController {
     @ResponseBody
     public JSONObject generateFile (@RequestBody Map<String,String> modeifyMaterialInfo
     ) throws ParseException, TemplateException, IOException, DocumentException, com.lowagie.text.DocumentException {
+        int fileID=Integer.parseInt(modeifyMaterialInfo.get("fileID"));
         long fid = Long.parseLong(modeifyMaterialInfo.get("fid"));
         int templateId=Integer.parseInt(modeifyMaterialInfo.get("templateId"));
         String title=modeifyMaterialInfo.get("title");
@@ -830,7 +831,7 @@ public class DataController {
         }catch (Exception e){
             System.out.println(e);
         }
-        return searchService.generateFile(fid,templateId,decodeTitle,decodeInstitution,decodeYuQingIds,echartsData);
+        return searchService.generateFile(fileID,fid,templateId,decodeTitle,decodeInstitution,decodeYuQingIds,echartsData);
     }
 
     @GetMapping("/getBriefingFiles")
@@ -839,6 +840,30 @@ public class DataController {
             @RequestParam("fid") long fid
     ) {
         return searchService.getBriefingFiles(fid);
+    }
+
+    @GetMapping("/addNewBriefingFileRecord")
+    @ResponseBody
+    public JSONObject addNewBriefingFileRecord (
+            @RequestParam("fid") long fid,
+            @RequestParam("title") String title
+    ) {
+        String decodeTitle="";
+        try{
+            decodeTitle = java.net.URLDecoder.decode(title, "utf-8");
+        }catch (Exception e){
+            System.out.println(e);
+        }
+        return searchService.addNewBriefingFileRecord(fid,decodeTitle);
+    }
+
+    @GetMapping("/updateBriefingFileProgess")
+    @ResponseBody
+    public JSONObject updateBriefingFileProgess (
+            @RequestParam("id") int id,
+            @RequestParam("percent") int percent
+    ) {
+        return searchService.updateBriefingFileProgess(id,percent);
     }
 
     @GetMapping("/deleteBriefingFiles")
@@ -859,34 +884,4 @@ public class DataController {
     ) throws Exception {
         searchService.downloadBriefingFiles(id,type,request,response);
     }
-
-    @GetMapping("/download")
-    @ResponseBody
-    public void download(HttpServletRequest request, HttpServletResponse response) throws Exception {
-        response.setContentType("text/html;charset=UTF-8");
-        request.setCharacterEncoding("UTF-8");
-        BufferedInputStream bis = null;
-        BufferedOutputStream bos = null;
-
-        File file = new File("/home/pubsys/jar_dir/fileTemp/word-70612c9accf1d0289516d1b7b5f1d61fc4c3ce15.doc");
-        long fileLength = file.length();
-        String storeName = file.getName();
-
-        response.setContentType("application/octet-stream");
-        response.setHeader("Content-disposition", "attachment; filename="
-                + new String(storeName.getBytes("utf-8"), "ISO8859-1"));
-        response.setHeader("Content-Length", String.valueOf(fileLength));
-
-
-        bis = new BufferedInputStream(new FileInputStream("/home/pubsys/jar_dir/fileTemp/word-70612c9accf1d0289516d1b7b5f1d61fc4c3ce15.doc"));
-        bos = new BufferedOutputStream(response.getOutputStream());
-        byte[] buff = new byte[1024];
-        int bytesRead;
-        while (-1 != (bytesRead = bis.read(buff, 0, buff.length))) {
-            bos.write(buff, 0, bytesRead);
-        }
-        bis.close();
-        bos.close();
-    }
-
 }

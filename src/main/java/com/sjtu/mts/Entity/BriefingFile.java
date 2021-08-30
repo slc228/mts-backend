@@ -1,9 +1,6 @@
 package com.sjtu.mts.Entity;
 
-import javax.persistence.Column;
-import javax.persistence.Entity;
-import javax.persistence.Id;
-import javax.persistence.Table;
+import javax.persistence.*;
 import java.sql.Blob;
 import java.util.Date;
 
@@ -11,6 +8,7 @@ import java.util.Date;
 @Table(name = "briefingfile")
 public class BriefingFile {
     @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "id")
     private int id;
 
@@ -32,6 +30,9 @@ public class BriefingFile {
     @Column(name = "excel")
     private byte[] excel;
 
+    @Column(name = "percent")
+    private int percent;
+
     public BriefingFile(){}
     public BriefingFile(
             long fid,
@@ -39,7 +40,8 @@ public class BriefingFile {
             Date generatetime,
             byte[] pdf,
             byte[] word,
-            byte[] excel
+            byte[] excel,
+            int percent
     ){
         this.fid = fid;
         this.name=name;
@@ -47,6 +49,7 @@ public class BriefingFile {
         this.pdf=pdf;
         this.word=word;
         this.excel=excel;
+        this.percent=percent;
     }
 
     public Integer getId() {
@@ -80,4 +83,8 @@ public class BriefingFile {
     public byte[] getExcel(){return excel;}
 
     public void setExcel(byte[] excel){this.excel=excel;}
+
+    public int getPercent(){return percent;}
+
+    public void setPercent(int percent){this.percent=percent;}
 }

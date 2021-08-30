@@ -2173,7 +2173,8 @@ public class SearchServiceImpl implements SearchService {
     }
 
     @Override
-    public JSONObject generateFile(long fid,int templateId,String decodeTitle,String decodeInstitution,String decodeYuQingIds,String echartsData) throws TemplateException, IOException, ParseException, DocumentException, com.lowagie.text.DocumentException {
+    public JSONObject generateFile(int fileID,long fid,int templateId,String decodeTitle,String decodeInstitution,String decodeYuQingIds,String echartsData) throws TemplateException, IOException, ParseException, DocumentException, com.lowagie.text.DocumentException {
+        System.out.println(echartsData);
         JSONObject ret=new JSONObject();
         ret.put("generateFile",1);
         String rnd = DigestUtils.sha1Hex(new Date().toString());
@@ -2365,7 +2366,11 @@ public class SearchServiceImpl implements SearchService {
         excelFileInputStream.read(excelByteArray);
 
         try {
-            BriefingFile briefingFile = new BriefingFile(fid,decodeTitle,new Date(),pdfByteArray,wordByteArray,excelByteArray);
+            BriefingFile briefingFile = briefingFileDao.findById(fileID);
+            briefingFile.setPercent(100);
+            briefingFile.setPdf(pdfByteArray);
+            briefingFile.setExcel(excelByteArray);
+            briefingFile.setWord(wordByteArray);
             briefingFileDao.save(briefingFile);
             ret.put("generateFile",1);
         }catch (Exception e){
@@ -2388,7 +2393,45 @@ public class SearchServiceImpl implements SearchService {
             jsonObject.put("id",briefingFile.getId());
             jsonObject.put("briefingName",briefingFile.getName());
             jsonObject.put("briefingTime",sdf.format(briefingFile.getGeneratetime()));
+            if (briefingFile.getPercent()!=100)
+            {
+                jsonObject.put("percent",briefingFile.getPercent());
+            }
             ret.appendElement(jsonObject);
+        }
+        return ret;
+    }
+
+    @Override
+    public JSONObject addNewBriefingFileRecord(long fid, String title)
+    {
+        JSONObject ret=new JSONObject();
+        try {
+            BriefingFile briefingFile=new BriefingFile(fid,title,new Date(),null,null,null,10);
+            briefingFileDao.save(briefingFile);
+            ret.put("addNewBriefingFileRecord",1);
+            ret.put("fileId",briefingFile.getId());
+        }
+        catch (Exception e) {
+            ret.put("addNewBriefingFileRecord", 0);
+            e.printStackTrace();
+        }
+        return ret;
+    }
+
+    @Override
+    public JSONObject updateBriefingFileProgess(int id,int percent)
+    {
+        JSONObject ret=new JSONObject();
+        BriefingFile briefingFile=briefingFileDao.findById(id);
+        briefingFile.setPercent(briefingFile.getPercent()+percent);
+        try {
+            briefingFileDao.save(briefingFile);
+            ret.put("updateBriefingFileProgess",1);
+        }
+        catch (Exception e) {
+            ret.put("updateBriefingFileProgess", 0);
+            e.printStackTrace();
         }
         return ret;
     }
