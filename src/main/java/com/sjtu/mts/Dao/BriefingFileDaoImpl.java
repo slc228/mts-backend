@@ -21,6 +21,11 @@ public class BriefingFileDaoImpl implements BriefingFileDao {
     }
 
     @Override
+    public List<BriefingFile> findAllByFidOrderByGeneratetimeDesc(long fid) {
+        return briefingFileRepository.findAllByFidOrderByGeneratetimeDesc(fid);
+    }
+
+    @Override
     public List<BriefingFile> findAllByFid(long fid)
     {
         return briefingFileRepository.findAllByFid(fid);

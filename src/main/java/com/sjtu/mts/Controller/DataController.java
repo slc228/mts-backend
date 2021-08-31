@@ -884,4 +884,59 @@ public class DataController {
     ) throws Exception {
         searchService.downloadBriefingFiles(id,type,request,response);
     }
+
+    @GetMapping("/getSensitiveWordTypes")
+    @ResponseBody
+    public JSONArray getSensitiveWordTypes () {
+        return searchService.getSensitiveWordTypes();
+    }
+
+    @GetMapping("/getSensitiveWords")
+    @ResponseBody
+    public List<SensitiveWords> getSensitiveWords (
+            @RequestParam("type") String type
+    ) throws Exception {
+        String decodeType="";
+        try{
+            decodeType = java.net.URLDecoder.decode(type, "utf-8");
+        }catch (Exception e){
+            System.out.println(e);
+        }
+        System.out.println(decodeType);
+       return searchService.getSensitiveWords(decodeType);
+    }
+
+    @PostMapping("/deleteSensitiveWords")
+    @ResponseBody
+    public JSONObject deleteSensitiveWords (@RequestBody Map<String,String> deleteSensitiveWordsInfo
+    ) throws ParseException {
+        String type=deleteSensitiveWordsInfo.get("type");
+        String words = deleteSensitiveWordsInfo.get("words");
+        String decodeType = "";
+        String decodeWords="";
+        try{
+            decodeType = java.net.URLDecoder.decode(type, "utf-8");
+            decodeWords= java.net.URLDecoder.decode(words, "utf-8");
+        }catch (Exception e){
+            System.out.println(e);
+        }
+        return searchService.deleteSensitiveWords(decodeType,decodeWords);
+    }
+
+    @GetMapping("/addSensitiveWordForAll")
+    @ResponseBody
+    public JSONObject addSensitiveWordForAll (
+            @RequestParam("type") String type,
+            @RequestParam("word") String word
+    ) throws Exception {
+        String decodeType="";
+        String decodeWord="";
+        try{
+            decodeType = java.net.URLDecoder.decode(type, "utf-8");
+            decodeWord = java.net.URLDecoder.decode(word, "utf-8");
+        }catch (Exception e){
+            System.out.println(e);
+        }
+        return searchService.addSensitiveWordForAll(decodeType,decodeWord);
+    }
 }

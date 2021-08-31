@@ -90,6 +90,9 @@ public class SearchServiceImpl implements SearchService {
     private BriefingFileDao briefingFileDao;
 
     @Autowired
+    private SensitiveWordsDao sensitiveWordsDao;
+
+    @Autowired
     private WeiboSpiderRpc weiboSpiderRpc;
 
     public SearchServiceImpl(ElasticsearchOperations elasticsearchOperations,AreaRepository areaRepository,SensitiveWordRepository sensitiveWordRepository,SwordFidRepository swordFidRepository)
@@ -2384,7 +2387,7 @@ public class SearchServiceImpl implements SearchService {
     public JSONArray getBriefingFiles(long fid)
     {
         JSONArray ret =new JSONArray();
-        List<BriefingFile> briefingFiles=briefingFileDao.findAllByFid(fid);
+        List<BriefingFile> briefingFiles=briefingFileDao.findAllByFidOrderByGeneratetimeDesc(fid);
         String strDateFormat = "yyyy-MM-dd HH:mm";
         SimpleDateFormat sdf = new SimpleDateFormat(strDateFormat);
         for(BriefingFile briefingFile:briefingFiles)
@@ -2506,5 +2509,85 @@ public class SearchServiceImpl implements SearchService {
         }
         bis.close();
         bos.close();
+    }
+
+    @Override
+    public JSONArray getSensitiveWordTypes()
+    {
+         List<SensitiveWords> sensitiveWordsList= sensitiveWordsDao.findAll();
+         List<String> strings=new ArrayList<>();
+         for (SensitiveWords sensitiveWords:sensitiveWordsList)
+         {
+             strings.add(sensitiveWords.getType());
+         }
+         LinkedHashSet set=new LinkedHashSet(strings);
+         List<String> stringsWithOutDuplicates =new ArrayList<>(set);
+         System.out.println(stringsWithOutDuplicates.size());
+         JSONArray jsonArray=new JSONArray();
+         for (String s:stringsWithOutDuplicates)
+         {
+             JSONObject jsonObject=new JSONObject();
+             jsonObject.put("type",s);
+             jsonArray.appendElement(jsonObject);
+         }
+         return jsonArray;
+    }
+
+    @Override
+    public List<SensitiveWords> getSensitiveWords(String type)
+    {
+        return sensitiveWordsDao.findAllByType(type);
+    }
+
+    @Override
+    public JSONObject deleteSensitiveWords(String type,String words)
+    {
+        System.out.println("deleteSensitiveWords");
+        JSONObject ret=new JSONObject();
+        System.out.println(words);
+
+        String[] deleteWords = words.trim().split("\\,");
+        List<String> DeleteWords = new ArrayList<>(Arrays.asList(deleteWords));
+        for (String s : DeleteWords) {
+            try{
+                sensitiveWordsDao.deleteByTypeAndWord(type,s);
+            }
+            catch (Exception e) {
+                ret.put("deleteSensitiveWords", 0);
+                e.printStackTrace();
+                return ret;
+            }
+        }
+        ret.put("deleteSensitiveWords", 1);
+        return ret;
+    }
+
+    @Override
+    public JSONObject addSensitiveWordForAll(String type,String word)
+    {
+        System.out.println("addSensitiveWordForAll");
+        JSONObject ret=new JSONObject();
+        if (sensitiveWordsDao.existsByTypeAndWord(type,word))
+        {
+            ret.put("isexisted",1);
+            ret.put("addSensitiveWordForAll",0);
+        }else
+        {
+            try {
+                SensitiveWords sensitiveWords=new SensitiveWords(type,word);
+                sensitiveWordsDao.save(sensitiveWords);
+                ret.put("addSensitiveWordForAll",1);
+            }
+            catch (Exception e) {
+                if (sensitiveWordsDao.existsByTypeAndWord(type,word)) {
+                    ret.put("addSensitiveWordForAll", 1);
+                }
+                else {
+                    ret.put("addSensitiveWordForAll", 0);
+                }
+                e.printStackTrace();
+            }
+        }
+        return ret;
     }
 }
