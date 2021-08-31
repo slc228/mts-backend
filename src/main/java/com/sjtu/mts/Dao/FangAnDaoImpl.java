@@ -229,12 +229,12 @@ public class FangAnDaoImpl implements FangAnDao {
                     for (String searchString : searchSplitArray) {
                         List<String> subArray = new LinkedList<>();
                         subArray.add(searchString);
-                        //criteria.subCriteria(new Criteria("content").in(subArray).or("title").in(subArray));
-                        criteria.subCriteria(new Criteria("title").in(subArray));
+                        criteria.subCriteria(new Criteria("content").in(subArray).or("title").in(subArray));
+                        //criteria.subCriteria(new Criteria("title").in(subArray));
                     }
                 }else {
-                    //criteria.subCriteria(new Criteria("content").in(searchSplitArray).or("title").in(searchSplitArray));
-                    criteria.subCriteria(new Criteria("title").in(searchSplitArray));
+                    criteria.subCriteria(new Criteria("content").in(searchSplitArray).or("title").in(searchSplitArray));
+                    //criteria.subCriteria(new Criteria("title").in(searchSplitArray));
                 }
             }
             if (!regionKeyword.isEmpty())

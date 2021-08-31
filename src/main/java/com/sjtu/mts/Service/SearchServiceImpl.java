@@ -1,7 +1,11 @@
 package com.sjtu.mts.Service;
 
-import com.sjtu.mts.Dao.FangAnDao;
-import com.sjtu.mts.Dao.FangAnWeiboUserDAO;
+import com.itextpdf.text.DocumentException;
+import com.itextpdf.text.pdf.BaseFont;
+
+import java.lang.reflect.Field;
+import java.lang.reflect.Method;
+import com.sjtu.mts.Dao.*;
 import com.sjtu.mts.Entity.*;
 import com.sjtu.mts.Keyword.KeywordResponse;
 import com.sjtu.mts.Keyword.MultipleThreadExtraction;
@@ -13,23 +17,24 @@ import com.sjtu.mts.Response.*;
 import com.sjtu.mts.rpc.WeiboSpiderRpc;
 import net.minidev.json.JSONArray;
 import net.minidev.json.JSONObject;
-import org.elasticsearch.index.query.QueryBuilder;
-import org.elasticsearch.index.query.QueryBuilders;
-import org.elasticsearch.index.query.QueryShardContext;
-import org.joda.time.DateTime;
+import org.apache.poi.hssf.usermodel.HSSFWorkbook;
+import org.apache.poi.ss.usermodel.Row;
+import org.apache.poi.ss.usermodel.Sheet;
+import org.apache.poi.ss.usermodel.Workbook;
+import org.hibernate.Hibernate;
+import org.openqa.selenium.WebElement;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.elasticsearch.core.*;
 import org.springframework.data.elasticsearch.core.query.Criteria;
 import org.springframework.data.elasticsearch.core.query.CriteriaQuery;
-import org.springframework.security.core.parameters.P;
 import org.springframework.stereotype.Service;
 
-import java.io.UnsupportedEncodingException;
+import java.io.*;
 import java.net.MalformedURLException;
 import java.net.URL;
-import java.sql.Array;
+import java.sql.Blob;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.*;
@@ -41,6 +46,16 @@ import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.chrome.ChromeOptions;
 import org.openqa.selenium.remote.DesiredCapabilities;
 import org.openqa.selenium.remote.RemoteWebDriver;
+
+import freemarker.template.Configuration;
+import freemarker.template.Template;
+import freemarker.template.TemplateException;
+import org.apache.commons.codec.digest.DigestUtils;
+import org.xhtmlrenderer.pdf.ITextFontResolver;
+import org.xhtmlrenderer.pdf.ITextRenderer;
+
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
 
 import static com.sjtu.mts.Keyword.Wrapper.min;
 
@@ -63,6 +78,18 @@ public class SearchServiceImpl implements SearchService {
     private FangAnWeiboUserDAO fangAnWeiboUserDAO;
 
     @Autowired
+    private FangAnTemplateDAO fangAnTemplateDAO;
+
+    @Autowired
+    private FangAnMaterialDAO fangAnMaterialDAO;
+
+    @Autowired
+    private DimensionDao dimensionDao;
+
+    @Autowired
+    private BriefingFileDao briefingFileDao;
+
+    @Autowired
     private WeiboSpiderRpc weiboSpiderRpc;
 
     public SearchServiceImpl(ElasticsearchOperations elasticsearchOperations,AreaRepository areaRepository,SensitiveWordRepository sensitiveWordRepository,SwordFidRepository swordFidRepository)
@@ -75,6 +102,10 @@ public class SearchServiceImpl implements SearchService {
 
     public int SensitiveTypeToInt(String SensitiveType)
     {
+        if (SensitiveType==null)
+        {
+            return 0;
+        }
         if (SensitiveType.indexOf("政治敏感")!=-1)
         {
             return 5;
@@ -92,6 +123,10 @@ public class SearchServiceImpl implements SearchService {
 
     public int EmotionToInt(String Emotion)
     {
+        if (Emotion==null)
+        {
+            return 0;
+        }
         if (Emotion.indexOf("angry")!=-1)
         {
             return 5;
@@ -105,6 +140,81 @@ public class SearchServiceImpl implements SearchService {
             return 0;
         }
         return 1;
+    }
+
+    public String EmotionToChinese(String text)
+    {
+        if (text.equals("happy")) return "积极 🥰";
+        if (text.equals("angry")) return "愤怒 😡";
+        if (text.equals("sad")) return "悲伤 😭";
+        if (text.equals("fear")) return "恐惧 😰";
+        if (text.equals("surprise")) return "惊讶 😮";
+        if (text.equals("neutral")) return "中立 😐";
+        return "";
+    }
+
+    public String SensitiveTypeStr(String SensitiveType)
+    {
+        if (SensitiveType==null){
+            return null;
+        }
+        if (SensitiveType.equals("1"))
+        {
+            return "正常信息";
+        }
+        if (SensitiveType.equals("2"))
+        {
+            return "政治敏感";
+        }
+        if (SensitiveType.equals("3"))
+        {
+            return "广告营销";
+        }
+        if (SensitiveType.equals("4"))
+        {
+            return "不实信息";
+        }
+        if (SensitiveType.equals("5"))
+        {
+            return "人身攻击";
+        }
+        if (SensitiveType.equals("6"))
+        {
+            return "低俗信息";
+        }
+        return null;
+    }
+
+    public String EmotionStr(String Emotion)
+    {
+        if (Emotion == null) {
+            return null;
+        }
+        if (Emotion.equals("1"))
+        {
+            return "neutral";
+        }
+        if (Emotion.equals("2"))
+        {
+            return "angry";
+        }
+        if (Emotion.equals("3"))
+        {
+            return "fear";
+        }
+        if (Emotion.equals("4"))
+        {
+            return "surprise";
+        }
+        if (Emotion.equals("5"))
+        {
+            return "sad";
+        }
+        if (Emotion.equals("6"))
+        {
+            return "happy";
+        }
+        return null;
     }
 
     @Override
@@ -161,7 +271,7 @@ public class SearchServiceImpl implements SearchService {
         return result;
     }
     @Override
-    public DataResponse SearchWithObject(String keyword, String cflag, String startPublishedDay, String endPublishedDay,
+    public DataResponse SearchWithObject(String keyword, String sensitiveType, String emotion, String startPublishedDay, String endPublishedDay,
                                          String fromType, int page, int pageSize, int timeOrder,String keywords)
     {
         String eventKeyword = keywords;
@@ -187,11 +297,15 @@ public class SearchServiceImpl implements SearchService {
                 List<String>searchSplitArray = Arrays.asList(searchSplitArray1);
                 criteria.subCriteria(new Criteria("content").in(searchSplitArray).or("title").in(searchSplitArray));
             }
-            if (!cflag.isEmpty())
+            if (!sensitiveType.isEmpty())
             {
-                criteria.subCriteria(new Criteria().and("cflag").is(cflag));
+                criteria.subCriteria(new Criteria("sensitiveType").in(SensitiveTypeStr(sensitiveType)));
             }
-            if (!startPublishedDay.isEmpty() && !endPublishedDay.isEmpty())
+            if (!emotion.isEmpty())
+            {
+                criteria.subCriteria(new Criteria("emotion").contains(EmotionStr(emotion)));
+            }
+            if (!startPublishedDay.equals("null")&& !endPublishedDay.equals("null")&&!startPublishedDay.isEmpty()&&!endPublishedDay.isEmpty())
             {
                 SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
                 try {
@@ -214,15 +328,12 @@ public class SearchServiceImpl implements SearchService {
                     for (String searchString : searchSplitArray) {
                         List<String> subArray = new LinkedList<>();
                         subArray.add(searchString);
-                        //criteria.subCriteria(new Criteria("content").in(subArray).or("title").in(subArray));
-                        criteria.subCriteria(new Criteria("title").in(subArray));
+                        criteria.subCriteria(new Criteria("content").in(subArray).or("title").in(subArray));
                     }
                 }else {
-                    //criteria.subCriteria(new Criteria("content").in(searchSplitArray).or("title").in(searchSplitArray));
-                    criteria.subCriteria(new Criteria("title").in(searchSplitArray));
+                    criteria.subCriteria(new Criteria("content").in(searchSplitArray).or("title").in(searchSplitArray));
                 }
             }
-            System.out.println(criteria);
             CriteriaQuery query = new CriteriaQuery(criteria);
             SearchHits<Data> searchHits = this.elasticsearchOperations.search(query, Data.class);
             for (SearchHit<Data> hit : searchHits.getSearchHits())
@@ -239,11 +350,15 @@ public class SearchServiceImpl implements SearchService {
                 List<String>searchSplitArray = Arrays.asList(searchSplitArray1);
                 criteria.subCriteria(new Criteria("content").in(searchSplitArray).or("title").in(searchSplitArray));
             }
-            if (!cflag.isEmpty())
+            if (!sensitiveType.isEmpty())
             {
-                criteria.subCriteria(new Criteria().and("cflag").is(cflag));
+                criteria.subCriteria(new Criteria("sensitiveType").in(SensitiveTypeStr(sensitiveType)));
             }
-            if (!startPublishedDay.isEmpty() && !endPublishedDay.isEmpty())
+            if (!emotion.isEmpty())
+            {
+                criteria.subCriteria(new Criteria("emotion").contains(EmotionStr(emotion)));
+            }
+            if (!startPublishedDay.equals("null")&& !endPublishedDay.equals("null")&&!startPublishedDay.isEmpty()&&!endPublishedDay.isEmpty())
             {
                 SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
                 try {
@@ -258,7 +373,6 @@ public class SearchServiceImpl implements SearchService {
             {
                 criteria.subCriteria(new Criteria().and("fromType").is(fromType));
             }
-            System.out.println(criteria);
             CriteriaQuery query = new CriteriaQuery(criteria);
             SearchHits<Data> searchHits = this.elasticsearchOperations.search(query, Data.class);
             for (SearchHit<Data> hit : searchHits.getSearchHits())
@@ -274,8 +388,8 @@ public class SearchServiceImpl implements SearchService {
             Collections.sort(pageDataContent , (Data b1, Data b2) -> b1.getPublishedDay().compareTo(b2.getPublishedDay()));
         }
 
-        Collections.sort(pageDataContent,(Data b1, Data b2) -> (EmotionToInt(b1.getEmotion())>EmotionToInt(b2.getEmotion()))?-1:
-            ((EmotionToInt(b1.getEmotion())==EmotionToInt(b2.getEmotion()))?0:1));
+        /*Collections.sort(pageDataContent,(Data b1, Data b2) -> (EmotionToInt(b1.getEmotion())>EmotionToInt(b2.getEmotion()))?-1:
+            ((EmotionToInt(b1.getEmotion())==EmotionToInt(b2.getEmotion()))?0:1));*/
 
         Collections.sort(pageDataContent,(Data b1, Data b2) -> (SensitiveTypeToInt(b1.getSensitiveType())>SensitiveTypeToInt(b2.getSensitiveType()))?-1:
                 ((SensitiveTypeToInt(b1.getSensitiveType())==SensitiveTypeToInt(b2.getSensitiveType()))?0:1));
@@ -807,7 +921,7 @@ public class SearchServiceImpl implements SearchService {
 
 
     @Override
-    public DataResponse fangAnSearch2(long fid,String keyword,String cflag, String startPublishedDay, String endPublishedDay,
+    public DataResponse fangAnSearch2(long fid,String keyword,String sensitiveType,String emotion, String startPublishedDay, String endPublishedDay,
                                      String fromType, int page, int pageSize, int timeOrder){
         List<Criteria> criterias=fangAnDao.FindCriteriasByFid(fid);
         List<Data> pageDataContent = new ArrayList<>();
@@ -816,11 +930,18 @@ public class SearchServiceImpl implements SearchService {
             if (!keyword.isEmpty()){
                 String[] searchSplitArray1 = keyword.trim().split("\\s+");
                 List<String>searchSplitArray = Arrays.asList(searchSplitArray1);
+                System.out.println("herereeeeeeeeee");
+                System.out.println(searchSplitArray1);
+                System.out.println(searchSplitArray);
                 criteria.subCriteria(new Criteria("content").in(searchSplitArray).or("title").in(searchSplitArray));
             }
-            if (!cflag.isEmpty())
+            if (!sensitiveType.isEmpty())
             {
-                criteria.subCriteria(new Criteria().and("cflag").is(cflag));
+                criteria.subCriteria(new Criteria("sensitiveType").in(SensitiveTypeStr(sensitiveType)));
+            }
+            if (!emotion.isEmpty())
+            {
+                criteria.subCriteria(new Criteria("emotion").contains(EmotionStr(emotion)));
             }
             if (!startPublishedDay.isEmpty() && !endPublishedDay.isEmpty())
             {
@@ -859,8 +980,8 @@ public class SearchServiceImpl implements SearchService {
             Collections.sort(pageDataContent , (Data b1, Data b2) -> b1.getPublishedDay().compareTo(b2.getPublishedDay()));
         }
 
-        Collections.sort(pageDataContent,(Data b1, Data b2) -> (EmotionToInt(b1.getEmotion())>EmotionToInt(b2.getEmotion()))?-1:
-                ((EmotionToInt(b1.getEmotion())==EmotionToInt(b2.getEmotion()))?0:1));
+        /*Collections.sort(pageDataContent,(Data b1, Data b2) -> (EmotionToInt(b1.getEmotion())>EmotionToInt(b2.getEmotion()))?-1:
+                ((EmotionToInt(b1.getEmotion())==EmotionToInt(b2.getEmotion()))?0:1));*/
 
         Collections.sort(pageDataContent,(Data b1, Data b2) -> (SensitiveTypeToInt(b1.getSensitiveType())>SensitiveTypeToInt(b2.getSensitiveType()))?-1:
                 ((SensitiveTypeToInt(b1.getSensitiveType())==SensitiveTypeToInt(b2.getSensitiveType()))?0:1));
@@ -1344,6 +1465,21 @@ public class SearchServiceImpl implements SearchService {
     };
 
     @Override
+    public JSONObject deleteWeiboUser(long fid,String Weibouserid,String Weibousernickname)
+    {
+        JSONObject result = new JSONObject();
+        result.put("deleteWeiboUser", 0);
+        try {
+            fangAnWeiboUserDAO.deleteByFidAndWeibousernickname(fid,Weibousernickname);
+            result.put("deleteWeiboUser", 1);
+        }catch (Exception e){
+            result.put("deleteWeiboUser", 0);
+            e.printStackTrace();
+        }
+        return result;
+    };
+
+    @Override
     public JSONArray getFangAnMonitor(long fid) throws ParseException {
         JSONArray jsonArray=new JSONArray();
         List<FangAnWeiboUser> fangAnWeiboUsers=fangAnWeiboUserDAO.findAllByFid(fid);
@@ -1626,7 +1762,7 @@ public class SearchServiceImpl implements SearchService {
         webDriver.findElements(By.className("t")).forEach(x -> {
             JSONObject jsonObject =new JSONObject();
             jsonObject.put("title",x.getText());
-            jsonObject.put("url",x.findElement(By.xpath(".//a")).getAttribute("href"));
+            jsonObject.put("url",x.findElement(By.xpath("./a")).getAttribute("href"));
             Arraybaidu.appendElement(jsonObject);
         });
         webDriver.quit();
@@ -1652,10 +1788,11 @@ public class SearchServiceImpl implements SearchService {
         webDriver.get(url);
         Thread.sleep(1000);
 
-        webDriver.findElements(By.className("res-title")).forEach(x -> {
+        //*[@id="main"]/ul/li/h3/a
+        webDriver.findElements(By.xpath("//*[@id=\"main\"]/ul/li/h3/a")).forEach(x -> {
             JSONObject jsonObject =new JSONObject();
             jsonObject.put("title",x.getText());
-            jsonObject.put("url",x.findElement(By.xpath(".//a")).getAttribute("href"));
+            jsonObject.put("url",x.getAttribute("href"));
             Array360.appendElement(jsonObject);
         });
         webDriver.quit();
@@ -1665,6 +1802,9 @@ public class SearchServiceImpl implements SearchService {
     @Override
     public JSONArray getOverallDataBing(String keyword,Integer pageId) throws MalformedURLException, InterruptedException
     {
+        System.out.println("Bingherer");
+        System.out.println(keyword);
+        System.out.println(pageId);
         ChromeOptions options = new ChromeOptions();
         options.addArguments("--no-sandbox");
         options.addArguments("--headless");
@@ -1679,14 +1819,692 @@ public class SearchServiceImpl implements SearchService {
         String url="https://cn.bing.com/search?q="+keyword+"&first="+String.valueOf(pageId*10+1);
         webDriver.get(url);
         Thread.sleep(1000);
+        WebElement webElement= webDriver.findElement(By.id("b_results"));
+        //*[@id="b_results"]/li/h2/a
+        for (WebElement x : webDriver.findElements(By.xpath(" //*[@id=\"b_results\"]/li/h2/a"))) {
+            JSONObject jsonObject = new JSONObject();
 
-        webDriver.findElements(By.className("b_algo")).forEach(x -> {
-            JSONObject jsonObject =new JSONObject();
-            jsonObject.put("title",x.findElement(By.xpath(".//h2")).getText());
-            jsonObject.put("url",x.findElement(By.xpath(".//h2")).findElement(By.xpath(".//a")).getAttribute("href"));
-            Arraybing.appendElement(jsonObject);
-        });
+                jsonObject.put("title", x.getText());
+                jsonObject.put("url", x.getAttribute("href"));
+                Arraybing.appendElement(jsonObject);
+
+        }
+        //h3/a
         webDriver.quit();
         return Arraybing;
     };
+
+    @Override
+    public List<FangAnTemplate> getBriefingTemplate(long fid)
+    {
+        return fangAnTemplateDAO.findAllByFid(fid);
+    }
+
+    @Override
+    public JSONObject saveBriefingTemplate(int id,long fid,String decodeTitle,String decodeVersion,String decodeInstitution,String time,String keylist,String text) throws ParseException {
+        JSONObject result = new JSONObject();
+        result.put("savebriefingtemplate", 0);
+        Boolean ifExist = fangAnTemplateDAO.existsById(id);
+        if(ifExist){
+            try {
+                FangAnTemplate fangAnTemplate = fangAnTemplateDAO.findById(id);
+                fangAnTemplate.setFid(fid);
+                fangAnTemplate.setTitle(decodeTitle);
+                fangAnTemplate.setVersion(decodeVersion);
+                fangAnTemplate.setInstitution(decodeInstitution);
+                SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm");
+                Date dateTime = sdf.parse(time);
+                fangAnTemplate.setTime(dateTime);
+                fangAnTemplate.setKeylist(keylist);
+                fangAnTemplate.setText(text);
+                fangAnTemplateDAO.save(fangAnTemplate);
+                result.put("savebriefingtemplate", 1);
+                return result;
+            }
+            catch (Exception e) {
+                if (fangAnTemplateDAO.existsById(id)) {
+                    result.put("savebriefingtemplate", 1);
+                }
+                else {
+                    result.put("savebriefingtemplate", 0);
+                }
+                e.printStackTrace();
+            }
+        }
+        else {
+            try {
+                SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm");
+                Date dateTime = sdf.parse(time);
+                FangAnTemplate fangAnTemplate=new FangAnTemplate(fid,decodeTitle,decodeVersion,decodeInstitution,dateTime,keylist,text);
+                fangAnTemplateDAO.save(fangAnTemplate);
+                result.put("savebriefingtemplate", 1);
+                return result;
+            }
+            catch (Exception e) {
+                if (fangAnTemplateDAO.existsById(id)) {
+                    result.put("savebriefingtemplate", 1);
+                }
+                else {
+                    result.put("savebriefingtemplate", 0);
+                }
+                e.printStackTrace();
+            }
+        }
+        return result;
+    }
+
+    @Override
+    public JSONObject deleteBriefingTemplate(int id)
+    {
+        JSONObject result = new JSONObject();
+        result.put("deletebriefingtemplate", 0);
+        try {
+            fangAnTemplateDAO.deleteById(id);
+            result.put("deletebriefingtemplate", 1);
+        }catch (Exception e){
+            result.put("deletebriefingtemplate", 0);
+            e.printStackTrace();
+        }
+        return result;
+    }
+
+    @Override
+    public JSONArray getMaterial(long fid)
+    {
+        JSONArray jsonArray=new JSONArray();
+        List<FangAnMaterial> fangAnMaterialList=fangAnMaterialDAO.findAllByFid(fid);
+        for(FangAnMaterial fangAnMaterial:fangAnMaterialList)
+        {
+            JSONObject jsonObject=new JSONObject();
+            jsonObject.put("materiallib",fangAnMaterial.getMateriallib());
+            String ids=fangAnMaterial.getIds();
+            if (ids.length()==0)
+            {
+                jsonObject.put("num",0);
+            }
+            else {
+                String[] idarray = ids.trim().split("\\,");
+                List<String> idArray = Arrays.asList(idarray);
+                jsonObject.put("num",idArray.size());
+            }
+            jsonArray.appendElement(jsonObject);
+        }
+        return jsonArray;
+    }
+
+    @Override
+    public DataResponse getMaterialDetail(long fid,String materiallib)
+    {
+        if (fangAnMaterialDAO.existsByFidAndMateriallib(fid,materiallib))
+        {
+            FangAnMaterial fangAnMaterial=fangAnMaterialDAO.findByFidAndMateriallib(fid,materiallib);
+            String ids=fangAnMaterial.getIds();
+            System.out.println(ids);
+            String[] idarray = ids.trim().split("\\,");
+            System.out.println(idarray.length);
+            List<String>searchSplitArray = Arrays.asList(idarray);
+            Criteria criteria = new Criteria();
+            criteria.subCriteria(new Criteria("_id").in(searchSplitArray));
+            CriteriaQuery query = new CriteriaQuery(criteria);
+            SearchHits<Data> searchHits = this.elasticsearchOperations.search(query, Data.class);
+            long hitNumber = this.elasticsearchOperations.count(query, Data.class);
+
+            List<Data> pageDataContent = new ArrayList<>();
+            for (SearchHit<Data> hit : searchHits.getSearchHits())
+            {
+                pageDataContent.add(hit.getContent());
+            }
+
+            DataResponse result = new DataResponse();
+            result.setHitNumber(hitNumber);
+            result.setDataContent(pageDataContent);
+
+            return result;
+        }else {
+            return new DataResponse();
+        }
+    }
+
+    @Override
+    public JSONObject addNewMaterialLib(long fid,String decodemateriallib)
+    {
+        System.out.println("addNewMaterialLib");
+        JSONObject ret=new JSONObject();
+        if (fangAnMaterialDAO.existsByFidAndMateriallib(fid,decodemateriallib))
+        {
+            ret.put("isexisted",1);
+            ret.put("addNewMaterialLib",0);
+        }else
+        {
+            try {
+                FangAnMaterial fangAnMaterial=new FangAnMaterial(fid,decodemateriallib,"");
+                fangAnMaterialDAO.save(fangAnMaterial);
+                ret.put("addNewMaterialLib",1);
+            }
+            catch (Exception e) {
+                if (fangAnMaterialDAO.existsByFidAndMateriallib(fid,decodemateriallib)) {
+                    ret.put("addNewMaterialLib", 1);
+                }
+                else {
+                    ret.put("addNewMaterialLib", 0);
+                }
+                e.printStackTrace();
+            }
+        }
+        System.out.println(ret.get("addNewMaterialLib"));
+        return ret;
+    }
+
+    @Override
+    public JSONObject renameMaterial(long fid,String decodeoldname,String decodenewname)
+    {
+        System.out.println("renameMaterial");
+        JSONObject ret=new JSONObject();
+
+        try {
+            FangAnMaterial fangAnMaterial = fangAnMaterialDAO.findByFidAndMateriallib(fid, decodeoldname);
+            fangAnMaterial.setMateriallib(decodenewname);
+            fangAnMaterialDAO.save(fangAnMaterial);
+            ret.put("renameMaterial", 1);
+        } catch (Exception e) {
+            if (fangAnMaterialDAO.existsByFidAndMateriallib(fid, decodenewname)) {
+                ret.put("renameMaterial", 1);
+            } else {
+                ret.put("renameMaterial", 0);
+            }
+            e.printStackTrace();
+        }
+
+        System.out.println(ret.get("renameMaterial"));
+        return ret;
+    }
+
+    @Override
+    public JSONObject deleteMaterial(long fid,String decodemateriallib)
+    {
+        System.out.println("deleteMaterial");
+        JSONObject ret=new JSONObject();
+
+        try {
+            fangAnMaterialDAO.deleteByFidAndMateriallib(fid,decodemateriallib);
+            ret.put("deleteMaterial", 1);
+        } catch (Exception e) {
+            if (fangAnMaterialDAO.existsByFidAndMateriallib(fid, decodemateriallib)) {
+                ret.put("deleteMaterial", 0);
+            } else {
+                ret.put("deleteMaterial", 1);
+            }
+            e.printStackTrace();
+        }
+
+        System.out.println(ret.get("deleteMaterial"));
+        return ret;
+    }
+
+    @Override
+    public JSONObject deleteMaterialIDs(long fid,String decodemateriallib,String decodeIds)
+    {
+        System.out.println("deleteMaterialIDs");
+        JSONObject ret=new JSONObject();
+
+        try {
+            FangAnMaterial fangAnMaterial= fangAnMaterialDAO.findByFidAndMateriallib(fid,decodemateriallib);
+            String nowids=fangAnMaterial.getIds();
+            String[] nowidarray = nowids.trim().split("\\,");
+            System.out.println(nowids);
+            List<String> nowIdarray = new ArrayList<>(Arrays.asList(nowidarray));
+
+            String[] deleteIds = decodeIds.trim().split("\\,");
+            System.out.println(deleteIds);
+            List<String> DeleteIds = new ArrayList<>(Arrays.asList(deleteIds));
+            for (String deleteid:DeleteIds)
+            {
+                int index=nowIdarray.indexOf(deleteid);
+                if (index!=-1)
+                {
+                    nowIdarray.remove(index);
+                }
+            }
+            StringBuilder stringBuilder= new StringBuilder();
+            for (String id:nowIdarray)
+            {
+                if (!id.equals("") && !id.equals(" "))
+                {
+                    stringBuilder.append(id).append(",");
+                }
+            }
+            String ids= stringBuilder.toString();
+            if (!ids.equals(""))
+            {
+                ids=ids.substring(0,ids.length()-1);
+            }
+
+
+            System.out.println(ids);
+            fangAnMaterial.setIds(ids);
+            fangAnMaterialDAO.save(fangAnMaterial);
+
+            ret.put("deleteMaterialIDs", 1);
+        } catch (Exception e) {
+            ret.put("deleteMaterialIDs", 0);
+            e.printStackTrace();
+        }
+
+        System.out.println(ret.get("deleteMaterialIDs"));
+        return ret;
+    }
+
+    @Override
+    public JSONObject modeifyMaterial(long fid,String materiallib,String decodeIds)
+    {
+        JSONObject result = new JSONObject();
+        result.put("modeifyMaterial", 0);
+        Boolean ifExist = fangAnMaterialDAO.existsByFidAndMateriallib(fid,materiallib);
+        if(ifExist){
+            try {
+                FangAnMaterial fangAnMaterial = fangAnMaterialDAO.findByFidAndMateriallib(fid,materiallib);
+                fangAnMaterial.setMateriallib(materiallib);
+
+                String nowids=fangAnMaterial.getIds();
+                String[] nowidarray = nowids.trim().split("\\,");
+                System.out.println(nowids);
+                List<String> nowIdarray = new ArrayList<>(Arrays.asList(nowidarray));
+
+                String[] newIds = decodeIds.trim().split("\\,");
+                System.out.println(newIds);
+                List<String> NewIds = new ArrayList<>(Arrays.asList(newIds));
+                for (String newid:NewIds)
+                {
+                    int index=nowIdarray.indexOf(newid);
+                    if (index==-1)
+                    {
+                        nowIdarray.add(newid);
+                    }
+                }
+
+                StringBuilder stringBuilder= new StringBuilder();
+                for (String id:nowIdarray)
+                {
+                    if (!id.equals("") && !id.equals(" "))
+                    {
+                        stringBuilder.append(id).append(",");
+                    }
+                }
+                String ids= stringBuilder.toString();
+                if (!ids.equals(""))
+                {
+                    ids=ids.substring(0,ids.length()-1);
+                }
+
+                System.out.println(ids);
+                fangAnMaterial.setIds(ids);
+                fangAnMaterialDAO.save(fangAnMaterial);
+                result.put("modeifyMaterial", 1);
+                return result;
+            }
+            catch (Exception e) {
+                if (fangAnMaterialDAO.existsByFid(fid)) {
+                    result.put("modeifyMaterial", 1);
+                }
+                else {
+                    result.put("modeifyMaterial", 0);
+                }
+                e.printStackTrace();
+            }
+        }
+        else {
+            try {
+                FangAnMaterial fangAnMaterial=new FangAnMaterial(fid,materiallib,decodeIds);
+                fangAnMaterialDAO.save(fangAnMaterial);
+                result.put("modeifyMaterial", 1);
+                return result;
+            }
+            catch (Exception e) {
+                if (fangAnMaterialDAO.existsByFid(fid)) {
+                    result.put("modeifyMaterial", 1);
+                }
+                else {
+                    result.put("modeifyMaterial", 0);
+                }
+                e.printStackTrace();
+            }
+        }
+        return result;
+    }
+
+    @Override
+    public JSONObject generateFile(int fileID,long fid,int templateId,String decodeTitle,String decodeInstitution,String decodeYuQingIds,String echartsData) throws TemplateException, IOException, ParseException, DocumentException, com.lowagie.text.DocumentException {
+        System.out.println(echartsData);
+        JSONObject ret=new JSONObject();
+        ret.put("generateFile",1);
+        String rnd = DigestUtils.sha1Hex(new Date().toString());
+        String wordOutFilePath = String.format("%s%s-%s.doc", "/home/pubsys/jar_dir/fileTemp/" , "word", rnd);
+        String pdfOutFilePath = String.format("%s%s-%s.pdf", "/home/pubsys/jar_dir/fileTemp/" , "pdf", rnd);
+        String excelOutFilePath = String.format("%s%s-%s.xls", "/home/pubsys/jar_dir/fileTemp/" , "excel", rnd);
+
+        Configuration configuration = new Configuration();
+        /* 设置编码 */
+        configuration.setDefaultEncoding("utf-8");
+        String fileDirectory = "/home/pubsys/jar_dir/fileTemplate/";
+        Template template = null;
+        try {
+            /* 加载文件 */
+            configuration.setDirectoryForTemplateLoading(new File(fileDirectory));
+            /* 加载模板 */
+            template = configuration.getTemplate("pdf.ftl");
+        } catch (IOException ex) {
+            System.out.println("找不到模板文件，路径为:") ;
+            System.out.println(fileDirectory);
+        }
+
+        /* 组装数据 */
+        Map<String,Object> dataMap = new HashMap<>();
+
+        // 标题数据
+        FangAnTemplate fangAnTemplate=fangAnTemplateDAO.findById(templateId);
+        dataMap.put("title", decodeTitle);
+        dataMap.put("version", fangAnTemplate.getVersion());
+        dataMap.put("institution", decodeInstitution);
+        String strDateFormat = "yyyy-MM-dd HH:mm";
+        SimpleDateFormat sdf = new SimpleDateFormat(strDateFormat);
+        dataMap.put("time", sdf.format(fangAnTemplate.getTime()));
+
+        // 维度数据
+        String keylistString=fangAnTemplate.getKeylist();
+        String[] keylistStrings = keylistString.trim().split("\\,");
+        List<String> keylist = new ArrayList<>(Arrays.asList(keylistStrings));
+        List<Dimension> dimensions=dimensionDao.findAllByKeyIn(keylist);
+        dataMap.put("dimensions",dimensions);
+
+        // echarts图片数据
+        com.alibaba.fastjson.JSONArray echarts = com.alibaba.fastjson.JSONArray.parseArray(echartsData);
+        dataMap.put("echarts",echarts);
+
+        // 舆情信息数据
+        String[] idarray = decodeYuQingIds.trim().split("\\,");
+        List<String>searchSplitArray = Arrays.asList(idarray);
+        Criteria criteria = new Criteria();
+        criteria.subCriteria(new Criteria("_id").in(searchSplitArray));
+        CriteriaQuery query = new CriteriaQuery(criteria);
+        SearchHits<Data> searchHits = this.elasticsearchOperations.search(query, Data.class);
+        List<Data> pageDataContent = new ArrayList<>();
+        for (SearchHit<Data> hit : searchHits.getSearchHits())
+        {
+            pageDataContent.add(hit.getContent());
+        }
+        dataMap.put("data",pageDataContent);
+
+
+        /* 生成excel */
+        Field[] declaredFields = Data.class.getDeclaredFields();
+        String[] fieldNames = new String[declaredFields.length];
+        for (int i = 0; i < declaredFields.length; i++) {
+            fieldNames[i] = declaredFields[i].getName(); //通过反射获取属性名
+        }
+
+        String[] headerCode={"标题","内容","网址","敏感类型","分类","情感","发布日期"};
+        String[] header = {"title","content", "webpageUrl", "sensitiveType", "tag", "emotion", "publishedDay" };
+
+        Workbook wb = new HSSFWorkbook();
+        int rowSize = 0;
+        Sheet sheet = wb.createSheet();
+        Row row = sheet.createRow(rowSize);
+        for (int i = 0; i < headerCode.length; i++) {
+            row.createCell(i).setCellValue(headerCode[i]);
+        }
+
+        try {
+            for (int x = 0; x < pageDataContent.size(); x++) {
+                rowSize = 1;
+                Row rowNew = sheet.createRow(rowSize + x);
+                for (int i = 0; i < header.length; i++) {
+                    Data data = pageDataContent.get(x);
+                    for (String fieldName : fieldNames) {
+                        if (header[i].equals(fieldName)) {
+                            String methodName = "get" + fieldName.substring(0, 1).toUpperCase() + fieldName.substring(1);//获取属性的get方法名
+                            Method method = data.getClass().getMethod(methodName);
+                            Object invoke = method.invoke(data);//获取属性值
+                            if (invoke==null)
+                            {
+                                rowNew.createCell(i).setCellValue("");
+                            }
+                            else {
+                                if (fieldName.equals("emotion"))
+                                {
+                                    rowNew.createCell(i).setCellValue(EmotionToChinese(invoke.toString()));
+                                }
+                                else {
+                                    rowNew.createCell(i).setCellValue(invoke.toString());
+                                }
+                            }
+                            break;
+                        }
+                    }
+                }
+            }
+        } catch (Exception e) {
+
+        }
+        OutputStream outputStream = null;
+        try {
+            outputStream = new FileOutputStream(excelOutFilePath);
+            wb.write(outputStream);
+        } catch (Exception e) {
+
+        } finally {
+            try {
+                if (outputStream != null) {
+                    outputStream.flush();
+                    outputStream.close();
+                }
+            } catch (Exception e) {
+
+            }
+            try {
+                if (wb != null) {
+                    wb.close();
+                }
+            } catch (Exception e) {
+
+            }
+        }
+
+        /* 按照模板生成doc和html数据 */
+        File docFile = new File(wordOutFilePath);
+        FileOutputStream fos;
+        Writer outDoc = null;
+        Writer outPdf = new StringWriter();
+        String content = null;
+        try {
+            fos = new FileOutputStream(docFile);
+            outDoc = new BufferedWriter(new OutputStreamWriter(fos, "utf-8"),10240);
+            template.process(dataMap,outDoc);
+            
+            template.process(dataMap, outPdf); //将合并后的数据和模板写入到流中，这里使用的字符流
+            outPdf.flush();
+            content=outPdf.toString();
+        } catch (FileNotFoundException ex) {
+            System.out.println("找不到输出文件路径，路径为：{}");
+        } catch (TemplateException | IOException ex) {
+            System.out.println("找不到输出文件路径，路径为：{}");
+        } finally {
+            if(outPdf != null){
+                try {
+                    outPdf.close();
+                } catch (IOException ex) {
+                    System.out.println("找不到输出文件路径，路径为：{}");
+                }
+            }
+        }
+
+        /* 解析html数据生成pdf */
+        String FONT = "/home/pubsys/jar_dir/font/SimHei.ttf";
+
+        ITextRenderer render = new ITextRenderer();
+        ITextFontResolver fontResolver = render.getFontResolver();
+        fontResolver.addFont(FONT, BaseFont.IDENTITY_H, BaseFont.NOT_EMBEDDED);
+        // 解析html生成pdf
+        render.setDocumentFromString(content);
+        //解决图片相对路径的问题
+        render.layout();
+        render.createPDF(new FileOutputStream(pdfOutFilePath));
+
+        /* 将生成的文件存到mysql中 */
+        File pdffile = new File(pdfOutFilePath);
+        InputStream pdffileInputStream = new FileInputStream(pdffile);
+        byte[] pdfByteArray = new byte[pdffileInputStream.available()];
+        pdffileInputStream.read(pdfByteArray);
+
+        File wordfile = new File(wordOutFilePath);
+        InputStream wordFileInputStream = new FileInputStream(wordfile);
+        byte[] wordByteArray = new byte[wordFileInputStream.available()];
+        wordFileInputStream.read(wordByteArray);
+
+        File excelfile = new File(excelOutFilePath);
+        InputStream excelFileInputStream = new FileInputStream(excelfile);
+        byte[] excelByteArray = new byte[excelFileInputStream.available()];
+        excelFileInputStream.read(excelByteArray);
+
+        try {
+            BriefingFile briefingFile = briefingFileDao.findById(fileID);
+            briefingFile.setPercent(100);
+            briefingFile.setPdf(pdfByteArray);
+            briefingFile.setExcel(excelByteArray);
+            briefingFile.setWord(wordByteArray);
+            briefingFileDao.save(briefingFile);
+            ret.put("generateFile",1);
+        }catch (Exception e){
+            ret.put("generateFile",0);
+        }
+
+        return ret;
+    }
+
+    @Override
+    public JSONArray getBriefingFiles(long fid)
+    {
+        JSONArray ret =new JSONArray();
+        List<BriefingFile> briefingFiles=briefingFileDao.findAllByFid(fid);
+        String strDateFormat = "yyyy-MM-dd HH:mm";
+        SimpleDateFormat sdf = new SimpleDateFormat(strDateFormat);
+        for(BriefingFile briefingFile:briefingFiles)
+        {
+            JSONObject jsonObject=new JSONObject();
+            jsonObject.put("id",briefingFile.getId());
+            jsonObject.put("briefingName",briefingFile.getName());
+            jsonObject.put("briefingTime",sdf.format(briefingFile.getGeneratetime()));
+            if (briefingFile.getPercent()!=100)
+            {
+                jsonObject.put("percent",briefingFile.getPercent());
+            }
+            ret.appendElement(jsonObject);
+        }
+        return ret;
+    }
+
+    @Override
+    public JSONObject addNewBriefingFileRecord(long fid, String title)
+    {
+        JSONObject ret=new JSONObject();
+        try {
+            BriefingFile briefingFile=new BriefingFile(fid,title,new Date(),null,null,null,10);
+            briefingFileDao.save(briefingFile);
+            ret.put("addNewBriefingFileRecord",1);
+            ret.put("fileId",briefingFile.getId());
+        }
+        catch (Exception e) {
+            ret.put("addNewBriefingFileRecord", 0);
+            e.printStackTrace();
+        }
+        return ret;
+    }
+
+    @Override
+    public JSONObject updateBriefingFileProgess(int id,int percent)
+    {
+        JSONObject ret=new JSONObject();
+        BriefingFile briefingFile=briefingFileDao.findById(id);
+        briefingFile.setPercent(briefingFile.getPercent()+percent);
+        try {
+            briefingFileDao.save(briefingFile);
+            ret.put("updateBriefingFileProgess",1);
+        }
+        catch (Exception e) {
+            ret.put("updateBriefingFileProgess", 0);
+            e.printStackTrace();
+        }
+        return ret;
+    }
+
+    @Override
+    public JSONObject deleteBriefingFiles(int id)
+    {
+        JSONObject ret=new JSONObject();
+        try {
+            briefingFileDao.deleteById(id);
+            ret.put("deleteBriefingFiles", 1);
+        } catch (Exception e) {
+            if (briefingFileDao.existsById(id)) {
+                ret.put("deleteBriefingFiles", 0);
+            } else {
+                ret.put("deleteBriefingFiles", 1);
+            }
+            e.printStackTrace();
+        }
+
+        System.out.println(ret.get("deleteBriefingFiles"));
+        return ret;
+
+    }
+
+    @Override
+    public void downloadBriefingFiles(int id, String type, HttpServletRequest request, HttpServletResponse response) throws IOException {
+        BriefingFile briefingFile=briefingFileDao.findById(id);
+        byte[] retFile = new byte[0];
+        String storeName = null;
+        SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm");
+        System.out.println(id);
+        System.out.println(type);
+        if (type.equals("pdf"))
+        {
+            System.out.println("here");
+            retFile=briefingFile.getPdf();
+            System.out.println(briefingFile);
+            storeName=briefingFile.getName()+"_"+sdf.format(briefingFile.getGeneratetime())+"_pdf.pdf";
+        }
+        if (type.equals("word"))
+        {
+            retFile=briefingFile.getWord();
+            storeName=briefingFile.getName()+"_"+sdf.format(briefingFile.getGeneratetime())+"_doc.doc";
+        }
+        if (type.equals("excel"))
+        {
+            retFile=briefingFile.getExcel();
+            storeName=briefingFile.getName()+"_"+sdf.format(briefingFile.getGeneratetime())+"_excel.xls";
+        }
+        long length=retFile.length;
+        System.out.println(storeName);
+        System.out.println(length);
+
+        ByteArrayInputStream ret=new ByteArrayInputStream(retFile);
+
+        response.setContentType("text/html;charset=UTF-8");
+        request.setCharacterEncoding("UTF-8");
+        BufferedInputStream bis = null;
+        BufferedOutputStream bos = null;
+
+        response.setContentType("application/octet-stream");
+        response.setHeader("Content-disposition", "attachment; filename="
+                + new String(storeName.getBytes("utf-8"), "ISO8859-1"));
+        response.setHeader("Content-Length", String.valueOf(length));
+        bis = new BufferedInputStream(ret);
+        bos = new BufferedOutputStream(response.getOutputStream());
+        byte[] buff = new byte[1024];
+        int bytesRead;
+        while (-1 != (bytesRead = bis.read(buff, 0, buff.length))) {
+            bos.write(buff, 0, bytesRead);
+        }
+        bis.close();
+        bos.close();
+    }
 }
