@@ -46,8 +46,9 @@ public class SentimentServiceImpl implements SentimentService {
 
     @Override
     public SentimentCountResponse countSentiment(long fid, String startPublishedDay, String endPublishedDay) {
-        List<String> fileContents = new ArrayList<>();
+//        List<String> fileContents = new ArrayList<>();
         //Criteria criteria = fangAnDao.criteriaByFid(fid);
+        List<Data> hitDatas = new ArrayList<>();
         List<Criteria> criterias=fangAnDao.FindCriteriasByFid(fid);
         for (Criteria criteria:criterias){
             if (!startPublishedDay.isEmpty() && !endPublishedDay.isEmpty())
@@ -67,13 +68,14 @@ public class SentimentServiceImpl implements SentimentService {
 
             for(SearchHit<Data> hit : searchHits){
                 Data data = hit.getContent();
-                fileContents.add(data.getContent());
+//                fileContents.add(data.getContent());
+                hitDatas.add(data);
             }
         }
 
 
-        String rpc = sentimentRpc.sentimentAnalysis(fileContents);
-        JSONObject jsonObject = JSONObject.parseObject(rpc);
+//        String rpc = sentimentRpc.sentimentAnalysis(fileContents);
+//        JSONObject jsonObject = JSONObject.parseObject(rpc);
 
         long happyCount = 0;
         long surpriseCount = 0;
@@ -82,23 +84,23 @@ public class SentimentServiceImpl implements SentimentService {
         long angryCount = 0;
         long neutralCount = 0;
 
-        for (Object object : jsonObject.values()) {
-            if (object.toString().equals("happy")){
+        for (Data data : hitDatas) {
+            if (data.getEmotion().equals("happy")){
                 happyCount++;
             }
-            else if (object.toString().equals("sad")){
+            else if (data.getEmotion().equals("sad")){
                 sadCount++;
             }
-            else if (object.toString().equals("fear")){
+            else if (data.getEmotion().equals("fear")){
                 fearCount++;
             }
-            else if (object.toString().equals("angry")){
+            else if (data.getEmotion().equals("angry")){
                 angryCount++;
             }
-            else if (object.toString().equals("surprise")){
+            else if (data.getEmotion().equals("surprise")){
                 surpriseCount++;
             }
-            else if (object.toString().equals("neutral")){
+            else if (data.getEmotion().equals("neutral")){
                 neutralCount++;
             }
         }
@@ -131,7 +133,8 @@ public class SentimentServiceImpl implements SentimentService {
         for (int j = 0; j < pointNum; j++) {
             timeRange.add(sdf.format(dateList.get(j)) + " to " + sdf.format(dateList.get(j + 1)));
             //Criteria criteria = fangAnDao.criteriaByFid(fid);
-            List<String> fileContents = new ArrayList<>();
+//            List<String> fileContents = new ArrayList<>();
+            List<Data> hitDatas = new ArrayList<>();
 
             List<Criteria> criterias=fangAnDao.FindCriteriasByFid(fid);
             for (Criteria criteria:criterias)
@@ -143,13 +146,14 @@ public class SentimentServiceImpl implements SentimentService {
 
                 for (SearchHit<Data> hit : searchHits) {
                     Data data = hit.getContent();
-                    fileContents.add(data.getContent());
+//                    fileContents.add(data.getContent());
+                    hitDatas.add(data);
                 }
             }
 
 
-            String rpc = sentimentRpc.sentimentAnalysis(fileContents);
-            JSONObject jsonObject = JSONObject.parseObject(rpc);
+//            String rpc = sentimentRpc.sentimentAnalysis(fileContents);
+//            JSONObject jsonObject = JSONObject.parseObject(rpc);
 
             long happyCount = 0;
             long surpriseCount = 0;
@@ -157,23 +161,23 @@ public class SentimentServiceImpl implements SentimentService {
             long fearCount = 0;
             long angryCount = 0;
             long neutralCount = 0;
-            for (Object object : jsonObject.values()) {
-                if (object.toString().equals("happy")){
+            for (Data data : hitDatas) {
+                if (data.getEmotion().equals("happy")){
                     happyCount++;
                 }
-                else if (object.toString().equals("sad")){
+                else if (data.getEmotion().equals("sad")){
                     sadCount++;
                 }
-                else if (object.toString().equals("fear")){
+                else if (data.getEmotion().equals("fear")){
                     fearCount++;
                 }
-                else if (object.toString().equals("angry")){
+                else if (data.getEmotion().equals("angry")){
                     angryCount++;
                 }
-                else if (object.toString().equals("surprise")){
+                else if (data.getEmotion().equals("surprise")){
                     surpriseCount++;
                 }
-                else if (object.toString().equals("neutral")){
+                else if (data.getEmotion().equals("neutral")){
                     neutralCount++;
                 }
             }
