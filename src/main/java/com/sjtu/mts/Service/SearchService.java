@@ -129,4 +129,12 @@ public interface SearchService {
     public JSONObject deleteBriefingFiles(int id);
 
     public void downloadBriefingFiles(int id, String type, HttpServletRequest request, HttpServletResponse response) throws IOException;
+
+    public JSONArray getSensitiveWordTypes();
+
+    public List<SensitiveWords> getSensitiveWords(String type);
+
+    public JSONObject deleteSensitiveWords(String type,String words);
+
+    public JSONObject addSensitiveWordForAll(String type,String word);
 }
