@@ -75,6 +75,8 @@ public class SearchServiceImpl implements SearchService {
 
     public int SensitiveTypeToInt(String SensitiveType)
     {
+        if (SensitiveType == null)
+            return 1;
         if (SensitiveType.indexOf("政治敏感")!=-1)
         {
             return 5;
@@ -92,6 +94,8 @@ public class SearchServiceImpl implements SearchService {
 
     public int EmotionToInt(String Emotion)
     {
+        if (Emotion == null)
+            return 1;
         if (Emotion.indexOf("angry")!=-1)
         {
             return 5;
@@ -1273,6 +1277,7 @@ public class SearchServiceImpl implements SearchService {
     {
 //        这条代码触发从https://s.weibo.com/user?q= 网页实时爬取相关用户
 //        List<BriefWeiboUser> currentSearch = weiboSpiderRpc.searchBriefWeiboUser(WeiboUserForSearch);
+        weiboSpiderRpc.searchBriefWeiboUser(WeiboUserForSearch);
 
         Criteria criteria = new Criteria();
         criteria.subCriteria(new Criteria("nickname").in(WeiboUserForSearch).or("uri").in(WeiboUserForSearch));
