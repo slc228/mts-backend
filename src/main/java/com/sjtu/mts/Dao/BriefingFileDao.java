@@ -7,6 +7,8 @@ import java.util.List;
 public interface BriefingFileDao {
     void save(BriefingFile briefingFile);
 
+    List<BriefingFile> findAllByFidOrderByGeneratetimeDesc(long fid);
+
     List<BriefingFile> findAllByFid(long fid);
 
     boolean existsById(int id);

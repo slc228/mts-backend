@@ -7,6 +7,8 @@ import javax.transaction.Transactional;
 import java.util.List;
 
 public interface BriefingFileRepository extends JpaRepository<BriefingFile,Integer> {
+    List<BriefingFile> findAllByFidOrderByGeneratetimeDesc(long fid);
+
     List<BriefingFile> findAllByFid(long fid);
 
     BriefingFile findById(int id);
