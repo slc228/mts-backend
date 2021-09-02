@@ -1,5 +1,6 @@
 package com.sjtu.mts.Controller;
 
+import com.itextpdf.text.DocumentException;
 import com.sjtu.mts.Entity.*;
 import com.sjtu.mts.EventTrack.EventTreeNode;
 import com.sjtu.mts.Keyword.KeywordResponse;
@@ -7,12 +8,16 @@ import com.sjtu.mts.Repository.DataRepository;
 import com.sjtu.mts.Response.*;
 import com.sjtu.mts.Service.*;
 import com.sjtu.mts.WeiboTrack.WeiboRepostTree;
+import freemarker.template.TemplateException;
 import net.minidev.json.JSONArray;
 import net.minidev.json.JSONObject;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
-import java.io.UnsupportedEncodingException;
+
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+import java.io.*;
 import java.net.MalformedURLException;
 import java.text.ParseException;
 import java.util.List;
@@ -94,7 +99,6 @@ public class DataController {
         String decodeKeyword = "";
         try{
             decodeKeyword = java.net.URLDecoder.decode(keyword, "utf-8");
-            System.out.println("Decoded keyword: "+decodeKeyword);
         }catch (Exception e){
             System.out.println(e);
         }
@@ -106,7 +110,8 @@ public class DataController {
     @ResponseBody
     public DataResponse dataSearchWithObject(
             @RequestParam("keyword") String keyword,
-            @RequestParam("cflag") String cflag,
+            @RequestParam("sensitiveType") String sensitiveType,
+            @RequestParam("emotion") String emotion,
             @RequestParam("startPublishedDay") String startPublishedDay,
             @RequestParam("endPublishedDay") String endPublishedDay,
             @RequestParam("fromType") String fromType,
@@ -117,15 +122,15 @@ public class DataController {
     ) {
         String decodeKeyword = "";
         String decodeKeywords = "";
+        String start="";
         try{
             decodeKeyword = java.net.URLDecoder.decode(keyword, "utf-8");
             decodeKeywords = java.net.URLDecoder.decode(keywords, "utf-8");
-            System.out.println("Decoded keyword: "+decodeKeyword);
-            System.out.println(decodeKeywords);
+            start= java.net.URLDecoder.decode(startPublishedDay, "utf-8");
         }catch (Exception e){
             System.out.println(e);
         }
-        return searchService.SearchWithObject(decodeKeyword, cflag, startPublishedDay, endPublishedDay, fromType,page, pageSize, timeOrder,decodeKeywords);
+        return searchService.SearchWithObject(decodeKeyword, sensitiveType, emotion, startPublishedDay, endPublishedDay, fromType,page, pageSize, timeOrder,decodeKeywords);
     }
 
     @GetMapping("/globalSearch/resourceCount")
@@ -248,7 +253,8 @@ public class DataController {
     public DataResponse fangAnSearch2(
             @RequestParam("fid") long fid,
             @RequestParam("keyword")String keyword,
-            @RequestParam("cflag") String cflag,
+            @RequestParam("sensitiveType") String sensitiveType,
+            @RequestParam("emotion") String emotion,
             @RequestParam("startPublishedDay") String startPublishedDay,
             @RequestParam("endPublishedDay") String endPublishedDay,
             @RequestParam("fromType") String fromType,
@@ -259,12 +265,11 @@ public class DataController {
         String decodeKeyword = "";
         try{
              decodeKeyword = java.net.URLDecoder.decode(keyword, "utf-8");
-             System.out.println(decodeKeyword);
         }catch (Exception e){
             System.out.println(e);
         }
 
-        return searchService.fangAnSearch2(fid,decodeKeyword,cflag,startPublishedDay,endPublishedDay,fromType,page,pageSize,timeOrder);
+        return searchService.fangAnSearch2(fid,decodeKeyword,sensitiveType,emotion,startPublishedDay,endPublishedDay,fromType,page,pageSize,timeOrder);
     }
 
     /*溯源微博，生成并返回微博转发关系树
@@ -364,7 +369,6 @@ public class DataController {
     @ResponseBody
     public com.alibaba.fastjson.JSONObject textAlert(@RequestBody Map<String,List<String>> textInfo)
     {
-        System.out.println(textInfo.get("textList"));
         return textAlertService.textAlert(textInfo.get("textList"));
     }
 
@@ -559,6 +563,21 @@ public class DataController {
         return searchService.addWeiboUser(fid, Weibouserid, Weibousernickname);
     }
 
+    /*删除方案监测的微博用户
+       @author Sun liangchen
+   */
+    @GetMapping("/deleteWeiboUser")
+    @ResponseBody
+    public JSONObject deleteWeiboUser (
+            @RequestParam("fid") long fid,
+            @RequestParam("id") String id,
+            @RequestParam("nickname") String nickname
+    ) throws UnsupportedEncodingException {
+        String Weibouserid = java.net.URLDecoder.decode(id, "utf-8");
+        String Weibousernickname = java.net.URLDecoder.decode(nickname, "utf-8");
+        return searchService.deleteWeiboUser(fid, Weibouserid, Weibousernickname);
+    }
+
      /*获得方案监测的微博用户
        @author Sun liangchen
    */
@@ -631,5 +650,238 @@ public class DataController {
     ) throws MalformedURLException, InterruptedException, UnsupportedEncodingException {
         String kword = java.net.URLDecoder.decode(keyword, "utf-8");
         return searchService.getOverallDataBaidu(kword,pageId);
+    }
+
+    @GetMapping("/getBriefingTemplate")
+    @ResponseBody
+    public List<FangAnTemplate> getBriefingTemplate (
+            @RequestParam("fid") long fid
+    ) {
+        return searchService.getBriefingTemplate(fid);
+    }
+
+    @GetMapping("/saveBriefingTemplate")
+    @ResponseBody
+    public JSONObject saveBriefingTemplate (
+            @RequestParam("id") int id,
+            @RequestParam("fid") long fid,
+            @RequestParam("title")String title,
+            @RequestParam("version") String version,
+            @RequestParam("institution") String institution,
+            @RequestParam("time") String time,
+            @RequestParam("keylist") String keylist,
+            @RequestParam("text") String text
+    ) throws ParseException {
+        String decodeTitle = "";
+        String decodeVersion = "";
+        String decodeInstitution = "";
+        String decodeTime = "";
+        String decodeKeylist = "";
+        String decodeText = "";
+        try{
+            decodeTitle = java.net.URLDecoder.decode(title, "utf-8");
+            decodeVersion = java.net.URLDecoder.decode(version, "utf-8");
+            decodeInstitution = java.net.URLDecoder.decode(institution, "utf-8");
+            decodeTime = java.net.URLDecoder.decode(time, "utf-8");
+            decodeKeylist = java.net.URLDecoder.decode(keylist, "utf-8");
+            decodeText = java.net.URLDecoder.decode(text, "utf-8");
+        }catch (Exception e){
+            System.out.println(e);
+        }
+        return searchService.saveBriefingTemplate(id,fid,decodeTitle,decodeVersion,decodeInstitution,decodeTime,decodeKeylist,decodeText);
+    }
+
+
+    @GetMapping("/deleteBriefingTemplate")
+    @ResponseBody
+    public JSONObject deleteBriefingTemplate (
+            @RequestParam("id") int id
+    ) throws ParseException {
+        return searchService.deleteBriefingTemplate(id);
+    }
+
+
+    @GetMapping("/getMaterial")
+    @ResponseBody
+    public JSONArray getMaterial (
+            @RequestParam("fid") long fid
+    ) {
+        return searchService.getMaterial(fid);
+    }
+
+    @GetMapping("/getMaterialDetail")
+    @ResponseBody
+    public DataResponse getMaterialDetail (
+            @RequestParam("fid") long fid,
+            @RequestParam("materiallib") String materiallib
+    ) {
+        String decodemateriallib="";
+        try{
+            decodemateriallib= java.net.URLDecoder.decode(materiallib, "utf-8");
+        }catch (Exception e){
+            System.out.println(e);
+        }
+        return searchService.getMaterialDetail(fid,decodemateriallib);
+    }
+
+    @GetMapping("/addNewMaterialLib")
+    @ResponseBody
+    public JSONObject addNewMaterialLib (
+            @RequestParam("fid") long fid,
+            @RequestParam("materiallib") String materiallib
+    ) {
+        String decodemateriallib="";
+        try{
+            decodemateriallib= java.net.URLDecoder.decode(materiallib, "utf-8");
+        }catch (Exception e){
+            System.out.println(e);
+        }
+        return searchService.addNewMaterialLib(fid,decodemateriallib);
+    }
+
+    @GetMapping("/renameMaterial")
+    @ResponseBody
+    public JSONObject renameMaterial (
+            @RequestParam("fid") long fid,
+            @RequestParam("oldname") String oldname,
+            @RequestParam("newname") String newname
+    ) {
+        String decodeoldname="";
+        String decodenewname="";
+        try{
+            decodeoldname= java.net.URLDecoder.decode(oldname, "utf-8");
+            decodenewname= java.net.URLDecoder.decode(newname, "utf-8");
+        }catch (Exception e){
+            System.out.println(e);
+        }
+        return searchService.renameMaterial(fid,decodeoldname,decodenewname);
+    }
+
+    @GetMapping("/deleteMaterial")
+    @ResponseBody
+    public JSONObject deleteMaterial (
+            @RequestParam("fid") long fid,
+            @RequestParam("materiallib") String materiallib
+    ) {
+        String decodemateriallib="";
+        try{
+            decodemateriallib= java.net.URLDecoder.decode(materiallib, "utf-8");
+        }catch (Exception e){
+            System.out.println(e);
+        }
+        return searchService.deleteMaterial(fid,decodemateriallib);
+    }
+
+    @PostMapping("/deleteMaterialIDs")
+    @ResponseBody
+    public JSONObject deleteMaterialIDs (@RequestBody Map<String,String> deleteyMaterialInfo
+    ) throws ParseException {
+        long fid = Long.parseLong(deleteyMaterialInfo.get("fid"));
+        String materiallib=deleteyMaterialInfo.get("materiallib");
+        String ids = deleteyMaterialInfo.get("ids");
+        String decodeIds = "";
+        String decodemateriallib="";
+        try{
+            decodeIds = java.net.URLDecoder.decode(ids, "utf-8");
+            decodemateriallib= java.net.URLDecoder.decode(materiallib, "utf-8");
+        }catch (Exception e){
+            System.out.println(e);
+        }
+        return searchService.deleteMaterialIDs(fid,decodemateriallib,decodeIds);
+    }
+
+
+    @PostMapping("/modeifyMaterial")
+    @ResponseBody
+    public JSONObject modeifyMaterial (@RequestBody Map<String,String> modeifyMaterialInfo
+    ) throws ParseException {
+        long fid = Long.parseLong(modeifyMaterialInfo.get("fid"));
+        String materiallib=modeifyMaterialInfo.get("materiallib");
+        String ids = modeifyMaterialInfo.get("ids");
+        String decodeIds = "";
+        String decodemateriallib="";
+        try{
+            decodeIds = java.net.URLDecoder.decode(ids, "utf-8");
+            decodemateriallib= java.net.URLDecoder.decode(materiallib, "utf-8");
+        }catch (Exception e){
+            System.out.println(e);
+        }
+        return searchService.modeifyMaterial(fid,decodemateriallib,decodeIds);
+    }
+
+
+    @PostMapping("/generateFile")
+    @ResponseBody
+    public JSONObject generateFile (@RequestBody Map<String,String> modeifyMaterialInfo
+    ) throws ParseException, TemplateException, IOException, DocumentException, com.lowagie.text.DocumentException {
+        int fileID=Integer.parseInt(modeifyMaterialInfo.get("fileID"));
+        long fid = Long.parseLong(modeifyMaterialInfo.get("fid"));
+        int templateId=Integer.parseInt(modeifyMaterialInfo.get("templateId"));
+        String title=modeifyMaterialInfo.get("title");
+        String institution=modeifyMaterialInfo.get("institution");
+        String yuQingIds = modeifyMaterialInfo.get("yuQingIds");
+        String echartsData = modeifyMaterialInfo.get("echartsData");
+        String decodeTitle = "";
+        String decodeInstitution="";
+        String decodeYuQingIds = "";
+        try{
+            decodeTitle = java.net.URLDecoder.decode(title, "utf-8");
+            decodeInstitution= java.net.URLDecoder.decode(institution, "utf-8");
+            decodeYuQingIds= java.net.URLDecoder.decode(yuQingIds, "utf-8");
+        }catch (Exception e){
+            System.out.println(e);
+        }
+        return searchService.generateFile(fileID,fid,templateId,decodeTitle,decodeInstitution,decodeYuQingIds,echartsData);
+    }
+
+    @GetMapping("/getBriefingFiles")
+    @ResponseBody
+    public JSONArray getBriefingFiles (
+            @RequestParam("fid") long fid
+    ) {
+        return searchService.getBriefingFiles(fid);
+    }
+
+    @GetMapping("/addNewBriefingFileRecord")
+    @ResponseBody
+    public JSONObject addNewBriefingFileRecord (
+            @RequestParam("fid") long fid,
+            @RequestParam("title") String title
+    ) {
+        String decodeTitle="";
+        try{
+            decodeTitle = java.net.URLDecoder.decode(title, "utf-8");
+        }catch (Exception e){
+            System.out.println(e);
+        }
+        return searchService.addNewBriefingFileRecord(fid,decodeTitle);
+    }
+
+    @GetMapping("/updateBriefingFileProgess")
+    @ResponseBody
+    public JSONObject updateBriefingFileProgess (
+            @RequestParam("id") int id,
+            @RequestParam("percent") int percent
+    ) {
+        return searchService.updateBriefingFileProgess(id,percent);
+    }
+
+    @GetMapping("/deleteBriefingFiles")
+    @ResponseBody
+    public JSONObject deleteBriefingFiles (
+            @RequestParam("id") int id
+    ) {
+        return searchService.deleteBriefingFiles(id);
+    }
+
+    @GetMapping("/downloadBriefingFiles")
+    @ResponseBody
+    public void downloadBriefingFiles (
+            @RequestParam("id") int id,
+            @RequestParam("type") String type,
+            HttpServletRequest request,
+            HttpServletResponse response
+    ) throws Exception {
+        searchService.downloadBriefingFiles(id,type,request,response);
     }
 }
