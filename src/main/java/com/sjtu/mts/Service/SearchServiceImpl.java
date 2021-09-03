@@ -518,28 +518,54 @@ public class SearchServiceImpl implements SearchService {
         for (int cflag = 0; cflag <= 1 ; cflag++) {
             resultList.add((long)0);
         }
-        for (int cflag = 0; cflag <= 1 ; cflag++) {
-            //Criteria criteria = fangAnDao.criteriaByFid(fid);
-            List<Criteria> criterias=fangAnDao.FindCriteriasByFid(fid);
-            for(Criteria criteria:criterias)
+//        for (int cflag = 0; cflag <= 1 ; cflag++) {
+//            //Criteria criteria = fangAnDao.criteriaByFid(fid);
+//            List<Criteria> criterias=fangAnDao.FindCriteriasByFid(fid);
+//            for(Criteria criteria:criterias)
+//            {
+//                if (!startPublishedDay.isEmpty() && !endPublishedDay.isEmpty())
+//                {
+//                    SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+//                    try {
+//                        Date startDate = sdf.parse(startPublishedDay);
+//                        Date endDate = sdf.parse(endPublishedDay);
+//                        criteria.subCriteria(new Criteria().and("publishedDay").between(startDate, endDate));
+//                    } catch (ParseException e) {
+//                        e.printStackTrace();
+//                    }
+//                }
+//                criteria.subCriteria(new Criteria().and("cflag").is(cflag));
+//                CriteriaQuery query = new CriteriaQuery(criteria);
+//                long searchHitCount = this.elasticsearchOperations.count(query, Data.class);
+//                resultList.set(cflag,resultList.get(cflag)+searchHitCount);
+//            }
+//        }
+        List<Criteria> criterias=fangAnDao.FindCriteriasByFid(fid);
+        for(Criteria criteria:criterias)
+        {
+            if (!startPublishedDay.isEmpty() && !endPublishedDay.isEmpty())
             {
-                if (!startPublishedDay.isEmpty() && !endPublishedDay.isEmpty())
-                {
-                    SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
-                    try {
-                        Date startDate = sdf.parse(startPublishedDay);
-                        Date endDate = sdf.parse(endPublishedDay);
-                        criteria.subCriteria(new Criteria().and("publishedDay").between(startDate, endDate));
-                    } catch (ParseException e) {
-                        e.printStackTrace();
-                    }
+                SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+                try {
+                    Date startDate = sdf.parse(startPublishedDay);
+                    Date endDate = sdf.parse(endPublishedDay);
+                    criteria.subCriteria(new Criteria().and("publishedDay").between(startDate, endDate));
+                } catch (ParseException e) {
+                    e.printStackTrace();
                 }
-                criteria.subCriteria(new Criteria().and("cflag").is(cflag));
-                CriteriaQuery query = new CriteriaQuery(criteria);
-                long searchHitCount = this.elasticsearchOperations.count(query, Data.class);
-                resultList.set(cflag,resultList.get(cflag)+searchHitCount);
             }
+            CriteriaQuery queryall = new CriteriaQuery(criteria);
+            long searchHitCountall = this.elasticsearchOperations.count(queryall, Data.class);
+
+            criteria.subCriteria(new Criteria("sensitiveType").in("政治敏感"));
+            CriteriaQuery querySen = new CriteriaQuery(criteria);
+            long searchHitCountquerySen = this.elasticsearchOperations.count(querySen, Data.class);
+            System.out.println(searchHitCountall);
+            System.out.println(searchHitCountquerySen);
+            resultList.set(0,resultList.get(0)+searchHitCountall);
+            resultList.set(1,resultList.get(1)+searchHitCountquerySen);
         }
+        resultList.set(0,resultList.get(0)-resultList.get(1));
         return new CflagCountResponse(resultList.get(0), resultList.get(1));
     }
 
@@ -2589,6 +2615,24 @@ public class SearchServiceImpl implements SearchService {
                 e.printStackTrace();
             }
         }
+        return ret;
+    }
+
+    @Override
+    public JSONArray getSensitiveWordsByFid(long fid)
+    {
+        JSONArray ret = new JSONArray();
+
+        FangAn fangAn = fangAnDao.findByFid(fid);
+        String sensitiveWords = fangAn.getSensitiveword();
+        String[] searchSplitArray1 = sensitiveWords.trim().split("\\s+");
+        List<String> searchSplitArray = Arrays.asList(searchSplitArray1);
+        for (String str : searchSplitArray) {
+            JSONObject object = new JSONObject();
+            object.put("sw", str);
+            ret.appendElement(object);
+        }
+
         return ret;
     }
 }

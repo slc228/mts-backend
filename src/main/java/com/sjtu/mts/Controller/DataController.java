@@ -939,4 +939,12 @@ public class DataController {
         }
         return searchService.addSensitiveWordForAll(decodeType,decodeWord);
     }
+
+    @GetMapping("/getSensitiveWordsByFid")
+    @ResponseBody
+    public JSONArray getSensitiveWordsByFid (
+            @RequestParam("fid") long fid
+    ) {
+        return searchService.getSensitiveWordsByFid(fid);
+    }
 }

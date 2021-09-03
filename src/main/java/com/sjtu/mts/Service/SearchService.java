@@ -137,4 +137,6 @@ public interface SearchService {
     public JSONObject deleteSensitiveWords(String type,String words);
 
     public JSONObject addSensitiveWordForAll(String type,String word);
+
+    public JSONArray getSensitiveWordsByFid(long fid);
 }
