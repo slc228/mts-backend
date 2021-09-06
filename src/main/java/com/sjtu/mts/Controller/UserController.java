@@ -215,5 +215,22 @@ public class UserController {
         );
     }
 
+
+    @GetMapping(path = "/changeUserJurisdiction")
+    @ResponseBody
+    public JSONObject changeUserJurisdiction(
+            @RequestParam("username") String username,
+            @RequestParam("jurisdiction") String jurisdiction
+    ) {
+        String decodejurisdiction="";
+        try{
+            decodejurisdiction= java.net.URLDecoder.decode(jurisdiction, "utf-8");
+        }catch (Exception e){
+            System.out.println(e);
+        }
+        return userService.changeUserJurisdiction(username,decodejurisdiction);
+    }
+
+
 }
 

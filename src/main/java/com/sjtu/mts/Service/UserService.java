@@ -90,4 +90,6 @@ public interface UserService {
 
 
     JSONObject changeUserState(String username);
+
+    JSONObject changeUserJurisdiction(String username,String jurisdiction);
 }

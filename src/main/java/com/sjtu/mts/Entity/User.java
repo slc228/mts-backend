@@ -35,10 +35,13 @@ public class User implements Serializable{
     @Column(name = "state")
     private Integer state;
 
+    @Column(name = "jurisdiction")
+    private String jurisdiction;
+
     public User(){
 
     }
-    public User(String username, String password, String phone, String email, Integer projectNum, String validDate, Integer role, Integer state){
+    public User(String username, String password, String phone, String email, Integer projectNum, String validDate, Integer role, Integer state,String jurisdiction){
         this.username = username;
         this.password = password;
         this.phone = phone;
@@ -47,6 +50,7 @@ public class User implements Serializable{
         this.validDate = validDate;
         this.role = role;
         this.state = state;
+        this.jurisdiction=jurisdiction;
     }
 
     public void setUsername(String username) {
@@ -112,6 +116,10 @@ public class User implements Serializable{
     public String getValidDate() {
         return validDate;
     }
+
+    public String getJurisdiction(){return jurisdiction;}
+
+    public void setJurisdiction(String jurisdiction){this.jurisdiction=jurisdiction;}
 
     @Override
     public boolean equals(Object obj) {

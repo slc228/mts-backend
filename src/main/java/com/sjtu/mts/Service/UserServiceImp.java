@@ -6,9 +6,12 @@ import com.sjtu.mts.Entity.Manager;
 import com.sjtu.mts.Entity.User;
 import net.minidev.json.JSONArray;
 import net.minidev.json.JSONObject;
+import org.openqa.selenium.json.Json;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 @Service
@@ -32,6 +35,7 @@ public class UserServiceImp implements UserService {
             object.put("role", user.getRole());
             object.put("project_num", user.getProjectNum());
             object.put("valid_date", user.getValidDate());
+            object.put("jurisdiction",user.getJurisdiction());
             jsonArray.appendElement(object);
         }
         return jsonArray;
@@ -102,7 +106,8 @@ public class UserServiceImp implements UserService {
             return result;
         }
         try {
-            User user = new User(username, password, phone, email, 0, "2099",1,1);
+            String jurisdiction="[{\"type\":\"全网搜索\",\"tag\":true},{\"type\":\"热门文章\",\"tag\":true},{\"type\":\"大屏显示\",\"tag\":true},{\"type\":\"添加方案\",\"tag\":true}]";
+            User user = new User(username, password, phone, email, 0, "2099",1,1,jurisdiction);
             userDao.save(user);
             result.put("register", 1);
             return result;
@@ -125,7 +130,8 @@ public class UserServiceImp implements UserService {
         try {
             Manager manager = new Manager(username, password, phone, email, 0, "2099",0,1);
             managerDao.save(manager);
-            User user = new User(username, password, phone, email, 0, "2099",0,1);
+            String jurisdiction="[{\"type\":\"全网搜索\",\"tag\":true},{\"type\":\"热门文章\",\"tag\":true},{\"type\":\"大屏显示\",\"tag\":true},{\"type\":\"添加方案\",\"tag\":true}]";
+            User user = new User(username, password, phone, email, 0, "2099",0,1,jurisdiction);
             userDao.save(user);
             result.put("register", 1);
             return result;
@@ -190,6 +196,17 @@ public class UserServiceImp implements UserService {
             System.out.println(e);
         }
         return result;
+    }
+
+    @Override
+    public JSONObject changeUserJurisdiction(String username,String jurisdiction)
+    {
+        JSONObject ret=new JSONObject();
+        ret.put("changeUserJurisdiction",1);
+        User user = userDao.findByUsername(username);
+        user.setJurisdiction(jurisdiction);
+        userDao.save(user);
+        return ret;
     }
 }
 
