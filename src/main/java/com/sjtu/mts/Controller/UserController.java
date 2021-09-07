@@ -231,6 +231,34 @@ public class UserController {
         return userService.changeUserJurisdiction(username,decodejurisdiction);
     }
 
+    @GetMapping(path = "/changeUserEventLimiter")
+    @ResponseBody
+    public JSONObject changeUserEventLimiter(
+            @RequestParam("username") String username,
+            @RequestParam("eventLimiter") String eventLimiter
+    ) {
+        String decodeEventLimiter="";
+        try{
+            decodeEventLimiter= java.net.URLDecoder.decode(eventLimiter, "utf-8");
+        }catch (Exception e){
+            System.out.println(e);
+        }
+        return userService.changeUserEventLimiter(username,decodeEventLimiter);
+    }
 
+    @GetMapping(path = "/changeUserSensitiveLimiter")
+    @ResponseBody
+    public JSONObject changeUserSensitiveLimiter(
+            @RequestParam("username") String username,
+            @RequestParam("sensitiveLimiter") String sensitiveLimiter
+    ) {
+        String decodeSensitiveLimiter="";
+        try{
+            decodeSensitiveLimiter= java.net.URLDecoder.decode(sensitiveLimiter, "utf-8");
+        }catch (Exception e){
+            System.out.println(e);
+        }
+        return userService.changeUserSensitiveLimiter(username,decodeSensitiveLimiter);
+    }
 }
 

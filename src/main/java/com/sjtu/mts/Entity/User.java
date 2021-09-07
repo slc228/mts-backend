@@ -38,10 +38,16 @@ public class User implements Serializable{
     @Column(name = "jurisdiction")
     private String jurisdiction;
 
+    @Column(name = "event_limiter")
+    private String eventLimiter;
+
+    @Column(name = "sensitive_limiter")
+    private String sensitiveLimiter;
+
     public User(){
 
     }
-    public User(String username, String password, String phone, String email, Integer projectNum, String validDate, Integer role, Integer state,String jurisdiction){
+    public User(String username, String password, String phone, String email, Integer projectNum, String validDate, Integer role, Integer state,String jurisdiction,String eventLimiter,String sensitiveLimiter){
         this.username = username;
         this.password = password;
         this.phone = phone;
@@ -51,6 +57,8 @@ public class User implements Serializable{
         this.role = role;
         this.state = state;
         this.jurisdiction=jurisdiction;
+        this.eventLimiter=eventLimiter;
+        this.sensitiveLimiter=sensitiveLimiter;
     }
 
     public void setUsername(String username) {
@@ -120,6 +128,14 @@ public class User implements Serializable{
     public String getJurisdiction(){return jurisdiction;}
 
     public void setJurisdiction(String jurisdiction){this.jurisdiction=jurisdiction;}
+
+    public String getEventLimiter(){return eventLimiter;}
+
+    public void setEventLimiter(String eventLimiter){this.eventLimiter=eventLimiter;}
+
+    public String getSensitiveLimiter(){return sensitiveLimiter;}
+
+    public void setSensitiveLimiter(String sensitiveLimiter){this.sensitiveLimiter=sensitiveLimiter;}
 
     @Override
     public boolean equals(Object obj) {

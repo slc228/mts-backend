@@ -36,6 +36,8 @@ public class UserServiceImp implements UserService {
             object.put("project_num", user.getProjectNum());
             object.put("valid_date", user.getValidDate());
             object.put("jurisdiction",user.getJurisdiction());
+            object.put("eventLimiter",user.getEventLimiter());
+            object.put("sensitiveLimiter",user.getSensitiveLimiter());
             jsonArray.appendElement(object);
         }
         return jsonArray;
@@ -107,7 +109,7 @@ public class UserServiceImp implements UserService {
         }
         try {
             String jurisdiction="[{\"type\":\"全网搜索\",\"tag\":true},{\"type\":\"热门文章\",\"tag\":true},{\"type\":\"大屏显示\",\"tag\":true},{\"type\":\"添加方案\",\"tag\":true}]";
-            User user = new User(username, password, phone, email, 0, "2099",1,1,jurisdiction);
+            User user = new User(username, password, phone, email, 0, "2099",1,1,jurisdiction,"","");
             userDao.save(user);
             result.put("register", 1);
             return result;
@@ -131,7 +133,7 @@ public class UserServiceImp implements UserService {
             Manager manager = new Manager(username, password, phone, email, 0, "2099",0,1);
             managerDao.save(manager);
             String jurisdiction="[{\"type\":\"全网搜索\",\"tag\":true},{\"type\":\"热门文章\",\"tag\":true},{\"type\":\"大屏显示\",\"tag\":true},{\"type\":\"添加方案\",\"tag\":true}]";
-            User user = new User(username, password, phone, email, 0, "2099",0,1,jurisdiction);
+            User user = new User(username, password, phone, email, 0, "2099",0,1,jurisdiction,"","");
             userDao.save(user);
             result.put("register", 1);
             return result;
@@ -157,6 +159,9 @@ public class UserServiceImp implements UserService {
                 result.put("username", user.getUsername());
                 result.put("phone", user.getPhone());
                 result.put("email", user.getEmail());
+                result.put("jurisdiction",user.getJurisdiction());
+                result.put("eventLimiter",user.getEventLimiter());
+                result.put("sensitiveLimiter",user.getSensitiveLimiter());
                 result.put("login", 1);
                 return result;
             }
@@ -205,6 +210,28 @@ public class UserServiceImp implements UserService {
         ret.put("changeUserJurisdiction",1);
         User user = userDao.findByUsername(username);
         user.setJurisdiction(jurisdiction);
+        userDao.save(user);
+        return ret;
+    }
+
+    @Override
+    public JSONObject changeUserEventLimiter(String username,String eventLimiter)
+    {
+        JSONObject ret=new JSONObject();
+        ret.put("changeUserEventLimiter",1);
+        User user = userDao.findByUsername(username);
+        user.setEventLimiter(eventLimiter);
+        userDao.save(user);
+        return ret;
+    }
+
+    @Override
+    public JSONObject changeUserSensitiveLimiter(String username,String sensitiveLimiter)
+    {
+        JSONObject ret=new JSONObject();
+        ret.put("changeUserSensitiveLimiter",1);
+        User user = userDao.findByUsername(username);
+        user.setSensitiveLimiter(sensitiveLimiter);
         userDao.save(user);
         return ret;
     }

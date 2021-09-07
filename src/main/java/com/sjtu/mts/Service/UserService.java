@@ -92,4 +92,8 @@ public interface UserService {
     JSONObject changeUserState(String username);
 
     JSONObject changeUserJurisdiction(String username,String jurisdiction);
+
+    JSONObject changeUserEventLimiter(String username,String eventLimiter);
+
+    JSONObject changeUserSensitiveLimiter(String username,String sensitiveLimiter);
 }
