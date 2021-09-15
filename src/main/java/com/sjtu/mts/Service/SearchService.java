@@ -69,6 +69,8 @@ public interface SearchService {
     public List<KeywordResponse> extractKeyword(long fid, String startPublishedDay, String endPublishedDay
             , int keywordNumber, String extractMethod);
 
+    public JSONObject keywordExtractionForSingleText(String title,String content);
+
     public  JSONObject autoaddEkeyword(long fid,String text);
     public JSONObject addSensitivewordForFid(long fid,String text);
     public JSONArray sensitivewordForFid(long fid);

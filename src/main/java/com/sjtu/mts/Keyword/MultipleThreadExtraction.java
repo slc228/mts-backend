@@ -111,7 +111,7 @@ public class MultipleThreadExtraction {
         List<String> extractlist = new ArrayList<>();
         extractlist.add("我们是共产主义接班人");
         extractlist.add("毛主席是我国最伟大的领导人之一。");
-        MultipleThreadExtraction countListIntegerSum=new MultipleThreadExtraction(extractlist,8, "tfidf");
+        MultipleThreadExtraction countListIntegerSum=new MultipleThreadExtraction(extractlist,8, "textrank");
 
         int keywordNumber = 25;
         long start = System.currentTimeMillis();
@@ -119,6 +119,7 @@ public class MultipleThreadExtraction {
         Map<String, Integer> wordScore = new HashMap<>();
         for (List<String> singleDocList : sum)
         {
+            System.out.println(singleDocList);
             for (int i=0; i<singleDocList.size(); i++){
                 if (!wordScore.containsKey(singleDocList.get(i))){
                     wordScore.put(singleDocList.get(i), 0);
@@ -145,6 +146,7 @@ public class MultipleThreadExtraction {
         }
         for (KeywordResponse kr : keywords){
             System.out.println(kr.name);
+            System.out.println(kr.value);
         }
         long end = System.currentTimeMillis();
         System.out.println("关键词提取耗时：" + (end-start) + "ms");

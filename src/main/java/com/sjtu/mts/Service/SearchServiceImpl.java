@@ -1249,6 +1249,7 @@ public class SearchServiceImpl implements SearchService {
         MultipleThreadExtraction countListIntegerSum=new MultipleThreadExtraction(fileContents,threadCounts, extractMethod);
 
         List<List<String>> sum=countListIntegerSum.getIntegerSum();
+        System.out.println("关键词提取耗时hhhh：" + (System.currentTimeMillis()-start) + "ms");
         Map<String, Integer> wordScore = new HashMap<>();
         for (List<String> singleDocList : sum)
         {
@@ -1280,6 +1281,18 @@ public class SearchServiceImpl implements SearchService {
         System.out.println("关键词提取耗时：" + (end-start) + "ms");
         return keywords;
     }
+
+    @Override
+    public JSONObject keywordExtractionForSingleText(String title,String content)
+    {
+        List<String> keywordList = new TextRankKeyword().getKeyword(title,content);
+        String str = String.join(",",keywordList);
+        System.out.println(str);
+        JSONObject jsonObject=new JSONObject();
+        jsonObject.put("words",str);
+        return jsonObject;
+    }
+
     @Override
     public  JSONObject autoaddEkeyword(long fid,String text){
         System.out.println(text);

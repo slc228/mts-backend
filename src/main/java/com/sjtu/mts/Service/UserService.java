@@ -56,7 +56,7 @@ public interface UserService {
      * @param email       email
      * @return whether register successfully 1:success, 0:fail
      */
-    JSONObject registerUser(String username, String password, String phone, String email);
+    JSONObject registerUser(String username, String password, String phone, String email, String role);
     /**
      * register into database as a manager
      *
@@ -75,7 +75,7 @@ public interface UserService {
      * @param password password
      * @return whether login successfully 1:success, 0:fail
      */
-    JSONObject login(String username, String password,String role);
+    JSONObject login(String username, String password);
 
 
 
@@ -91,7 +91,7 @@ public interface UserService {
 
     JSONObject changeUserState(String username);
 
-    JSONObject changeUserJurisdiction(String username,String jurisdiction);
+    JSONObject changeUserJurisdiction(String username,String type,boolean checked);
 
     JSONObject changeUserEventLimiter(String username,String eventLimiter);
 

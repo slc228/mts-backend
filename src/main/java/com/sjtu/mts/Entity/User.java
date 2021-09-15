@@ -30,13 +30,10 @@ public class User implements Serializable{
     private String validDate;
 
     @Column(name = "role")
-    private Integer role;//1 代表普通用户，0代表管理员
+    private String role;
 
     @Column(name = "state")
     private Integer state;
-
-    @Column(name = "jurisdiction")
-    private String jurisdiction;
 
     @Column(name = "event_limiter")
     private String eventLimiter;
@@ -47,7 +44,7 @@ public class User implements Serializable{
     public User(){
 
     }
-    public User(String username, String password, String phone, String email, Integer projectNum, String validDate, Integer role, Integer state,String jurisdiction,String eventLimiter,String sensitiveLimiter){
+    public User(String username, String password, String phone, String email, Integer projectNum, String validDate, String role, Integer state,String eventLimiter,String sensitiveLimiter){
         this.username = username;
         this.password = password;
         this.phone = phone;
@@ -56,7 +53,6 @@ public class User implements Serializable{
         this.validDate = validDate;
         this.role = role;
         this.state = state;
-        this.jurisdiction=jurisdiction;
         this.eventLimiter=eventLimiter;
         this.sensitiveLimiter=sensitiveLimiter;
     }
@@ -101,11 +97,11 @@ public class User implements Serializable{
         return projectNum;
     }
 
-    public void setRole(Integer role) {
+    public void setRole(String role) {
         this.role = role;
     }
 
-    public Integer getRole() {
+    public String getRole() {
         return role;
     }
 
@@ -124,10 +120,6 @@ public class User implements Serializable{
     public String getValidDate() {
         return validDate;
     }
-
-    public String getJurisdiction(){return jurisdiction;}
-
-    public void setJurisdiction(String jurisdiction){this.jurisdiction=jurisdiction;}
 
     public String getEventLimiter(){return eventLimiter;}
 

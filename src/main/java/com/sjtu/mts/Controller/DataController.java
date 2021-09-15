@@ -343,6 +343,16 @@ public class DataController {
         return searchService.extractKeyword(fid,startPublishedDay,endPublishedDay,keywordNumber,extractMethod);
     }
 
+    /*单条文本关键词提取
+   @author Sun Liangchen
+    */
+    @PostMapping(value = "/keywordExtractionForSingleText")
+    @ResponseBody
+    public JSONObject keywordExtractionForSingleText(@RequestBody Map<String,String> textInfo)
+    {
+        return searchService.keywordExtractionForSingleText(textInfo.get("title"),textInfo.get("content"));
+    }
+
     /*文本分类
     @author Fu Yongrui
      */
