@@ -62,7 +62,7 @@ public class UserController {
     @PostMapping(path = "/register")
     @ResponseBody
     public JSONObject register(@RequestBody Map<String,String> registerinfo ) {
-        return userService.registerUser(registerinfo.get("username"), registerinfo.get("password"), registerinfo.get("phone"), registerinfo.get("email"));
+        return userService.registerUser(registerinfo.get("username"), registerinfo.get("password"), registerinfo.get("phone"), registerinfo.get("email"), registerinfo.get("role"));
     }
 
     @PostMapping(path = "/registerManager")
@@ -75,7 +75,7 @@ public class UserController {
     @ResponseBody
     public JSONObject login(HttpServletRequest request, @RequestBody Map<String,String> userinfo) {
         System.out.println("test login");
-        JSONObject result = ("0".equals(userinfo.get("role"))) ? userService.loginManager(userinfo.get("username"), userinfo.get("password")) : userService.login(userinfo.get("username"), userinfo.get("password"),"1");
+        JSONObject result = userService.login(userinfo.get("username"), userinfo.get("password"));
         if ("1".equals(result.getAsString("login"))) {
             HttpSession session = request.getSession();
             //System.out.println("此时的sessionid为：");
@@ -86,11 +86,7 @@ public class UserController {
             String name = (String) session.getAttribute("username");
             if (StringUtils.isEmpty(name)) {
                 session.setAttribute("username", userinfo.get("username"));
-                if ("0".equals(result.getAsString("role"))) {
-                    session.setAttribute("role", "0");
-                } else {
-                    session.setAttribute("role", "1");
-                }
+                session.setAttribute("role", userinfo.get("role"));
             } else if (!(name.equals(userinfo.get("username")))) {
                 JSONObject err = new JSONObject();
                 err.put("login", -1);
@@ -134,7 +130,8 @@ public class UserController {
                 fangAnInfo.get("eventKeyword"),
                 Integer.parseInt(fangAnInfo.get("eventKeywordMatch")),
                 Boolean.parseBoolean(fangAnInfo.get("enableAlert")),
-                fangAnInfo.get("sensitiveWord")
+                fangAnInfo.get("sensitiveWord"),
+                Integer.parseInt(fangAnInfo.get("priority"))
                 );
     }
     @PostMapping(path = "/changeFangAn")
@@ -166,7 +163,8 @@ public class UserController {
                 eventKeyword,
                 Integer.parseInt(fangAnInfo.get("eventKeywordMatch")),
                 Boolean.parseBoolean(fangAnInfo.get("enableAlert")),
-                fangAnInfo.get("sensitiveWord")
+                fangAnInfo.get("sensitiveWord"),
+                Integer.parseInt(fangAnInfo.get("priority"))
         );
     }
     @GetMapping(path = "/delFangAn")
@@ -215,5 +213,45 @@ public class UserController {
         );
     }
 
+
+    @GetMapping(path = "/changeUserJurisdiction")
+    @ResponseBody
+    public JSONObject changeUserJurisdiction(
+            @RequestParam("username") String username,
+            @RequestParam("type") String type,
+            @RequestParam("checked") boolean checked
+    ) {
+        return userService.changeUserJurisdiction(username,type,checked);
+    }
+
+    @GetMapping(path = "/changeUserEventLimiter")
+    @ResponseBody
+    public JSONObject changeUserEventLimiter(
+            @RequestParam("username") String username,
+            @RequestParam("eventLimiter") String eventLimiter
+    ) {
+        String decodeEventLimiter="";
+        try{
+            decodeEventLimiter= java.net.URLDecoder.decode(eventLimiter, "utf-8");
+        }catch (Exception e){
+            System.out.println(e);
+        }
+        return userService.changeUserEventLimiter(username,decodeEventLimiter);
+    }
+
+    @GetMapping(path = "/changeUserSensitiveLimiter")
+    @ResponseBody
+    public JSONObject changeUserSensitiveLimiter(
+            @RequestParam("username") String username,
+            @RequestParam("sensitiveLimiter") String sensitiveLimiter
+    ) {
+        String decodeSensitiveLimiter="";
+        try{
+            decodeSensitiveLimiter= java.net.URLDecoder.decode(sensitiveLimiter, "utf-8");
+        }catch (Exception e){
+            System.out.println(e);
+        }
+        return userService.changeUserSensitiveLimiter(username,decodeSensitiveLimiter);
+    }
 }
 

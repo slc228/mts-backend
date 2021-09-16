@@ -14,7 +14,8 @@ public interface FangAnService {
                           String eventKeyword,
                           int eventKeywordMatch,
                           boolean enableAlert,
-                          String sensitiveWord
+                          String sensitiveWord,
+                          Integer priority
                           );
     JSONObject changeFangAn(long fid,
                             String username,
@@ -27,7 +28,8 @@ public interface FangAnService {
                           String eventKeyword,
                           int eventKeywordMatch,
                           boolean enableAlert,
-                          String sensitiveWord
+                          String sensitiveWord,
+                          Integer priority
     );
     JSONObject delFangAn(String username,long fid);
 

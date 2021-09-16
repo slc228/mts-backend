@@ -30,15 +30,21 @@ public class User implements Serializable{
     private String validDate;
 
     @Column(name = "role")
-    private Integer role;//1 代表普通用户，0代表管理员
+    private String role;
 
     @Column(name = "state")
     private Integer state;
 
+    @Column(name = "event_limiter")
+    private String eventLimiter;
+
+    @Column(name = "sensitive_limiter")
+    private String sensitiveLimiter;
+
     public User(){
 
     }
-    public User(String username, String password, String phone, String email, Integer projectNum, String validDate, Integer role, Integer state){
+    public User(String username, String password, String phone, String email, Integer projectNum, String validDate, String role, Integer state,String eventLimiter,String sensitiveLimiter){
         this.username = username;
         this.password = password;
         this.phone = phone;
@@ -47,6 +53,8 @@ public class User implements Serializable{
         this.validDate = validDate;
         this.role = role;
         this.state = state;
+        this.eventLimiter=eventLimiter;
+        this.sensitiveLimiter=sensitiveLimiter;
     }
 
     public void setUsername(String username) {
@@ -89,11 +97,11 @@ public class User implements Serializable{
         return projectNum;
     }
 
-    public void setRole(Integer role) {
+    public void setRole(String role) {
         this.role = role;
     }
 
-    public Integer getRole() {
+    public String getRole() {
         return role;
     }
 
@@ -112,6 +120,14 @@ public class User implements Serializable{
     public String getValidDate() {
         return validDate;
     }
+
+    public String getEventLimiter(){return eventLimiter;}
+
+    public void setEventLimiter(String eventLimiter){this.eventLimiter=eventLimiter;}
+
+    public String getSensitiveLimiter(){return sensitiveLimiter;}
+
+    public void setSensitiveLimiter(String sensitiveLimiter){this.sensitiveLimiter=sensitiveLimiter;}
 
     @Override
     public boolean equals(Object obj) {

@@ -37,6 +37,7 @@ public class FangAnServiceImpl implements FangAnService {
             object.put("eventKeywordMatch", fangAn.getEventKeywordMatch());
             object.put("enableAlert", fangAn.getEnableAlert());
             object.put("sensitiveWord", fangAn.getSensitiveword());
+            object.put("priority",fangAn.getPriority());
             JSONArray eventKeyword = new JSONArray();
             String event = fangAn.getEventKeyword();
             while(event.length()>0)
@@ -65,7 +66,8 @@ public class FangAnServiceImpl implements FangAnService {
                                  String eventKeyword,
                                  int eventKeywordMatch,
                                  boolean enableAlert,
-                                 String sensitiveWord){
+                                 String sensitiveWord,
+                                 Integer priority){
         JSONObject result = new JSONObject();
         result.put("saveFangAn", 0);
         Boolean ifExist = fangAnDao.existsByUsernameAndProgrammeName(username,programmeName);
@@ -75,7 +77,7 @@ public class FangAnServiceImpl implements FangAnService {
             return result;
         }
         try {
-            FangAn fangAn1 = new FangAn(username,programmeName,matchType,regionKeyword,regionKeywordMatch,roleKeyword,roleKeywordMatch,eventKeyword,eventKeywordMatch,enableAlert,sensitiveWord);
+            FangAn fangAn1 = new FangAn(username,programmeName,matchType,regionKeyword,regionKeywordMatch,roleKeyword,roleKeywordMatch,eventKeyword,eventKeywordMatch,enableAlert,sensitiveWord,priority);
             fangAnDao.save(fangAn1);
             result.put("saveFangAn", 1);
             return result;
@@ -96,7 +98,8 @@ public class FangAnServiceImpl implements FangAnService {
                                    String eventKeyword,
                                    int eventKeywordMatch,
                                    boolean enableAlert,
-                                   String sensitiveWord
+                                   String sensitiveWord,
+                                   Integer priority
     ){
         JSONObject result = new JSONObject();
         result.put("changeFangAn", 0);
@@ -117,6 +120,7 @@ public class FangAnServiceImpl implements FangAnService {
             oldFangAn.setEventKeywordMatch(eventKeywordMatch);
             oldFangAn.setEnableAlert(enableAlert);
             oldFangAn.setSensitiveword(sensitiveWord);
+            oldFangAn.setPriority(priority);
             //fangAnDao.deleteByFid(fid);
             fangAnDao.save(oldFangAn);
             result.put("changeFangAn", 1);
@@ -168,6 +172,7 @@ public class FangAnServiceImpl implements FangAnService {
             result.put("eventKeywordMatch", fangAn.getEventKeywordMatch());
             result.put("enableAlert", fangAn.getEnableAlert());
             result.put("sensitiveWord", fangAn.getSensitiveword());
+            result.put("priority",fangAn.getPriority());
             JSONArray eventKeyword = new JSONArray();
             String event = fangAn.getEventKeyword();
             while(event.length()>0)

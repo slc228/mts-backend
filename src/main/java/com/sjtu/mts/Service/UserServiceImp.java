@@ -2,13 +2,18 @@ package com.sjtu.mts.Service;
 
 import com.sjtu.mts.Dao.ManagerDao;
 import com.sjtu.mts.Dao.UserDao;
+import com.sjtu.mts.Dao.UserRightsDao;
 import com.sjtu.mts.Entity.Manager;
 import com.sjtu.mts.Entity.User;
+import com.sjtu.mts.Entity.UserRights;
 import net.minidev.json.JSONArray;
 import net.minidev.json.JSONObject;
+import org.openqa.selenium.json.Json;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 @Service
@@ -16,6 +21,10 @@ public class UserServiceImp implements UserService {
 
     @Autowired // This means to get the bean called userRepository
     private UserDao userDao;
+
+    @Autowired
+    private UserRightsDao userRightsDao;
+
     @Autowired
     private ManagerDao managerDao;
 
@@ -24,15 +33,21 @@ public class UserServiceImp implements UserService {
         JSONArray jsonArray = new JSONArray();
         List<User> userList = userDao.getAllUsers();
         for(User user : userList){
-            JSONObject object = new JSONObject();
-            object.put("username", user.getUsername());
-            object.put("phone", user.getPhone());
-            object.put("email", user.getEmail());
-            object.put("status", user.getState());
-            object.put("role", user.getRole());
-            object.put("project_num", user.getProjectNum());
-            object.put("valid_date", user.getValidDate());
-            jsonArray.appendElement(object);
+            if (!user.getRole().equals("systemAdmin"))
+            {
+                JSONObject object = new JSONObject();
+                object.put("username", user.getUsername());
+                object.put("phone", user.getPhone());
+                object.put("email", user.getEmail());
+                object.put("status", user.getState());
+                object.put("role", user.getRole());
+                object.put("project_num", user.getProjectNum());
+                object.put("valid_date", user.getValidDate());
+                object.put("eventLimiter",user.getEventLimiter());
+                object.put("sensitiveLimiter",user.getSensitiveLimiter());
+                object.put("userRights",userRightsDao.findByUsername(user.getUsername()));
+                jsonArray.appendElement(object);
+            }
         }
         return jsonArray;
     }
@@ -94,7 +109,7 @@ public class UserServiceImp implements UserService {
 
 
     @Override
-    public JSONObject registerUser(String username, String password, String phone, String email) {
+    public JSONObject registerUser(String username, String password, String phone, String email, String role) {
         JSONObject result = new JSONObject();
         result.put("register", 0);
         String available = "available";
@@ -102,8 +117,10 @@ public class UserServiceImp implements UserService {
             return result;
         }
         try {
-            User user = new User(username, password, phone, email, 0, "2099",1,1);
+            User user = new User(username, password, phone, email, 0, "2099",role,1,"","");
+            UserRights userRights=new UserRights(username,role);
             userDao.save(user);
+            userRightsDao.save(userRights);
             result.put("register", 1);
             return result;
         } catch (Exception e) {
@@ -111,8 +128,6 @@ public class UserServiceImp implements UserService {
         }
         return result;
     }
-
-
 
     @Override
     public JSONObject registerManager(String username, String password, String phone, String email) {
@@ -125,7 +140,7 @@ public class UserServiceImp implements UserService {
         try {
             Manager manager = new Manager(username, password, phone, email, 0, "2099",0,1);
             managerDao.save(manager);
-            User user = new User(username, password, phone, email, 0, "2099",0,1);
+            User user = new User(username, password, phone, email, 0, "2099","systemAdmin",1,"","");
             userDao.save(user);
             result.put("register", 1);
             return result;
@@ -136,21 +151,23 @@ public class UserServiceImp implements UserService {
     }
 
     @Override
-    public JSONObject login(String username, String password, String role) {
+    public JSONObject login(String username, String password) {
         JSONObject result = new JSONObject();
         result.put("login", 0);
         if (!userDao.existByUsername(username)) {
             return result;
         } else {
-            Integer urole = "1".equals(role) ? 1 : 0;
             User user = userDao.findByUsername(username);
-            if (!user.getPassword().equals(password) || !user.getRole().equals(urole)) {
+            if (!user.getPassword().equals(password)) {
                 return result;
             } else {
-                result.put("role", user.getRole().toString());
+                result.put("role", user.getRole());
                 result.put("username", user.getUsername());
                 result.put("phone", user.getPhone());
                 result.put("email", user.getEmail());
+                result.put("eventLimiter",user.getEventLimiter());
+                result.put("sensitiveLimiter",user.getSensitiveLimiter());
+                result.put("userRights",userRightsDao.findByUsername(username));
                 result.put("login", 1);
                 return result;
             }
@@ -190,6 +207,56 @@ public class UserServiceImp implements UserService {
             System.out.println(e);
         }
         return result;
+    }
+
+    @Override
+    public JSONObject changeUserJurisdiction(String username,String type,boolean checked)
+    {
+        JSONObject ret=new JSONObject();
+        ret.put("changeUserJurisdiction",1);
+        UserRights userRights=userRightsDao.findByUsername(username);
+        if (type.equals("dataScreen")){
+            userRights.setDataScreen(checked);
+        }
+        if (type.equals("schemeConfiguration")){
+            userRights.setSchemeConfiguration(checked);
+        }
+        if (type.equals("globalSearch")){
+            userRights.setGlobalSearch(checked);
+        }
+        if (type.equals("analysis")){
+            userRights.setAnalysis(checked);
+        }
+        if (type.equals("warning")){
+            userRights.setWarning(checked);
+        }
+        if (type.equals("briefing")){
+            userRights.setBriefing(checked);
+        }
+        userRightsDao.save(userRights);
+        return ret;
+    }
+
+    @Override
+    public JSONObject changeUserEventLimiter(String username,String eventLimiter)
+    {
+        JSONObject ret=new JSONObject();
+        ret.put("changeUserEventLimiter",1);
+        User user = userDao.findByUsername(username);
+        user.setEventLimiter(eventLimiter);
+        userDao.save(user);
+        return ret;
+    }
+
+    @Override
+    public JSONObject changeUserSensitiveLimiter(String username,String sensitiveLimiter)
+    {
+        JSONObject ret=new JSONObject();
+        ret.put("changeUserSensitiveLimiter",1);
+        User user = userDao.findByUsername(username);
+        user.setSensitiveLimiter(sensitiveLimiter);
+        userDao.save(user);
+        return ret;
     }
 }
 
