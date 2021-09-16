@@ -93,6 +93,9 @@ public class SearchServiceImpl implements SearchService {
     private SensitiveWordsDao sensitiveWordsDao;
 
     @Autowired
+    private MonitoringWebsiteDao monitoringWebsiteDao;
+
+    @Autowired
     private WeiboSpiderRpc weiboSpiderRpc;
 
     public SearchServiceImpl(ElasticsearchOperations elasticsearchOperations,AreaRepository areaRepository,SensitiveWordRepository sensitiveWordRepository,SwordFidRepository swordFidRepository)
@@ -449,6 +452,9 @@ public class SearchServiceImpl implements SearchService {
 
     @Override
     public ResourceCountResponse globalSearchResourceCountByFid(long fid,String startPublishedDay, String endPublishedDay){
+
+
+
         List<Long> resultList = new ArrayList<>();
         for (int fromType = 1; fromType <= 7 ; fromType++) {
             resultList.add((long) 0);

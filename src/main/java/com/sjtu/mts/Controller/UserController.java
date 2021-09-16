@@ -130,7 +130,8 @@ public class UserController {
                 fangAnInfo.get("eventKeyword"),
                 Integer.parseInt(fangAnInfo.get("eventKeywordMatch")),
                 Boolean.parseBoolean(fangAnInfo.get("enableAlert")),
-                fangAnInfo.get("sensitiveWord")
+                fangAnInfo.get("sensitiveWord"),
+                Integer.parseInt(fangAnInfo.get("priority"))
                 );
     }
     @PostMapping(path = "/changeFangAn")
@@ -162,7 +163,8 @@ public class UserController {
                 eventKeyword,
                 Integer.parseInt(fangAnInfo.get("eventKeywordMatch")),
                 Boolean.parseBoolean(fangAnInfo.get("enableAlert")),
-                fangAnInfo.get("sensitiveWord")
+                fangAnInfo.get("sensitiveWord"),
+                Integer.parseInt(fangAnInfo.get("priority"))
         );
     }
     @GetMapping(path = "/delFangAn")

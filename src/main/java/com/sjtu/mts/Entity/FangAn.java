@@ -48,6 +48,9 @@ public class FangAn implements Serializable {
     @Column(name = "sensitiveword")
     private String sensitiveword;
 
+    @Column(name = "priority")
+    private Integer priority;
+
     public FangAn(){}
 
     public FangAn(
@@ -61,7 +64,8 @@ public class FangAn implements Serializable {
             String eventKeyword,
             int eventKeywordMatch,
             boolean enableAlert,
-            String sensitiveword
+            String sensitiveword,
+            Integer priority
             ){
         this.username = username;
         this.programmeName = programmeName;
@@ -74,7 +78,7 @@ public class FangAn implements Serializable {
         this.eventKeywordMatch = eventKeywordMatch;
         this.enableAlert = enableAlert;
         this.sensitiveword=sensitiveword;
-
+        this.priority=priority;
     }
 
     public void setUsername(String username) {
@@ -167,5 +171,13 @@ public class FangAn implements Serializable {
 
     public void setSensitiveword(String sensitiveword) {
         this.sensitiveword = sensitiveword;
+    }
+
+    public Integer getPriority() {
+        return priority;
+    }
+
+    public void setPriority(Integer priority) {
+        this.priority = priority;
     }
 }
