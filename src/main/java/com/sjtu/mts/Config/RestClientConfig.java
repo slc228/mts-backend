@@ -1,4 +1,4 @@
-package com.sjtu.mts;
+package com.sjtu.mts.Config;
 
 import org.elasticsearch.client.RestHighLevelClient;
 import org.springframework.context.annotation.Bean;
