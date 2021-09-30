@@ -27,18 +27,18 @@ public interface SearchService {
     public DataResponse SearchWithObject(String keyword, String sensitiveType, String emotion, String startPublishedDay, String endPublishedDay,
                                String fromType, int page, int pageSize, int timeOrder,String keywords);
 
-    public ResourceCountResponse globalSearchResourceCount(String keyword, String startPublishedDay,
+    public JSONArray globalSearchResourceCount(String keyword, String startPublishedDay,
                                                            String endPublishedDay);
-    public ResourceCountResponse globalSearchResourceCountByFid(long fid,String startPublishedDay, String endPublishedDay);
+    public JSONArray globalSearchResourceCountByFid(long fid,String startPublishedDay, String endPublishedDay);
 
     public CflagCountResponse globalSearchCflagCount(String keyword, String startPublishedDay, String endPublishedDay);
 
     public CflagCountResponse globalSearchCflagCountByFid(long fid,String startPublishedDay, String endPublishedDay);
 
 
-    public AmountTrendResponse globalSearchTrendCount(String keyword, String startPublishedDay, String endPublishedDay);
+    public JSONObject globalSearchTrendCount(String keyword, String startPublishedDay, String endPublishedDay);
 
-    public AmountTrendResponse globalSearchTrendCount2(long fid,String startPublishedDay, String endPublishedDay);
+    public JSONObject globalSearchTrendCount2(long fid,String startPublishedDay, String endPublishedDay);
     public AmountTrendResponse globalSearchTrendCount3(long fid,String startPublishedDay, String endPublishedDay);
 
 

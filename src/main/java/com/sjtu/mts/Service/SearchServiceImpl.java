@@ -21,14 +21,28 @@ import org.apache.poi.hssf.usermodel.HSSFWorkbook;
 import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.ss.usermodel.Sheet;
 import org.apache.poi.ss.usermodel.Workbook;
+import org.elasticsearch.index.query.BoolQueryBuilder;
+import org.elasticsearch.index.query.QueryBuilders;
+import org.elasticsearch.search.aggregations.Aggregation;
+import org.elasticsearch.search.aggregations.AggregationBuilder;
+import org.elasticsearch.search.aggregations.AggregationBuilders;
+import org.elasticsearch.search.aggregations.Aggregations;
+import org.elasticsearch.search.aggregations.bucket.terms.ParsedStringTerms;
+import org.elasticsearch.search.aggregations.bucket.terms.StringTerms;
+import org.elasticsearch.search.aggregations.bucket.terms.Terms;
+import org.elasticsearch.search.aggregations.bucket.terms.TermsAggregationBuilder;
 import org.hibernate.Hibernate;
 import org.openqa.selenium.WebElement;
+import org.openqa.selenium.json.Json;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.elasticsearch.core.*;
+import org.springframework.data.elasticsearch.core.mapping.IndexCoordinates;
 import org.springframework.data.elasticsearch.core.query.Criteria;
 import org.springframework.data.elasticsearch.core.query.CriteriaQuery;
+import org.springframework.data.elasticsearch.core.query.NativeSearchQuery;
+import org.springframework.data.elasticsearch.core.query.NativeSearchQueryBuilder;
 import org.springframework.stereotype.Service;
 
 import java.io.*;
@@ -418,9 +432,12 @@ public class SearchServiceImpl implements SearchService {
     };
 
     @Override
-    public ResourceCountResponse globalSearchResourceCount(String keyword, String startPublishedDay, String endPublishedDay) {
-        List<Long> resultList = new ArrayList<>();
-        for (int fromType = 1; fromType <= 7 ; fromType++) {
+    public JSONArray globalSearchResourceCount(String keyword, String startPublishedDay, String endPublishedDay) {
+        List<MonitoringWebsite> monitoringWebsiteList=monitoringWebsiteDao.findAll();
+        JSONArray ret=new JSONArray();
+        for (MonitoringWebsite monitoringWebsite:monitoringWebsiteList) {
+            JSONObject jsonObject=new JSONObject();
+            long num=0;
             Criteria criteria = new Criteria();
             if (!keyword.isEmpty())
             {
@@ -441,93 +458,192 @@ public class SearchServiceImpl implements SearchService {
                     e.printStackTrace();
                 }
             }
-            criteria.subCriteria(new Criteria().and("fromType").is(fromType));
+            criteria.subCriteria(new Criteria("resource").is(monitoringWebsite.getName()));
             CriteriaQuery query = new CriteriaQuery(criteria);
             long searchHitCount = this.elasticsearchOperations.count(query, Data.class);
-            resultList.add(searchHitCount);
+            num=num+searchHitCount;
+            jsonObject.put("name",monitoringWebsite.getName());
+            jsonObject.put("label",monitoringWebsite.getName());
+            jsonObject.put("value",num);
+            ret.appendElement(jsonObject);
         }
-        return new ResourceCountResponse(resultList.get(0), resultList.get(1), resultList.get(2),
-                resultList.get(3), resultList.get(4), resultList.get(5), resultList.get(6));
+        return ret;
     }
 
     @Override
-    public ResourceCountResponse globalSearchResourceCountByFid(long fid,String startPublishedDay, String endPublishedDay){
+    public JSONArray globalSearchResourceCountByFid(long fid,String startPublishedDay, String endPublishedDay){
+        List<MonitoringWebsite> monitoringWebsiteList=monitoringWebsiteDao.findAll();
+
+        TermsAggregationBuilder termsAggregationBuilder= AggregationBuilders.terms("resource_count").field("resource").size(20);
+        NativeSearchQueryBuilder nativeSearchQueryBuilder=new NativeSearchQueryBuilder();
 
 
+        BoolQueryBuilder boolQueryBuilder=new BoolQueryBuilder();
 
-        List<Long> resultList = new ArrayList<>();
-        for (int fromType = 1; fromType <= 7 ; fromType++) {
-            resultList.add((long) 0);
+        FangAn fangAn = fangAnDao.findByFid(fid);
+        String regionKeyword = fangAn.getRegionKeyword();
+        int regionKeywordMatch = fangAn.getRegionKeywordMatch();
+        BoolQueryBuilder regionKeywordBoolQueryBuilder=new BoolQueryBuilder();
+
+        String roleKeyword = fangAn.getRoleKeyword();
+        int roleKeywordMatch = fangAn.getRoleKeywordMatch();
+        BoolQueryBuilder roleKeywordBoolQueryBuilder=new BoolQueryBuilder();
+
+        String eventKeyword = fangAn.getEventKeyword();
+        List<String> events=new ArrayList<String>();
+        BoolQueryBuilder eventKeywordBoolQueryBuilder=new BoolQueryBuilder();
+
+        while(eventKeyword.length()>0)
+        {
+            int tag=eventKeyword.indexOf('+');
+            events.add(eventKeyword.substring(0,tag));
+            eventKeyword=eventKeyword.substring(tag+1);
         }
-        for (int fromType = 1; fromType <= 7 ; fromType++) {
 
-            //Criteria criteria = fangAnDao.criteriaByFid(fid);
-            List<Criteria> criterias=fangAnDao.FindCriteriasByFid(fid);
-            for (Criteria criteria:criterias)
-            {
-                if (!startPublishedDay.isEmpty() && !endPublishedDay.isEmpty())
-                {
-                    SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
-                    try {
-                        Date startDate = sdf.parse(startPublishedDay);
-                        Date endDate = sdf.parse(endPublishedDay);
-                        criteria.subCriteria(new Criteria().and("publishedDay").between(startDate, endDate));
-                    } catch (ParseException e) {
-                        e.printStackTrace();
+        if (!roleKeyword.isEmpty())
+        {
+            String[] searchSplitArray1 = roleKeyword.trim().split("\\s+");
+            List<String>searchSplitArray = Arrays.asList(searchSplitArray1);
+            BoolQueryBuilder contentBoolQueryBuilder=new BoolQueryBuilder();
+            BoolQueryBuilder titleBoolQueryBuilder=new BoolQueryBuilder();
+            for (String searchString : searchSplitArray) {
+                if (roleKeywordMatch == 1) {
+                    contentBoolQueryBuilder.must(QueryBuilders.matchQuery("content", searchString));
+                    titleBoolQueryBuilder.must(QueryBuilders.matchQuery("title", searchString));
+                } else {
+                    contentBoolQueryBuilder.should(QueryBuilders.matchQuery("content", searchString));
+                    titleBoolQueryBuilder.should(QueryBuilders.matchQuery("title", searchString));
+                }
+            }
+            roleKeywordBoolQueryBuilder.should(contentBoolQueryBuilder);
+            roleKeywordBoolQueryBuilder.should(titleBoolQueryBuilder);
+        }
+
+        for (int numOfEvents=0;numOfEvents<events.size();numOfEvents++)
+        {
+            String[] searchSplitArray1 = events.get(numOfEvents).trim().split("\\s+");
+            List<String>searchSplitArray = Arrays.asList(searchSplitArray1);
+            BoolQueryBuilder contentBoolQueryBuilder=new BoolQueryBuilder();
+            BoolQueryBuilder titleBoolQueryBuilder=new BoolQueryBuilder();
+            for (String searchString : searchSplitArray) {
+                contentBoolQueryBuilder.must(QueryBuilders.matchQuery("content",searchString));
+                titleBoolQueryBuilder.must(QueryBuilders.matchQuery("title",searchString));
+            }
+            eventKeywordBoolQueryBuilder.should(contentBoolQueryBuilder);
+            eventKeywordBoolQueryBuilder.should(titleBoolQueryBuilder);
+        }
+
+        if (!regionKeyword.isEmpty()) {
+            String[] searchSplitArray1 = regionKeyword.trim().split("\\s+");
+            List<String> searchSplitArray = Arrays.asList(searchSplitArray1);
+            if (searchSplitArray.size() == 1) {
+                BoolQueryBuilder contentBoolQueryBuilder = new BoolQueryBuilder();
+                BoolQueryBuilder titleBoolQueryBuilder = new BoolQueryBuilder();
+                List<Integer> codeid = areaRepository.findCodeidByCityName(searchSplitArray.get(0));
+                List<String> citys = new ArrayList<>();
+                for (Integer co : codeid) {
+                    List<String> tmp = areaRepository.findCityNameByCodeid(co);
+                    for (int i = 0; i < tmp.size(); i++) {
+                        tmp.set(i, tmp.get(i).replaceAll("\\s*", ""));
+                        if (tmp.get(i).contains("市辖") || tmp.get(i).contains("县辖")) {
+                            tmp.remove(i);
+                        }
                     }
+                    citys.addAll(tmp);
                 }
-                criteria.subCriteria(new Criteria().and("fromType").is(fromType));
-                CriteriaQuery query = new CriteriaQuery(criteria);
-                long searchHitCount = this.elasticsearchOperations.count(query, Data.class);
-                resultList.set(fromType-1,resultList.get(fromType-1)+searchHitCount);
-                //resultList.add(searchHitCount);
-            }
-        }
-        return new ResourceCountResponse(resultList.get(0), resultList.get(1), resultList.get(2),
-                resultList.get(3), resultList.get(4), resultList.get(5), resultList.get(6));
-    }
 
-    @Override
-    public CflagCountResponse globalSearchCflagCount(String keyword, String startPublishedDay, String endPublishedDay) {
-        List<Long> resultList = new ArrayList<>();
-        for (int cflag = 0; cflag <= 1 ; cflag++) {
-            Criteria criteria = new Criteria();
-            if (!keyword.isEmpty())
-            {
-                String[] searchSplitArray = keyword.trim().split("\\s+");;
+                citys = (List) citys.stream().distinct().collect(Collectors.toList());//去重
+                for (String city : citys) {
+                    contentBoolQueryBuilder.should(QueryBuilders.matchQuery("content", city));
+                    titleBoolQueryBuilder.should(QueryBuilders.matchQuery("title", city));
+                }
+                regionKeywordBoolQueryBuilder.should(contentBoolQueryBuilder);
+                regionKeywordBoolQueryBuilder.should(titleBoolQueryBuilder);
+            } else if (searchSplitArray.size() > 1 && regionKeywordMatch == 1) {
+                BoolQueryBuilder allContentBoolQueryBuilder = new BoolQueryBuilder();
+                BoolQueryBuilder allTitleBoolQueryBuilder = new BoolQueryBuilder();
                 for (String searchString : searchSplitArray) {
-                    criteria.subCriteria(new Criteria().and("content").contains(searchString).
-                            or("title").contains(searchString));
+                    BoolQueryBuilder contentBoolQueryBuilder = new BoolQueryBuilder();
+                    BoolQueryBuilder titleBoolQueryBuilder = new BoolQueryBuilder();
+                    List<Integer> codeid = areaRepository.findCodeidByCityName(searchString);
+                    List<String> citys = new ArrayList<>();
+                    for (Integer co : codeid) {
+                        List<String> tmp = areaRepository.findCityNameByCodeid(co);
+                        for (int i = 0; i < tmp.size(); i++) {
+                            tmp.set(i, tmp.get(i).replaceAll("\\s*", ""));
+                            if (tmp.get(i).contains("市辖") || tmp.get(i).contains("县辖")) {
+                                tmp.remove(i);
+                            }
+                        }
+                        citys.addAll(tmp);
+                    }
+
+                    citys = (List) citys.stream().distinct().collect(Collectors.toList());//去重
+                    for (String city : citys) {
+                        contentBoolQueryBuilder.should(QueryBuilders.matchQuery("content", city));
+                        titleBoolQueryBuilder.should(QueryBuilders.matchQuery("title", city));
+                    }
+                    allContentBoolQueryBuilder.must(contentBoolQueryBuilder);
+                    allTitleBoolQueryBuilder.must(titleBoolQueryBuilder);
                 }
-            }
-            if (!startPublishedDay.isEmpty() && !endPublishedDay.isEmpty())
-            {
-                SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
-                try {
-                    Date startDate = sdf.parse(startPublishedDay);
-                    Date endDate = sdf.parse(endPublishedDay);
-                    criteria.subCriteria(new Criteria().and("publishedDay").between(startDate, endDate));
-                } catch (ParseException e) {
-                    e.printStackTrace();
+                regionKeywordBoolQueryBuilder.should(allContentBoolQueryBuilder);
+                regionKeywordBoolQueryBuilder.should(allTitleBoolQueryBuilder);
+            } else if (searchSplitArray.size() > 1 && regionKeywordMatch == 0) {
+                BoolQueryBuilder contentBoolQueryBuilder = new BoolQueryBuilder();
+                BoolQueryBuilder titleBoolQueryBuilder = new BoolQueryBuilder();
+                List<String> citys = new ArrayList<>();
+                for (String searchString : searchSplitArray) {
+                    List<Integer> codeid = areaRepository.findCodeidByCityName(searchString);
+                    for (Integer co : codeid) {
+                        List<String> tmp = areaRepository.findCityNameByCodeid(co);
+                        for (int i = 0; i < tmp.size(); i++) {
+                            tmp.set(i, tmp.get(i).replaceAll("\\s*", ""));
+                            if (tmp.get(i).contains("市辖") || tmp.get(i).contains("县辖")) {
+                                tmp.remove(i);
+                            }
+                        }
+                        citys.addAll(tmp);
+                    }
+                    citys = (List) citys.stream().distinct().collect(Collectors.toList());//去重
+
                 }
+                for (String city : citys) {
+                    contentBoolQueryBuilder.should(QueryBuilders.matchQuery("content", city));
+                    titleBoolQueryBuilder.should(QueryBuilders.matchQuery("title", city));
+                }
+                regionKeywordBoolQueryBuilder.should(contentBoolQueryBuilder);
+                regionKeywordBoolQueryBuilder.should(titleBoolQueryBuilder);
             }
-            criteria.subCriteria(new Criteria().and("cflag").is(cflag));
-            CriteriaQuery query = new CriteriaQuery(criteria);
-            long searchHitCount = this.elasticsearchOperations.count(query, Data.class);
-            resultList.add(searchHitCount);
         }
-        return new CflagCountResponse(resultList.get(0), resultList.get(1));
-    }
-    @Override
-    public CflagCountResponse globalSearchCflagCountByFid(long fid, String startPublishedDay, String endPublishedDay){
-        List<Long> resultList = new ArrayList<>();
-        for (int cflag = 0; cflag <= 1 ; cflag++) {
-            resultList.add((long)0);
+        boolQueryBuilder.must(regionKeywordBoolQueryBuilder);
+        boolQueryBuilder.must(roleKeywordBoolQueryBuilder);
+        boolQueryBuilder.must(eventKeywordBoolQueryBuilder);
+        boolQueryBuilder.minimumShouldMatch(1);
+
+        nativeSearchQueryBuilder.withQuery(boolQueryBuilder);
+
+        nativeSearchQueryBuilder.addAggregation(termsAggregationBuilder);
+
+        NativeSearchQuery nativeSearchQuery=nativeSearchQueryBuilder.build();
+        nativeSearchQuery.setMaxResults(0);
+
+        Aggregations aggregations=this.elasticsearchOperations.search(nativeSearchQuery,Data.class).getAggregations();
+        Terms aggregation = aggregations.get("resource_count");
+        System.out.println(aggregation.getBuckets().size());
+
+        for (Terms.Bucket bucket : aggregation.getBuckets()) {
+            System.out.println("部门编号=" + bucket.getKey() + ";员工数=" + bucket.getDocCount());
         }
-//        for (int cflag = 0; cflag <= 1 ; cflag++) {
-//            //Criteria criteria = fangAnDao.criteriaByFid(fid);
+
+        System.out.println(aggregations.toString());
+
+
+        JSONArray ret=new JSONArray();
+//        for (MonitoringWebsite monitoringWebsite:monitoringWebsiteList) {
+//            JSONObject jsonObject=new JSONObject();
+//            long num=0;
 //            List<Criteria> criterias=fangAnDao.FindCriteriasByFid(fid);
-//            for(Criteria criteria:criterias)
+//            for (Criteria criteria:criterias)
 //            {
 //                if (!startPublishedDay.isEmpty() && !endPublishedDay.isEmpty())
 //                {
@@ -540,12 +656,55 @@ public class SearchServiceImpl implements SearchService {
 //                        e.printStackTrace();
 //                    }
 //                }
-//                criteria.subCriteria(new Criteria().and("cflag").is(cflag));
+//                criteria.subCriteria(new Criteria("resource").is(monitoringWebsite.getName()));
 //                CriteriaQuery query = new CriteriaQuery(criteria);
 //                long searchHitCount = this.elasticsearchOperations.count(query, Data.class);
-//                resultList.set(cflag,resultList.get(cflag)+searchHitCount);
+//                num=num+searchHitCount;
 //            }
+//            jsonObject.put("name",monitoringWebsite.getName());
+//            jsonObject.put("label",monitoringWebsite.getName());
+//            jsonObject.put("value",num);
+//            ret.appendElement(jsonObject);
 //        }
+        return ret;
+    }
+
+    @Override
+    public CflagCountResponse globalSearchCflagCount(String keyword, String startPublishedDay, String endPublishedDay) {
+        List<Long> resultList = new ArrayList<>();
+        for (int cflag = 0; cflag <= 1 ; cflag++) {
+            resultList.add((long)0);
+        }
+        Criteria criteria = new Criteria();
+
+        if (!startPublishedDay.isEmpty() && !endPublishedDay.isEmpty()) {
+            SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+            try {
+                Date startDate = sdf.parse(startPublishedDay);
+                Date endDate = sdf.parse(endPublishedDay);
+                criteria.subCriteria(new Criteria().and("publishedDay").between(startDate, endDate));
+            } catch (ParseException e) {
+                e.printStackTrace();
+            }
+        }
+        CriteriaQuery queryall = new CriteriaQuery(criteria);
+        long searchHitCountall = this.elasticsearchOperations.count(queryall, Data.class);
+
+        criteria.subCriteria(new Criteria("sensitiveType").in("政治敏感"));
+        CriteriaQuery querySen = new CriteriaQuery(criteria);
+        long searchHitCountquerySen = this.elasticsearchOperations.count(querySen, Data.class);
+        resultList.set(0, searchHitCountall);
+        resultList.set(1, searchHitCountquerySen);
+
+        resultList.set(0,resultList.get(0)-resultList.get(1));
+        return new CflagCountResponse(resultList.get(0), resultList.get(1));
+    }
+    @Override
+    public CflagCountResponse globalSearchCflagCountByFid(long fid, String startPublishedDay, String endPublishedDay){
+        List<Long> resultList = new ArrayList<>();
+        for (int cflag = 0; cflag <= 1 ; cflag++) {
+            resultList.add((long)0);
+        }
         List<Criteria> criterias=fangAnDao.FindCriteriasByFid(fid);
         for(Criteria criteria:criterias)
         {
@@ -576,7 +735,10 @@ public class SearchServiceImpl implements SearchService {
     }
 
     @Override
-    public AmountTrendResponse globalSearchTrendCount(String keyword, String startPublishedDay, String endPublishedDay) {
+    public JSONObject globalSearchTrendCount(String keyword, String startPublishedDay, String endPublishedDay) {
+        JSONObject ret=new JSONObject();
+        JSONArray xAxisForSourceAmountTrend=new JSONArray();
+        List<Long> xAxisForTotalAmountTrend=new ArrayList<>();
         int pointNum = 6;
         SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
         List<Date> dateList = new ArrayList<>();
@@ -592,38 +754,47 @@ public class SearchServiceImpl implements SearchService {
             e.printStackTrace();
         }
         List<String> timeRange = new ArrayList<>();
+        for (int j = 0; j < pointNum; j++) {
+            timeRange.add(sdf.format(dateList.get(j)) + " to " + sdf.format(dateList.get(j + 1)));
+        }
+
         List<List<Long>> fromTypeResultList = new ArrayList<>();
-        for (int fromType = 0; fromType <= 7 ; fromType++) {
+        List<MonitoringWebsite> monitoringWebsiteList=monitoringWebsiteDao.findAll();
+
+        for (int j = 0; j < pointNum; j++) {
+            xAxisForTotalAmountTrend.add((long) 0);
+        }
+        for (int j = 0; j < pointNum; j++) {
+            Criteria criteria = new Criteria();
+            criteria.subCriteria(new Criteria().and("publishedDay").between(dateList.get(j), dateList.get(j + 1)));
+            CriteriaQuery query = new CriteriaQuery(criteria);
+            long searchHitCount = this.elasticsearchOperations.count(query, Data.class);
+            xAxisForTotalAmountTrend.set(j, xAxisForTotalAmountTrend.get(j) + searchHitCount);
+        }
+
+        for (MonitoringWebsite monitoringWebsite:monitoringWebsiteList) {
+            JSONObject jsonObject=new JSONObject();
             List<Long> resultList = new ArrayList<>();
             for (int j = 0; j < pointNum; j++) {
+                resultList.add((long)0);
+            }
+            for (int j = 0; j < pointNum; j++) {
                 Criteria criteria = new Criteria();
-                if (!keyword.isEmpty())
-                {
-                    String[] searchSplitArray = keyword.trim().split("\\s+");;
-                    for (String searchString : searchSplitArray) {
-                        criteria.subCriteria(new Criteria().and("content").contains(searchString).
-                                or("title").contains(searchString));
-                    }
-                }
-                // fromType 0 indicates searching all fromTypes
-                if (fromType != 0) {
-                    criteria.subCriteria(new Criteria().and("fromType").is(fromType));
-                }
-                else {
-                    // only add once
-                    timeRange.add(sdf.format(dateList.get(j)) + " to " + sdf.format(dateList.get(j + 1)));
-                }
+                criteria.subCriteria(new Criteria().and("resource").is(monitoringWebsite.getName()));
                 criteria.subCriteria(new Criteria().and("publishedDay").between(dateList.get(j), dateList.get(j + 1)));
                 CriteriaQuery query = new CriteriaQuery(criteria);
                 long searchHitCount = this.elasticsearchOperations.count(query, Data.class);
-                resultList.add(searchHitCount);
+                resultList.set(j, resultList.get(j) + searchHitCount);
             }
-            fromTypeResultList.add(resultList);
+            jsonObject.put("name",monitoringWebsite.getName());
+            jsonObject.put("label",monitoringWebsite.getName());
+            jsonObject.put("value",resultList);
+            xAxisForSourceAmountTrend.appendElement(jsonObject);
         }
-        return new AmountTrendResponse(timeRange, fromTypeResultList.get(0),
-                fromTypeResultList.get(1), fromTypeResultList.get(2), fromTypeResultList.get(3),
-                fromTypeResultList.get(4), fromTypeResultList.get(5), fromTypeResultList.get(6),
-                fromTypeResultList.get(7));
+        ret.put("timeRange",timeRange);
+        ret.put("totalAmountTrend",xAxisForTotalAmountTrend);
+        ret.put("xAxisForSourceAmountTrend",xAxisForSourceAmountTrend);
+        return ret;
     }
 
     @Override
@@ -679,7 +850,10 @@ public class SearchServiceImpl implements SearchService {
     }
 
     @Override
-    public AmountTrendResponse globalSearchTrendCount2(long fid,String startPublishedDay, String endPublishedDay){
+    public JSONObject globalSearchTrendCount2(long fid,String startPublishedDay, String endPublishedDay){
+        JSONObject ret=new JSONObject();
+        JSONArray xAxisForSourceAmountTrend=new JSONArray();
+        List<Long> xAxisForTotalAmountTrend=new ArrayList<>();
         int pointNum = 6;
         SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
         List<Date> dateList = new ArrayList<>();
@@ -695,39 +869,52 @@ public class SearchServiceImpl implements SearchService {
             e.printStackTrace();
         }
         List<String> timeRange = new ArrayList<>();
-        List<List<Long>> fromTypeResultList = new ArrayList<>();
-        for (int fromType = 0; fromType <= 7 ; fromType++) {
-            if (fromType==0){
-                for (int j = 0; j < pointNum; j++) {
-                    timeRange.add(sdf.format(dateList.get(j)) + " to " + sdf.format(dateList.get(j + 1)));
-                }
-            }
+        for (int j = 0; j < pointNum; j++) {
+            timeRange.add(sdf.format(dateList.get(j)) + " to " + sdf.format(dateList.get(j + 1)));
+        }
 
+        List<List<Long>> fromTypeResultList = new ArrayList<>();
+        List<MonitoringWebsite> monitoringWebsiteList=monitoringWebsiteDao.findAll();
+
+        for (int j = 0; j < pointNum; j++) {
+            xAxisForTotalAmountTrend.add((long) 0);
+        }
+        for (int j = 0; j < pointNum; j++) {
+            List<Criteria> criterias = fangAnDao.FindCriteriasByFid(fid);
+            for (Criteria criteria : criterias) {
+                criteria.subCriteria(new Criteria().and("publishedDay").between(dateList.get(j), dateList.get(j + 1)));
+                CriteriaQuery query = new CriteriaQuery(criteria);
+                long searchHitCount = this.elasticsearchOperations.count(query, Data.class);
+                xAxisForTotalAmountTrend.set(j, xAxisForTotalAmountTrend.get(j) + searchHitCount);
+            }
+        }
+
+        for (MonitoringWebsite monitoringWebsite:monitoringWebsiteList) {
+            JSONObject jsonObject=new JSONObject();
             List<Long> resultList = new ArrayList<>();
             for (int j = 0; j < pointNum; j++) {
                 resultList.add((long)0);
             }
             for (int j = 0; j < pointNum; j++) {
-                //Criteria criteria = fangAnDao.criteriaByFid(fid);
-                // fromType 0 indicates searching all fromTypes
                 List<Criteria> criterias=fangAnDao.FindCriteriasByFid(fid);
                 for (Criteria criteria:criterias)
                 {
-                    if (fromType != 0) {
-                        criteria.subCriteria(new Criteria().and("fromType").is(fromType));
-                    }
+                    criteria.subCriteria(new Criteria().and("resource").is(monitoringWebsite.getName()));
                     criteria.subCriteria(new Criteria().and("publishedDay").between(dateList.get(j), dateList.get(j + 1)));
                     CriteriaQuery query = new CriteriaQuery(criteria);
                     long searchHitCount = this.elasticsearchOperations.count(query, Data.class);
                     resultList.set(j,resultList.get(j)+searchHitCount);
                 }
             }
-            fromTypeResultList.add(resultList);
+            jsonObject.put("name",monitoringWebsite.getName());
+            jsonObject.put("label",monitoringWebsite.getName());
+            jsonObject.put("value",resultList);
+            xAxisForSourceAmountTrend.appendElement(jsonObject);
         }
-        return new AmountTrendResponse(timeRange, fromTypeResultList.get(0),
-                fromTypeResultList.get(1), fromTypeResultList.get(2), fromTypeResultList.get(3),
-                fromTypeResultList.get(4), fromTypeResultList.get(5), fromTypeResultList.get(6),
-                fromTypeResultList.get(7));
+        ret.put("timeRange",timeRange);
+        ret.put("totalAmountTrend",xAxisForTotalAmountTrend);
+        ret.put("xAxisForSourceAmountTrend",xAxisForSourceAmountTrend);
+        return ret;
     }
     @Override
     public AreaAnalysisResponse countArea(String keyword, String startPublishedDay, String endPublishedDay){
