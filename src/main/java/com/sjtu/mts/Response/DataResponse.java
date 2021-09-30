@@ -1,6 +1,7 @@
 package com.sjtu.mts.Response;
 
 import com.sjtu.mts.Entity.Data;
+import com.sjtu.mts.Entity.YuQing;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;

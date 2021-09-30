@@ -86,7 +86,7 @@ public class DataController {
 
     @GetMapping("/globalSearch/dataSearch")
     @ResponseBody
-    public DataResponse findByKeywordAndCflagAndPublishedDayAndFromType(
+    public YuQingResponse findByKeywordAndCflagAndPublishedDayAndFromType(
             @RequestParam("keyword") String keyword,
             @RequestParam("cflag") String cflag,
             @RequestParam("startPublishedDay") String startPublishedDay,
@@ -108,7 +108,7 @@ public class DataController {
 
     @GetMapping("/globalSearch/dataSearchWithObject")
     @ResponseBody
-    public DataResponse dataSearchWithObject(
+    public YuQingResponse dataSearchWithObject(
             @RequestParam("keyword") String keyword,
             @RequestParam("sensitiveType") String sensitiveType,
             @RequestParam("emotion") String emotion,

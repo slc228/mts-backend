@@ -41,12 +41,12 @@ public class YuQingElasticSearch {
     @Field(type = FieldType.Date)
     private String publishedDay;
 
-    @Field(type = FieldType.Text)
+    @Field(type = FieldType.Keyword)
     private String tag;
 
-    @Field(type = FieldType.Text)
+    @Field(type = FieldType.Keyword)
     private String emotion;
 
-    @Field(type = FieldType.Text)
+    @Field(type = FieldType.Keyword)
     private String sensitiveType;
 }

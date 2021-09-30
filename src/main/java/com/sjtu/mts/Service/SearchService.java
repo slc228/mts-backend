@@ -21,10 +21,10 @@ import java.util.Map;
 
 public interface SearchService {
 
-    public DataResponse Search(String keyword, String cflag, String startPublishedDay, String endPublishedDay,
+    public YuQingResponse Search(String keyword, String cflag, String startPublishedDay, String endPublishedDay,
                                String fromType, int page, int pageSize, int timeOrder);
 
-    public DataResponse SearchWithObject(String keyword, String sensitiveType, String emotion, String startPublishedDay, String endPublishedDay,
+    public YuQingResponse SearchWithObject(String keyword, String sensitiveType, String emotion, String startPublishedDay, String endPublishedDay,
                                String fromType, int page, int pageSize, int timeOrder,String keywords);
 
     public ResourceCountResponse globalSearchResourceCount(String keyword, String startPublishedDay,
