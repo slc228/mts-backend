@@ -25,6 +25,7 @@ import org.apache.poi.ss.usermodel.Sheet;
 import org.apache.poi.ss.usermodel.Workbook;
 import org.elasticsearch.index.query.BoolQueryBuilder;
 import org.elasticsearch.index.query.QueryBuilders;
+import org.elasticsearch.index.query.RangeQueryBuilder;
 import org.elasticsearch.search.aggregations.Aggregation;
 import org.elasticsearch.search.aggregations.AggregationBuilder;
 import org.elasticsearch.search.aggregations.AggregationBuilders;
@@ -430,6 +431,8 @@ public class SearchServiceImpl implements SearchService {
             eventKeyword=eventKeyword.substring(tag+1);
         }
 
+        boolQueryBuilder.must(QueryBuilders.termQuery("fid", fid));
+
         if (!roleKeyword.isEmpty())
         {
             String[] searchSplitArray1 = roleKeyword.trim().split("\\s+");
@@ -548,54 +551,43 @@ public class SearchServiceImpl implements SearchService {
         boolQueryBuilder.must(regionKeywordBoolQueryBuilder);
         boolQueryBuilder.must(roleKeywordBoolQueryBuilder);
         boolQueryBuilder.must(eventKeywordBoolQueryBuilder);
-        boolQueryBuilder.minimumShouldMatch(1);
+
+        RangeQueryBuilder rangeQueryBuilder=new RangeQueryBuilder("publishedDay");
+        if (!startPublishedDay.isEmpty() && !endPublishedDay.isEmpty())
+        {
+            SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+            try {
+                Date startDate = sdf.parse(startPublishedDay);
+                Date endDate = sdf.parse(endPublishedDay);
+                System.out.println(startDate);
+                System.out.println(endDate);
+                rangeQueryBuilder.from(startDate);
+                rangeQueryBuilder.to(endDate);
+            } catch (ParseException e) {
+                e.printStackTrace();
+            }
+        }
+        boolQueryBuilder.must(rangeQueryBuilder);
 
         nativeSearchQueryBuilder.withQuery(boolQueryBuilder);
-
+        //nativeSearchQueryBuilder.withQuery(rangeQueryBuilder);
         nativeSearchQueryBuilder.addAggregation(termsAggregationBuilder);
 
         NativeSearchQuery nativeSearchQuery=nativeSearchQueryBuilder.build();
         nativeSearchQuery.setMaxResults(0);
 
-        Aggregations aggregations=this.elasticsearchOperations.search(nativeSearchQuery,Data.class).getAggregations();
+        Aggregations aggregations=this.elasticsearchOperations.search(nativeSearchQuery,YuQingElasticSearch.class).getAggregations();
         Terms aggregation = aggregations.get("resource_count");
-        System.out.println(aggregation.getBuckets().size());
-
-        for (Terms.Bucket bucket : aggregation.getBuckets()) {
-            System.out.println("部门编号=" + bucket.getKey() + ";员工数=" + bucket.getDocCount());
-        }
-
-        System.out.println(aggregations.toString());
-
 
         JSONArray ret=new JSONArray();
-//        for (MonitoringWebsite monitoringWebsite:monitoringWebsiteList) {
-//            JSONObject jsonObject=new JSONObject();
-//            long num=0;
-//            List<Criteria> criterias=fangAnDao.FindCriteriasByFid(fid);
-//            for (Criteria criteria:criterias)
-//            {
-//                if (!startPublishedDay.isEmpty() && !endPublishedDay.isEmpty())
-//                {
-//                    SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
-//                    try {
-//                        Date startDate = sdf.parse(startPublishedDay);
-//                        Date endDate = sdf.parse(endPublishedDay);
-//                        criteria.subCriteria(new Criteria().and("publishedDay").between(startDate, endDate));
-//                    } catch (ParseException e) {
-//                        e.printStackTrace();
-//                    }
-//                }
-//                criteria.subCriteria(new Criteria("resource").is(monitoringWebsite.getName()));
-//                CriteriaQuery query = new CriteriaQuery(criteria);
-//                long searchHitCount = this.elasticsearchOperations.count(query, Data.class);
-//                num=num+searchHitCount;
-//            }
-//            jsonObject.put("name",monitoringWebsite.getName());
-//            jsonObject.put("label",monitoringWebsite.getName());
-//            jsonObject.put("value",num);
-//            ret.appendElement(jsonObject);
-//        }
+        for (Terms.Bucket bucket : aggregation.getBuckets()) {
+            JSONObject jsonObject=new JSONObject();
+            jsonObject.put("name",bucket.getKey());
+            jsonObject.put("label",bucket.getKey());
+            jsonObject.put("value",bucket.getDocCount());
+            ret.appendElement(jsonObject);
+        }
+
         return ret;
     }
 
