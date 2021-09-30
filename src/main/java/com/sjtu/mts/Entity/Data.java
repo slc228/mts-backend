@@ -9,7 +9,7 @@ import org.springframework.data.elasticsearch.annotations.FieldType;
 
 import java.util.Date;
 
-@Document(indexName = "yuqing")
+@Document(indexName = "yuqing_version2")
 @AllArgsConstructor
 @NoArgsConstructor
 @Getter
@@ -27,7 +27,7 @@ public class Data {
     @Field(type = FieldType.Date)
     private String publishedDay;
 
-    @Field(type = FieldType.Text)
+    @Field(type = FieldType.Keyword)
     private String resource;
 
     @Field(type = FieldType.Text)

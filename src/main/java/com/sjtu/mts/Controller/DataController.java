@@ -135,7 +135,7 @@ public class DataController {
 
     @GetMapping("/globalSearch/resourceCount")
     @ResponseBody
-    public ResourceCountResponse countByKeywordAndPublishedDayAndFromType(
+    public JSONArray countByKeywordAndPublishedDayAndFromType(
             @RequestParam("keyword") String keyword,
             @RequestParam("startPublishedDay") String startPublishedDay,
             @RequestParam("endPublishedDay") String endPublishedDay
@@ -145,7 +145,7 @@ public class DataController {
     }
     @GetMapping("/globalSearch/resourceCount2")
     @ResponseBody
-    public ResourceCountResponse countByKeywordAndPublishedDayAndFromType2(
+    public JSONArray countByKeywordAndPublishedDayAndFromType2(
             @RequestParam("fid") long fid,
             @RequestParam("startPublishedDay") String startPublishedDay,
             @RequestParam("endPublishedDay") String endPublishedDay
@@ -175,7 +175,7 @@ public class DataController {
     }
     @GetMapping("/globalSearch/amountTrendCount")
     @ResponseBody
-    public AmountTrendResponse countAmountTrendByKeywordAndPublishedDay(
+    public JSONObject countAmountTrendByKeywordAndPublishedDay(
             @RequestParam("keyword") String keyword,
             @RequestParam("startPublishedDay") String startPublishedDay,
             @RequestParam("endPublishedDay") String endPublishedDay
@@ -184,7 +184,7 @@ public class DataController {
     }
     @GetMapping("/globalSearch/amountTrendCount2")
     @ResponseBody
-    public AmountTrendResponse countAmountTrendByKeywordAndPublishedDay2(
+    public JSONObject countAmountTrendByKeywordAndPublishedDay2(
             @RequestParam("fid") long fid,
             @RequestParam("startPublishedDay") String startPublishedDay,
             @RequestParam("endPublishedDay") String endPublishedDay

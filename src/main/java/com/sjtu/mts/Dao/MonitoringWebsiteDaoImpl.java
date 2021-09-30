@@ -6,6 +6,8 @@ import com.sjtu.mts.Repository.MonitoringWebsiteRepository;
 import com.sjtu.mts.Repository.UserRightsRepository;
 import org.springframework.stereotype.Repository;
 
+import java.util.List;
+
 @Repository
 public class MonitoringWebsiteDaoImpl implements MonitoringWebsiteDao {
     private final MonitoringWebsiteRepository monitoringWebsiteRepository;
@@ -18,6 +20,12 @@ public class MonitoringWebsiteDaoImpl implements MonitoringWebsiteDao {
     public MonitoringWebsite save(MonitoringWebsite monitoringWebsite)
     {
         return monitoringWebsiteRepository.save(monitoringWebsite);
+    }
+
+    @Override
+    public List<MonitoringWebsite> findAll()
+    {
+        return monitoringWebsiteRepository.findAll();
     }
 
     @Override
