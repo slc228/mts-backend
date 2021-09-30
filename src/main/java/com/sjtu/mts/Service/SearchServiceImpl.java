@@ -3,10 +3,12 @@ package com.sjtu.mts.Service;
 import com.itextpdf.text.DocumentException;
 import com.itextpdf.text.pdf.BaseFont;
 
+import java.beans.Expression;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import com.sjtu.mts.Dao.*;
 import com.sjtu.mts.Entity.*;
+import com.sjtu.mts.Expression.ElasticSearchExpression;
 import com.sjtu.mts.Keyword.KeywordResponse;
 import com.sjtu.mts.Keyword.MultipleThreadExtraction;
 import com.sjtu.mts.Keyword.TextRankKeyword;
@@ -98,7 +100,10 @@ public class SearchServiceImpl implements SearchService {
     @Autowired
     private WeiboSpiderRpc weiboSpiderRpc;
 
-    public SearchServiceImpl(ElasticsearchOperations elasticsearchOperations,AreaRepository areaRepository,SensitiveWordRepository sensitiveWordRepository,SwordFidRepository swordFidRepository)
+    @Autowired
+    private ElasticSearchDao elasticSearchDao;
+
+    public SearchServiceImpl(ElasticsearchOperations elasticsearchOperations, AreaRepository areaRepository,SensitiveWordRepository sensitiveWordRepository,SwordFidRepository swordFidRepository)
     {
         this.elasticsearchOperations = elasticsearchOperations;
         this.areaRepository = areaRepository;
@@ -224,62 +229,33 @@ public class SearchServiceImpl implements SearchService {
     }
 
     @Override
-    public DataResponse Search(String keyword, String cflag, String startPublishedDay, String endPublishedDay,
+    public YuQingResponse Search(String keyword, String cflag, String startPublishedDay, String endPublishedDay,
                                String fromType, int page, int pageSize, int timeOrder)
     {
-        Criteria criteria = new Criteria();
+        // TODO
+        // Update cflag and fromType
+        ElasticSearchExpression expression = new ElasticSearchExpression();
+        expression.SetPageParameter(page, pageSize, timeOrder);
         if (!keyword.isEmpty())
-        {
-            String[] searchSplitArray1 = keyword.trim().split("\\s+");
-            List<String>searchSplitArray = Arrays.asList(searchSplitArray1);
-            criteria.subCriteria(new Criteria("content").in(searchSplitArray).or("title").in(searchSplitArray));
-        }
-        if (!cflag.isEmpty())
-        {
-            criteria.subCriteria(new Criteria().and("cflag").is(cflag));
-        }
-        if (!startPublishedDay.isEmpty() && !endPublishedDay.isEmpty())
-        {
-            SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
-            try {
-                Date startDate = sdf.parse(startPublishedDay);
-                Date endDate = sdf.parse(endPublishedDay);
-                criteria.subCriteria(new Criteria().and("publishedDay").between(startDate, endDate));
-            } catch (ParseException e) {
-                e.printStackTrace();
-            }
-        }
-        if (!fromType.isEmpty())
-        {
-            criteria.subCriteria(new Criteria().and("fromType").is(fromType));
-        }
-        CriteriaQuery query = new CriteriaQuery(criteria);
-        if (timeOrder == 0) {
-            query.setPageable(PageRequest.of(page, pageSize, Sort.by(Sort.Direction.DESC, "publishedDay")));
-        }
-        else {
-            query.setPageable(PageRequest.of(page, pageSize, Sort.by(Sort.Direction.ASC, "publishedDay")));
-        }
-        SearchHits<Data> searchHits = this.elasticsearchOperations.search(query, Data.class);
-        SearchPage<Data> searchPage = SearchHitSupport.searchPageFor(searchHits, query.getPageable());
-        long hitNumber = this.elasticsearchOperations.count(query, Data.class);
+            expression.JoinTitleAndContentCriteria(keyword);
+        if (startPublishedDay != null && endPublishedDay != null &&
+                !startPublishedDay.isEmpty() && !endPublishedDay.isEmpty() )
+            expression.JoinPublishedDayCriteria(startPublishedDay, endPublishedDay);
+        List<YuQing> yuQings = elasticSearchDao.findByExpression(expression);
+        long hitNumber = yuQings.size();
 
-        List<Data> pageDataContent = new ArrayList<>();
-        for (SearchHit<Data> hit : searchPage.getSearchHits())
-        {
-            pageDataContent.add(hit.getContent());
-        }
-
-        DataResponse result = new DataResponse();
-        result.setHitNumber(hitNumber);
-        result.setDataContent(pageDataContent);
-
-        return result;
+        YuQingResponse response = new YuQingResponse();
+        response.setHitNumber(hitNumber);
+        response.setYuQingContent(yuQings);
+        return response;
     }
+
     @Override
-    public DataResponse SearchWithObject(String keyword, String sensitiveType, String emotion, String startPublishedDay, String endPublishedDay,
+    public YuQingResponse SearchWithObject(String keyword, String sensitiveType, String emotion, String startPublishedDay, String endPublishedDay,
                                          String fromType, int page, int pageSize, int timeOrder,String keywords)
     {
+        // TODO
+        // Update fromType
         String eventKeyword = keywords;
         eventKeyword=eventKeyword.substring(1,eventKeyword.length()-1);
         List<String> events=new ArrayList<String>();
@@ -294,125 +270,79 @@ public class SearchServiceImpl implements SearchService {
             }
         }
 
-        List<Data> pageDataContent = new ArrayList<>();
-        for(int numOfEvents=0;numOfEvents<events.size();numOfEvents++)
+        List<YuQing> yuQings = new ArrayList<>();
+        final boolean hasPublishedDay = startPublishedDay != null && endPublishedDay != null &&
+                !startPublishedDay.isEmpty() && !endPublishedDay.isEmpty();
+        for (String event : events)
         {
-            Criteria criteria=new Criteria();
-            if (!keyword.isEmpty()){
-                String[] searchSplitArray1 = keyword.trim().split("\\s+");
-                List<String>searchSplitArray = Arrays.asList(searchSplitArray1);
-                criteria.subCriteria(new Criteria("content").in(searchSplitArray).or("title").in(searchSplitArray));
-            }
+            ElasticSearchExpression expression = new ElasticSearchExpression();
+            if (!keyword.isEmpty())
+                expression.JoinTitleAndContentCriteria(keyword);
             if (!sensitiveType.isEmpty())
-            {
-                criteria.subCriteria(new Criteria("sensitiveType").in(SensitiveTypeStr(sensitiveType)));
-            }
+                expression.JoinSensitiveTypeCriteria(sensitiveType);
             if (!emotion.isEmpty())
+                expression.JoinEmotionCriteria(emotion);
+            if (hasPublishedDay)
+                expression.JoinPublishedDayCriteria(startPublishedDay, endPublishedDay);
+            if (!event.isEmpty())
             {
-                criteria.subCriteria(new Criteria("emotion").contains(EmotionStr(emotion)));
-            }
-            if (!startPublishedDay.equals("null")&& !endPublishedDay.equals("null")&&!startPublishedDay.isEmpty()&&!endPublishedDay.isEmpty())
-            {
-                SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
-                try {
-                    Date startDate = sdf.parse(startPublishedDay);
-                    Date endDate = sdf.parse(endPublishedDay);
-                    criteria.subCriteria(new Criteria().and("publishedDay").between(startDate, endDate));
-                } catch (ParseException e) {
-                    e.printStackTrace();
-                }
-            }
-            if (!fromType.isEmpty())
-            {
-                criteria.subCriteria(new Criteria().and("fromType").is(fromType));
-            }
-            if (!events.get(numOfEvents).isEmpty())
-            {
-                String[] searchSplitArray1 = events.get(numOfEvents).trim().split("\\s+");
+                String[] searchSplitArray1 = event.trim().split("\\s+");
                 List<String>searchSplitArray = Arrays.asList(searchSplitArray1);
                 if(searchSplitArray.size()>1){
                     for (String searchString : searchSplitArray) {
                         List<String> subArray = new LinkedList<>();
                         subArray.add(searchString);
-                        criteria.subCriteria(new Criteria("content").in(subArray).or("title").in(subArray));
+                        expression.JoinTitleAndContentCriteria(subArray);
                     }
                 }else {
-                    criteria.subCriteria(new Criteria("content").in(searchSplitArray).or("title").in(searchSplitArray));
+                    expression.JoinTitleAndContentCriteria(searchSplitArray);
                 }
             }
-            CriteriaQuery query = new CriteriaQuery(criteria);
-            SearchHits<Data> searchHits = this.elasticsearchOperations.search(query, Data.class);
-            for (SearchHit<Data> hit : searchHits.getSearchHits())
-            {
-                pageDataContent.add(hit.getContent());
-            }
+            List<YuQing> searchResults = elasticSearchDao.findByExpression(expression);
+            yuQings.addAll(searchResults);
         }
 
         if (events.size()==0)
         {
-            Criteria criteria=new Criteria();
-            if (!keyword.isEmpty()){
-                String[] searchSplitArray1 = keyword.trim().split("\\s+");
-                List<String>searchSplitArray = Arrays.asList(searchSplitArray1);
-                criteria.subCriteria(new Criteria("content").in(searchSplitArray).or("title").in(searchSplitArray));
-            }
+            ElasticSearchExpression expression = new ElasticSearchExpression();
+            if (!keyword.isEmpty())
+                expression.JoinTitleAndContentCriteria(keyword);
             if (!sensitiveType.isEmpty())
-            {
-                criteria.subCriteria(new Criteria("sensitiveType").in(SensitiveTypeStr(sensitiveType)));
-            }
+                expression.JoinSensitiveTypeCriteria(sensitiveType);
             if (!emotion.isEmpty())
-            {
-                criteria.subCriteria(new Criteria("emotion").contains(EmotionStr(emotion)));
-            }
-            if (!startPublishedDay.equals("null")&& !endPublishedDay.equals("null")&&!startPublishedDay.isEmpty()&&!endPublishedDay.isEmpty())
-            {
-                SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
-                try {
-                    Date startDate = sdf.parse(startPublishedDay);
-                    Date endDate = sdf.parse(endPublishedDay);
-                    criteria.subCriteria(new Criteria().and("publishedDay").between(startDate, endDate));
-                } catch (ParseException e) {
-                    e.printStackTrace();
-                }
-            }
-            if (!fromType.isEmpty())
-            {
-                criteria.subCriteria(new Criteria().and("fromType").is(fromType));
-            }
-            CriteriaQuery query = new CriteriaQuery(criteria);
-            SearchHits<Data> searchHits = this.elasticsearchOperations.search(query, Data.class);
-            for (SearchHit<Data> hit : searchHits.getSearchHits())
-            {
-                pageDataContent.add(hit.getContent());
-            }
+                expression.JoinEmotionCriteria(emotion);
+            if (hasPublishedDay)
+                expression.JoinPublishedDayCriteria(startPublishedDay, endPublishedDay);
+            List<YuQing> searchResults = elasticSearchDao.findByExpression(expression);
+            yuQings.addAll(searchResults);
         }
 
         if (timeOrder == 0) {
-            Collections.sort(pageDataContent , (Data b1, Data b2) -> b2.getPublishedDay().compareTo(b1.getPublishedDay()));
+            Collections.sort(yuQings, (YuQing b1, YuQing b2) -> b2.getPublishedDay().compareTo(b1.getPublishedDay()));
         }
         else {
-            Collections.sort(pageDataContent , (Data b1, Data b2) -> b1.getPublishedDay().compareTo(b2.getPublishedDay()));
+            Collections.sort(yuQings, (YuQing b1, YuQing b2) -> b1.getPublishedDay().compareTo(b2.getPublishedDay()));
         }
 
         /*Collections.sort(pageDataContent,(Data b1, Data b2) -> (EmotionToInt(b1.getEmotion())>EmotionToInt(b2.getEmotion()))?-1:
             ((EmotionToInt(b1.getEmotion())==EmotionToInt(b2.getEmotion()))?0:1));*/
 
-        Collections.sort(pageDataContent,(Data b1, Data b2) -> (SensitiveTypeToInt(b1.getSensitiveType())>SensitiveTypeToInt(b2.getSensitiveType()))?-1:
+        Collections.sort(yuQings, (YuQing b1, YuQing b2) -> (SensitiveTypeToInt(b1.getSensitiveType())>SensitiveTypeToInt(b2.getSensitiveType()))?-1:
                 ((SensitiveTypeToInt(b1.getSensitiveType())==SensitiveTypeToInt(b2.getSensitiveType()))?0:1));
 
-        int hitNumber=pageDataContent.size();
+        int hitNumber=yuQings.size();
 
-        List<Data> resultDataContent = new ArrayList<>();
+        List<YuQing> resultDataContent = new ArrayList<>();
         if ((page+1)*pageSize>hitNumber)
         {
-            resultDataContent=pageDataContent.subList(page*pageSize,hitNumber);
+            resultDataContent=yuQings.subList(page*pageSize,hitNumber);
         }else{
-            resultDataContent=pageDataContent.subList(page*pageSize,(page+1)*pageSize);
+            resultDataContent=yuQings.subList(page*pageSize,(page+1)*pageSize);
         }
 
-        DataResponse result = new DataResponse();
+        YuQingResponse result = new YuQingResponse();
         result.setHitNumber(hitNumber);
-        result.setDataContent(resultDataContent);
+        result.setYuQingContent(resultDataContent);
 
         return result;
     };
