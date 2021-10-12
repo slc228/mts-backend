@@ -12,11 +12,13 @@ import com.sjtu.mts.Expression.ElasticSearchExpression;
 import com.sjtu.mts.Keyword.KeywordResponse;
 import com.sjtu.mts.Keyword.MultipleThreadExtraction;
 import com.sjtu.mts.Keyword.TextRankKeyword;
+import com.sjtu.mts.Query.ElasticSearchQuery;
 import com.sjtu.mts.Repository.AreaRepository;
 import com.sjtu.mts.Repository.SensitiveWordRepository;
 import com.sjtu.mts.Repository.SwordFidRepository;
 import com.sjtu.mts.Response.*;
 import com.sjtu.mts.rpc.WeiboSpiderRpc;
+import javafx.util.Builder;
 import net.minidev.json.JSONArray;
 import net.minidev.json.JSONObject;
 import org.apache.poi.hssf.usermodel.HSSFWorkbook;
@@ -34,6 +36,7 @@ import org.elasticsearch.search.aggregations.bucket.terms.ParsedStringTerms;
 import org.elasticsearch.search.aggregations.bucket.terms.StringTerms;
 import org.elasticsearch.search.aggregations.bucket.terms.Terms;
 import org.elasticsearch.search.aggregations.bucket.terms.TermsAggregationBuilder;
+import org.elasticsearch.search.sort.SortBuilder;
 import org.hibernate.Hibernate;
 import org.openqa.selenium.WebElement;
 import org.openqa.selenium.json.Json;
@@ -249,14 +252,30 @@ public class SearchServiceImpl implements SearchService {
     {
         // TODO
         // Update cflag and fromType
-        ElasticSearchExpression expression = new ElasticSearchExpression();
-        expression.SetPageParameter(page, pageSize, timeOrder);
+//        ElasticSearchExpression expression = new ElasticSearchExpression();
+//
+//        expression.SetPageParameter(page, pageSize, timeOrder);
+//        if (!keyword.isEmpty())
+//            expression.JoinTitleAndContentCriteria(keyword);
+//        if (startPublishedDay != null && endPublishedDay != null &&
+//                !startPublishedDay.isEmpty() && !endPublishedDay.isEmpty() )
+//            expression.JoinPublishedDayCriteria(startPublishedDay, endPublishedDay);
+//        List<YuQing> yuQings = elasticSearchDao.findByExpression(expression);
+//        long hitNumber = yuQings.size();
+//
+//        YuQingResponse response = new YuQingResponse();
+//        response.setHitNumber(hitNumber);
+//        response.setYuQingContent(yuQings);
+        //return response;
+
+        ElasticSearchQuery query=new ElasticSearchQuery();
+        query.SetPageParameter(page,pageSize,timeOrder);
         if (!keyword.isEmpty())
-            expression.JoinTitleAndContentCriteria(keyword);
+            query.JoinTitleAndContentQueryBuilders(keyword);
         if (startPublishedDay != null && endPublishedDay != null &&
                 !startPublishedDay.isEmpty() && !endPublishedDay.isEmpty() )
-            expression.JoinPublishedDayCriteria(startPublishedDay, endPublishedDay);
-        List<YuQing> yuQings = elasticSearchDao.findByExpression(expression);
+            query.JoinPublishedDayQueryBuilders(startPublishedDay,endPublishedDay);
+        List<YuQing> yuQings = elasticSearchDao.findByQuery(query);
         long hitNumber = yuQings.size();
 
         YuQingResponse response = new YuQingResponse();
@@ -407,7 +426,6 @@ public class SearchServiceImpl implements SearchService {
 
         TermsAggregationBuilder termsAggregationBuilder= AggregationBuilders.terms("resource_count").field("resource").size(20);
         NativeSearchQueryBuilder nativeSearchQueryBuilder=new NativeSearchQueryBuilder();
-
 
         BoolQueryBuilder boolQueryBuilder=new BoolQueryBuilder();
 

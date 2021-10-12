@@ -4,6 +4,7 @@ import com.sjtu.mts.Entity.Data;
 import com.sjtu.mts.Entity.YuQing;
 import com.sjtu.mts.Entity.YuQingElasticSearch;
 import com.sjtu.mts.Expression.ElasticSearchExpression;
+import com.sjtu.mts.Query.ElasticSearchQuery;
 import com.sjtu.mts.rpc.HBaseHandleRpc;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.elasticsearch.core.ElasticsearchOperations;
@@ -43,4 +44,22 @@ public class ElasticSearchDaoImpl implements ElasticSearchDao {
         }
         return result;
     }
+
+    @Override
+    public List<YuQing> findByQuery(ElasticSearchQuery query) {
+        List<YuQing> result = new ArrayList<>();
+        SearchHits<YuQingElasticSearch> searchHits = this.elasticsearchOperations.search(
+                query.GetQuery(),
+                YuQingElasticSearch.class
+        );
+
+        for (SearchHit<YuQingElasticSearch> hit : searchHits.getSearchHits())
+        {
+            String yuQingUrl = hit.getContent().getYuqing_url();
+            YuQing yuqing = hBaseHandleRpc.GetYuqing(yuQingUrl);
+            result.add(yuqing);
+        }
+        return result;
+    }
+
 }
