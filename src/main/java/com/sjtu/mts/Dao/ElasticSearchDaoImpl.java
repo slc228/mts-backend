@@ -56,7 +56,9 @@ public class ElasticSearchDaoImpl implements ElasticSearchDao {
         for (SearchHit<YuQingElasticSearch> hit : searchHits.getSearchHits())
         {
             String yuQingUrl = hit.getContent().getYuqing_url();
+            System.out.println(yuQingUrl);
             YuQing yuqing = hBaseHandleRpc.GetYuqing(yuQingUrl);
+            System.out.println(yuqing);
             result.add(yuqing);
         }
         return result;

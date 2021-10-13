@@ -1,9 +1,13 @@
 package com.sjtu.mts.Query;
 
+import com.sjtu.mts.Dao.FangAnDao;
+import com.sjtu.mts.Entity.FangAn;
 import com.sjtu.mts.Expression.ElasticSearchExpression;
+import com.sjtu.mts.Repository.AreaRepository;
 import org.elasticsearch.index.query.BoolQueryBuilder;
 import org.elasticsearch.index.query.QueryBuilders;
 import org.elasticsearch.index.query.RangeQueryBuilder;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
@@ -14,12 +18,14 @@ import org.springframework.data.elasticsearch.core.query.NativeSearchQueryBuilde
 
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
+import java.util.stream.Collectors;
 
 public class ElasticSearchQuery {
-    private final BoolQueryBuilder boolQueryBuilder;
+    public final BoolQueryBuilder boolQueryBuilder;
     private int page;
     private int pageSize;
     private int timeOrder;
@@ -27,7 +33,7 @@ public class ElasticSearchQuery {
     public ElasticSearchQuery() {
         boolQueryBuilder= new BoolQueryBuilder();
         this.page = 0;
-        this.pageSize = 10;
+        this.pageSize = 20;
         this.timeOrder = -2;
     }
 

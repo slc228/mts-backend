@@ -268,6 +268,9 @@ public class SearchServiceImpl implements SearchService {
 //        response.setYuQingContent(yuQings);
         //return response;
 
+        System.out.println(keyword);
+        System.out.println(startPublishedDay);
+        System.out.println(endPublishedDay);
         ElasticSearchQuery query=new ElasticSearchQuery();
         query.SetPageParameter(page,pageSize,timeOrder);
         if (!keyword.isEmpty())
@@ -277,6 +280,7 @@ public class SearchServiceImpl implements SearchService {
             query.JoinPublishedDayQueryBuilders(startPublishedDay,endPublishedDay);
         List<YuQing> yuQings = elasticSearchDao.findByQuery(query);
         long hitNumber = yuQings.size();
+        System.out.println(hitNumber);
 
         YuQingResponse response = new YuQingResponse();
         response.setHitNumber(hitNumber);
@@ -303,6 +307,20 @@ public class SearchServiceImpl implements SearchService {
                 eventKeyword=eventKeyword.substring(tag+1);
             }
         }
+
+        ElasticSearchQuery query=new ElasticSearchQuery();
+        query.SetPageParameter(page,pageSize,timeOrder);
+        if (!keyword.isEmpty())
+            query.JoinTitleAndContentQueryBuilders(keyword);
+        if(events.size()!=0)
+            query.JoinTitleAndContentQueryBuilders(events);
+        if (!sensitiveType.isEmpty())
+            query.JoinSensitiveTypeQueryBuilders(sensitiveType);
+        if (!emotion.isEmpty())
+            query.JoinEmotionQueryBuilders(emotion);
+        if (startPublishedDay != null && endPublishedDay != null &&
+                !startPublishedDay.isEmpty() && !endPublishedDay.isEmpty() )
+            query.JoinPublishedDayQueryBuilders(startPublishedDay,endPublishedDay);
 
         List<YuQing> yuQings = new ArrayList<>();
         final boolean hasPublishedDay = startPublishedDay != null && endPublishedDay != null &&
@@ -587,8 +605,10 @@ public class SearchServiceImpl implements SearchService {
         }
         boolQueryBuilder.must(rangeQueryBuilder);
 
+        ElasticSearchQuery query=new ElasticSearchQuery();
+        boolQueryBuilder=query.boolQueryBuilder;
+
         nativeSearchQueryBuilder.withQuery(boolQueryBuilder);
-        //nativeSearchQueryBuilder.withQuery(rangeQueryBuilder);
         nativeSearchQueryBuilder.addAggregation(termsAggregationBuilder);
 
         NativeSearchQuery nativeSearchQuery=nativeSearchQueryBuilder.build();
