@@ -18,7 +18,6 @@ import com.sjtu.mts.Repository.SensitiveWordRepository;
 import com.sjtu.mts.Repository.SwordFidRepository;
 import com.sjtu.mts.Response.*;
 import com.sjtu.mts.rpc.WeiboSpiderRpc;
-import javafx.util.Builder;
 import net.minidev.json.JSONArray;
 import net.minidev.json.JSONObject;
 import org.apache.poi.hssf.usermodel.HSSFWorkbook;
@@ -247,53 +246,32 @@ public class SearchServiceImpl implements SearchService {
     }
 
     @Override
-    public YuQingResponse Search(String keyword, String cflag, String startPublishedDay, String endPublishedDay,
-                               String fromType, int page, int pageSize, int timeOrder)
+    public YuQingResponse Search(String keyword, String startPublishedDay, String endPublishedDay,
+                                 String sensitiveFlag, int page, int pageSize, int timeOrder)
     {
-        // TODO
-        // Update cflag and fromType
-//        ElasticSearchExpression expression = new ElasticSearchExpression();
-//
-//        expression.SetPageParameter(page, pageSize, timeOrder);
-//        if (!keyword.isEmpty())
-//            expression.JoinTitleAndContentCriteria(keyword);
-//        if (startPublishedDay != null && endPublishedDay != null &&
-//                !startPublishedDay.isEmpty() && !endPublishedDay.isEmpty() )
-//            expression.JoinPublishedDayCriteria(startPublishedDay, endPublishedDay);
-//        List<YuQing> yuQings = elasticSearchDao.findByExpression(expression);
-//        long hitNumber = yuQings.size();
-//
-//        YuQingResponse response = new YuQingResponse();
-//        response.setHitNumber(hitNumber);
-//        response.setYuQingContent(yuQings);
-        //return response;
-
-        System.out.println(keyword);
-        System.out.println(startPublishedDay);
-        System.out.println(endPublishedDay);
-        ElasticSearchQuery query=new ElasticSearchQuery();
+        ElasticSearchQuery query=new ElasticSearchQuery(areaRepository,fangAnDao);
         query.SetPageParameter(page,pageSize,timeOrder);
         if (!keyword.isEmpty())
             query.JoinTitleAndContentQueryBuilders(keyword);
         if (startPublishedDay != null && endPublishedDay != null &&
                 !startPublishedDay.isEmpty() && !endPublishedDay.isEmpty() )
             query.JoinPublishedDayQueryBuilders(startPublishedDay,endPublishedDay);
-        List<YuQing> yuQings = elasticSearchDao.findByQuery(query);
-        long hitNumber = yuQings.size();
-        System.out.println(hitNumber);
+        if (Objects.equals(sensitiveFlag, "1"))
+        {
+            query.JoinSensitiveTypeQueryBuilders("政治敏感 ");
+        }
 
-        YuQingResponse response = new YuQingResponse();
-        response.setHitNumber(hitNumber);
-        response.setYuQingContent(yuQings);
+        query.SortBytimeOrder();
+        query.SetPageableAndBoolQuery();
+
+        YuQingResponse response = elasticSearchDao.findByQuery(query);
         return response;
     }
 
     @Override
     public YuQingResponse SearchWithObject(String keyword, String sensitiveType, String emotion, String startPublishedDay, String endPublishedDay,
-                                         String fromType, int page, int pageSize, int timeOrder,String keywords)
+                                         String resource, int page, int pageSize, int timeOrder,String keywords)
     {
-        // TODO
-        // Update fromType
         String eventKeyword = keywords;
         eventKeyword=eventKeyword.substring(1,eventKeyword.length()-1);
         List<String> events=new ArrayList<String>();
@@ -308,390 +286,122 @@ public class SearchServiceImpl implements SearchService {
             }
         }
 
-        ElasticSearchQuery query=new ElasticSearchQuery();
+        ElasticSearchQuery query=new ElasticSearchQuery(areaRepository,fangAnDao);
         query.SetPageParameter(page,pageSize,timeOrder);
         if (!keyword.isEmpty())
             query.JoinTitleAndContentQueryBuilders(keyword);
-        if(events.size()!=0)
+        if (events.size()>0)
             query.JoinTitleAndContentQueryBuilders(events);
-        if (!sensitiveType.isEmpty())
-            query.JoinSensitiveTypeQueryBuilders(sensitiveType);
-        if (!emotion.isEmpty())
-            query.JoinEmotionQueryBuilders(emotion);
-        if (startPublishedDay != null && endPublishedDay != null &&
+        if (!Objects.equals(startPublishedDay, "null") && !Objects.equals(endPublishedDay, "null") &&
                 !startPublishedDay.isEmpty() && !endPublishedDay.isEmpty() )
             query.JoinPublishedDayQueryBuilders(startPublishedDay,endPublishedDay);
+        if (!sensitiveType.isEmpty())
+            query.JoinSensitiveTypeQueryBuilders(sensitiveType);
+        if (!resource.isEmpty())
+            query.JoinResourceQueryBuilders(resource);
+        if (!emotion.isEmpty())
+            query.JoinEmotionQueryBuilders(emotion);
+        query.SortBySensitiveType();
+        query.SortBytimeOrder();
+        query.SetPageableAndBoolQuery();
 
-        List<YuQing> yuQings = new ArrayList<>();
-        final boolean hasPublishedDay = startPublishedDay != null && endPublishedDay != null &&
-                !startPublishedDay.isEmpty() && !endPublishedDay.isEmpty();
-        for (String event : events)
-        {
-            ElasticSearchExpression expression = new ElasticSearchExpression();
-            if (!keyword.isEmpty())
-                expression.JoinTitleAndContentCriteria(keyword);
-            if (!sensitiveType.isEmpty())
-                expression.JoinSensitiveTypeCriteria(sensitiveType);
-            if (!emotion.isEmpty())
-                expression.JoinEmotionCriteria(emotion);
-            if (hasPublishedDay)
-                expression.JoinPublishedDayCriteria(startPublishedDay, endPublishedDay);
-            if (!event.isEmpty())
-            {
-                String[] searchSplitArray1 = event.trim().split("\\s+");
-                List<String>searchSplitArray = Arrays.asList(searchSplitArray1);
-                if(searchSplitArray.size()>1){
-                    for (String searchString : searchSplitArray) {
-                        List<String> subArray = new LinkedList<>();
-                        subArray.add(searchString);
-                        expression.JoinTitleAndContentCriteria(subArray);
-                    }
-                }else {
-                    expression.JoinTitleAndContentCriteria(searchSplitArray);
-                }
-            }
-            List<YuQing> searchResults = elasticSearchDao.findByExpression(expression);
-            yuQings.addAll(searchResults);
-        }
-
-        if (events.size()==0)
-        {
-            ElasticSearchExpression expression = new ElasticSearchExpression();
-            if (!keyword.isEmpty())
-                expression.JoinTitleAndContentCriteria(keyword);
-            if (!sensitiveType.isEmpty())
-                expression.JoinSensitiveTypeCriteria(sensitiveType);
-            if (!emotion.isEmpty())
-                expression.JoinEmotionCriteria(emotion);
-            if (hasPublishedDay)
-                expression.JoinPublishedDayCriteria(startPublishedDay, endPublishedDay);
-            List<YuQing> searchResults = elasticSearchDao.findByExpression(expression);
-            yuQings.addAll(searchResults);
-        }
-
-        if (timeOrder == 0) {
-            Collections.sort(yuQings, (YuQing b1, YuQing b2) -> b2.getPublishedDay().compareTo(b1.getPublishedDay()));
-        }
-        else {
-            Collections.sort(yuQings, (YuQing b1, YuQing b2) -> b1.getPublishedDay().compareTo(b2.getPublishedDay()));
-        }
-
-        /*Collections.sort(pageDataContent,(Data b1, Data b2) -> (EmotionToInt(b1.getEmotion())>EmotionToInt(b2.getEmotion()))?-1:
-            ((EmotionToInt(b1.getEmotion())==EmotionToInt(b2.getEmotion()))?0:1));*/
-
-        Collections.sort(yuQings, (YuQing b1, YuQing b2) -> (SensitiveTypeToInt(b1.getSensitiveType())>SensitiveTypeToInt(b2.getSensitiveType()))?-1:
-                ((SensitiveTypeToInt(b1.getSensitiveType())==SensitiveTypeToInt(b2.getSensitiveType()))?0:1));
-
-        int hitNumber=yuQings.size();
-
-        List<YuQing> resultDataContent = new ArrayList<>();
-        if ((page+1)*pageSize>hitNumber)
-        {
-            resultDataContent=yuQings.subList(page*pageSize,hitNumber);
-        }else{
-            resultDataContent=yuQings.subList(page*pageSize,(page+1)*pageSize);
-        }
-
-        YuQingResponse result = new YuQingResponse();
-        result.setHitNumber(hitNumber);
-        result.setYuQingContent(resultDataContent);
-
-        return result;
+        YuQingResponse response = elasticSearchDao.findByQuery(query);
+        return response;
     };
 
     @Override
-    public JSONArray globalSearchResourceCount(String keyword, String startPublishedDay, String endPublishedDay) {
-        List<MonitoringWebsite> monitoringWebsiteList=monitoringWebsiteDao.findAll();
-        JSONArray ret=new JSONArray();
-        for (MonitoringWebsite monitoringWebsite:monitoringWebsiteList) {
-            JSONObject jsonObject=new JSONObject();
-            long num=0;
-            Criteria criteria = new Criteria();
-            if (!keyword.isEmpty())
-            {
-                String[] searchSplitArray = keyword.trim().split("\\s+");;
-                for (String searchString : searchSplitArray) {
-                    criteria.subCriteria(new Criteria().and("content").contains(searchString).
-                            or("title").contains(searchString));
-                }
-            }
-            if (!startPublishedDay.isEmpty() && !endPublishedDay.isEmpty())
-            {
-                SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
-                try {
-                    Date startDate = sdf.parse(startPublishedDay);
-                    Date endDate = sdf.parse(endPublishedDay);
-                    criteria.subCriteria(new Criteria().and("publishedDay").between(startDate, endDate));
-                } catch (ParseException e) {
-                    e.printStackTrace();
-                }
-            }
-            criteria.subCriteria(new Criteria("resource").is(monitoringWebsite.getName()));
-            CriteriaQuery query = new CriteriaQuery(criteria);
-            long searchHitCount = this.elasticsearchOperations.count(query, Data.class);
-            num=num+searchHitCount;
-            jsonObject.put("name",monitoringWebsite.getName());
-            jsonObject.put("label",monitoringWebsite.getName());
-            jsonObject.put("value",num);
-            ret.appendElement(jsonObject);
-        }
-        return ret;
-    }
-
-    @Override
-    public JSONArray globalSearchResourceCountByFid(long fid,String startPublishedDay, String endPublishedDay){
-        List<MonitoringWebsite> monitoringWebsiteList=monitoringWebsiteDao.findAll();
-
+    public JSONArray getResources()
+    {
         TermsAggregationBuilder termsAggregationBuilder= AggregationBuilders.terms("resource_count").field("resource").size(20);
         NativeSearchQueryBuilder nativeSearchQueryBuilder=new NativeSearchQueryBuilder();
-
-        BoolQueryBuilder boolQueryBuilder=new BoolQueryBuilder();
-
-        FangAn fangAn = fangAnDao.findByFid(fid);
-        String regionKeyword = fangAn.getRegionKeyword();
-        int regionKeywordMatch = fangAn.getRegionKeywordMatch();
-        BoolQueryBuilder regionKeywordBoolQueryBuilder=new BoolQueryBuilder();
-
-        String roleKeyword = fangAn.getRoleKeyword();
-        int roleKeywordMatch = fangAn.getRoleKeywordMatch();
-        BoolQueryBuilder roleKeywordBoolQueryBuilder=new BoolQueryBuilder();
-
-        String eventKeyword = fangAn.getEventKeyword();
-        List<String> events=new ArrayList<String>();
-        BoolQueryBuilder eventKeywordBoolQueryBuilder=new BoolQueryBuilder();
-
-        while(eventKeyword.length()>0)
-        {
-            int tag=eventKeyword.indexOf('+');
-            events.add(eventKeyword.substring(0,tag));
-            eventKeyword=eventKeyword.substring(tag+1);
-        }
-
-        boolQueryBuilder.must(QueryBuilders.termQuery("fid", fid));
-
-        if (!roleKeyword.isEmpty())
-        {
-            String[] searchSplitArray1 = roleKeyword.trim().split("\\s+");
-            List<String>searchSplitArray = Arrays.asList(searchSplitArray1);
-            BoolQueryBuilder contentBoolQueryBuilder=new BoolQueryBuilder();
-            BoolQueryBuilder titleBoolQueryBuilder=new BoolQueryBuilder();
-            for (String searchString : searchSplitArray) {
-                if (roleKeywordMatch == 1) {
-                    contentBoolQueryBuilder.must(QueryBuilders.matchQuery("content", searchString));
-                    titleBoolQueryBuilder.must(QueryBuilders.matchQuery("title", searchString));
-                } else {
-                    contentBoolQueryBuilder.should(QueryBuilders.matchQuery("content", searchString));
-                    titleBoolQueryBuilder.should(QueryBuilders.matchQuery("title", searchString));
-                }
-            }
-            roleKeywordBoolQueryBuilder.should(contentBoolQueryBuilder);
-            roleKeywordBoolQueryBuilder.should(titleBoolQueryBuilder);
-        }
-
-        for (int numOfEvents=0;numOfEvents<events.size();numOfEvents++)
-        {
-            String[] searchSplitArray1 = events.get(numOfEvents).trim().split("\\s+");
-            List<String>searchSplitArray = Arrays.asList(searchSplitArray1);
-            BoolQueryBuilder contentBoolQueryBuilder=new BoolQueryBuilder();
-            BoolQueryBuilder titleBoolQueryBuilder=new BoolQueryBuilder();
-            for (String searchString : searchSplitArray) {
-                contentBoolQueryBuilder.must(QueryBuilders.matchQuery("content",searchString));
-                titleBoolQueryBuilder.must(QueryBuilders.matchQuery("title",searchString));
-            }
-            eventKeywordBoolQueryBuilder.should(contentBoolQueryBuilder);
-            eventKeywordBoolQueryBuilder.should(titleBoolQueryBuilder);
-        }
-
-        if (!regionKeyword.isEmpty()) {
-            String[] searchSplitArray1 = regionKeyword.trim().split("\\s+");
-            List<String> searchSplitArray = Arrays.asList(searchSplitArray1);
-            if (searchSplitArray.size() == 1) {
-                BoolQueryBuilder contentBoolQueryBuilder = new BoolQueryBuilder();
-                BoolQueryBuilder titleBoolQueryBuilder = new BoolQueryBuilder();
-                List<Integer> codeid = areaRepository.findCodeidByCityName(searchSplitArray.get(0));
-                List<String> citys = new ArrayList<>();
-                for (Integer co : codeid) {
-                    List<String> tmp = areaRepository.findCityNameByCodeid(co);
-                    for (int i = 0; i < tmp.size(); i++) {
-                        tmp.set(i, tmp.get(i).replaceAll("\\s*", ""));
-                        if (tmp.get(i).contains("市辖") || tmp.get(i).contains("县辖")) {
-                            tmp.remove(i);
-                        }
-                    }
-                    citys.addAll(tmp);
-                }
-
-                citys = (List) citys.stream().distinct().collect(Collectors.toList());//去重
-                for (String city : citys) {
-                    contentBoolQueryBuilder.should(QueryBuilders.matchQuery("content", city));
-                    titleBoolQueryBuilder.should(QueryBuilders.matchQuery("title", city));
-                }
-                regionKeywordBoolQueryBuilder.should(contentBoolQueryBuilder);
-                regionKeywordBoolQueryBuilder.should(titleBoolQueryBuilder);
-            } else if (searchSplitArray.size() > 1 && regionKeywordMatch == 1) {
-                BoolQueryBuilder allContentBoolQueryBuilder = new BoolQueryBuilder();
-                BoolQueryBuilder allTitleBoolQueryBuilder = new BoolQueryBuilder();
-                for (String searchString : searchSplitArray) {
-                    BoolQueryBuilder contentBoolQueryBuilder = new BoolQueryBuilder();
-                    BoolQueryBuilder titleBoolQueryBuilder = new BoolQueryBuilder();
-                    List<Integer> codeid = areaRepository.findCodeidByCityName(searchString);
-                    List<String> citys = new ArrayList<>();
-                    for (Integer co : codeid) {
-                        List<String> tmp = areaRepository.findCityNameByCodeid(co);
-                        for (int i = 0; i < tmp.size(); i++) {
-                            tmp.set(i, tmp.get(i).replaceAll("\\s*", ""));
-                            if (tmp.get(i).contains("市辖") || tmp.get(i).contains("县辖")) {
-                                tmp.remove(i);
-                            }
-                        }
-                        citys.addAll(tmp);
-                    }
-
-                    citys = (List) citys.stream().distinct().collect(Collectors.toList());//去重
-                    for (String city : citys) {
-                        contentBoolQueryBuilder.should(QueryBuilders.matchQuery("content", city));
-                        titleBoolQueryBuilder.should(QueryBuilders.matchQuery("title", city));
-                    }
-                    allContentBoolQueryBuilder.must(contentBoolQueryBuilder);
-                    allTitleBoolQueryBuilder.must(titleBoolQueryBuilder);
-                }
-                regionKeywordBoolQueryBuilder.should(allContentBoolQueryBuilder);
-                regionKeywordBoolQueryBuilder.should(allTitleBoolQueryBuilder);
-            } else if (searchSplitArray.size() > 1 && regionKeywordMatch == 0) {
-                BoolQueryBuilder contentBoolQueryBuilder = new BoolQueryBuilder();
-                BoolQueryBuilder titleBoolQueryBuilder = new BoolQueryBuilder();
-                List<String> citys = new ArrayList<>();
-                for (String searchString : searchSplitArray) {
-                    List<Integer> codeid = areaRepository.findCodeidByCityName(searchString);
-                    for (Integer co : codeid) {
-                        List<String> tmp = areaRepository.findCityNameByCodeid(co);
-                        for (int i = 0; i < tmp.size(); i++) {
-                            tmp.set(i, tmp.get(i).replaceAll("\\s*", ""));
-                            if (tmp.get(i).contains("市辖") || tmp.get(i).contains("县辖")) {
-                                tmp.remove(i);
-                            }
-                        }
-                        citys.addAll(tmp);
-                    }
-                    citys = (List) citys.stream().distinct().collect(Collectors.toList());//去重
-
-                }
-                for (String city : citys) {
-                    contentBoolQueryBuilder.should(QueryBuilders.matchQuery("content", city));
-                    titleBoolQueryBuilder.should(QueryBuilders.matchQuery("title", city));
-                }
-                regionKeywordBoolQueryBuilder.should(contentBoolQueryBuilder);
-                regionKeywordBoolQueryBuilder.should(titleBoolQueryBuilder);
-            }
-        }
-        boolQueryBuilder.must(regionKeywordBoolQueryBuilder);
-        boolQueryBuilder.must(roleKeywordBoolQueryBuilder);
-        boolQueryBuilder.must(eventKeywordBoolQueryBuilder);
-
-        RangeQueryBuilder rangeQueryBuilder=new RangeQueryBuilder("publishedDay");
-        if (!startPublishedDay.isEmpty() && !endPublishedDay.isEmpty())
-        {
-            SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
-            try {
-                Date startDate = sdf.parse(startPublishedDay);
-                Date endDate = sdf.parse(endPublishedDay);
-                System.out.println(startDate);
-                System.out.println(endDate);
-                rangeQueryBuilder.from(startDate);
-                rangeQueryBuilder.to(endDate);
-            } catch (ParseException e) {
-                e.printStackTrace();
-            }
-        }
-        boolQueryBuilder.must(rangeQueryBuilder);
-
-        ElasticSearchQuery query=new ElasticSearchQuery();
-        boolQueryBuilder=query.boolQueryBuilder;
-
-        nativeSearchQueryBuilder.withQuery(boolQueryBuilder);
         nativeSearchQueryBuilder.addAggregation(termsAggregationBuilder);
-
         NativeSearchQuery nativeSearchQuery=nativeSearchQueryBuilder.build();
         nativeSearchQuery.setMaxResults(0);
-
         Aggregations aggregations=this.elasticsearchOperations.search(nativeSearchQuery,YuQingElasticSearch.class).getAggregations();
         Terms aggregation = aggregations.get("resource_count");
 
         JSONArray ret=new JSONArray();
+        JSONObject nullObject=new JSONObject();
+        nullObject.put("label","不限");
+        nullObject.put("value",null);
+        ret.appendElement(nullObject);
         for (Terms.Bucket bucket : aggregation.getBuckets()) {
             JSONObject jsonObject=new JSONObject();
-            jsonObject.put("name",bucket.getKey());
             jsonObject.put("label",bucket.getKey());
-            jsonObject.put("value",bucket.getDocCount());
+            jsonObject.put("value",bucket.getKey());
             ret.appendElement(jsonObject);
         }
-
         return ret;
     }
 
     @Override
+    public JSONArray globalSearchResourceCount(String keyword, String startPublishedDay, String endPublishedDay) {
+        ElasticSearchQuery query=new ElasticSearchQuery(areaRepository,fangAnDao);
+        query.AggregateByResource();
+        return elasticSearchDao.aggregateByResource(query);
+    }
+
+    @Override
+    public JSONArray globalSearchResourceCountByFid(long fid,String startPublishedDay, String endPublishedDay){
+        ElasticSearchQuery query=new ElasticSearchQuery(areaRepository,fangAnDao);
+        query.JoinFidQueryBuilders(fid);
+        query.JoinPublishedDayQueryBuilders(startPublishedDay,endPublishedDay);
+        query.SetBoolQuery();
+        query.AggregateByResource();
+
+        return elasticSearchDao.aggregateByResource(query);
+    }
+
+    @Override
     public CflagCountResponse globalSearchCflagCount(String keyword, String startPublishedDay, String endPublishedDay) {
-        List<Long> resultList = new ArrayList<>();
-        for (int cflag = 0; cflag <= 1 ; cflag++) {
-            resultList.add((long)0);
-        }
-        Criteria criteria = new Criteria();
-
-        if (!startPublishedDay.isEmpty() && !endPublishedDay.isEmpty()) {
-            SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
-            try {
-                Date startDate = sdf.parse(startPublishedDay);
-                Date endDate = sdf.parse(endPublishedDay);
-                criteria.subCriteria(new Criteria().and("publishedDay").between(startDate, endDate));
-            } catch (ParseException e) {
-                e.printStackTrace();
-            }
-        }
-        CriteriaQuery queryall = new CriteriaQuery(criteria);
-        long searchHitCountall = this.elasticsearchOperations.count(queryall, Data.class);
-
-        criteria.subCriteria(new Criteria("sensitiveType").in("政治敏感"));
-        CriteriaQuery querySen = new CriteriaQuery(criteria);
-        long searchHitCountquerySen = this.elasticsearchOperations.count(querySen, Data.class);
-        resultList.set(0, searchHitCountall);
-        resultList.set(1, searchHitCountquerySen);
-
-        resultList.set(0,resultList.get(0)-resultList.get(1));
+        ElasticSearchQuery query=new ElasticSearchQuery(areaRepository,fangAnDao);
+        query.AggregateBySensitiveType();
+        List<Long> resultList = elasticSearchDao.aggregateBySensitiveType(query);
         return new CflagCountResponse(resultList.get(0), resultList.get(1));
     }
     @Override
     public CflagCountResponse globalSearchCflagCountByFid(long fid, String startPublishedDay, String endPublishedDay){
-        List<Long> resultList = new ArrayList<>();
-        for (int cflag = 0; cflag <= 1 ; cflag++) {
-            resultList.add((long)0);
-        }
-        List<Criteria> criterias=fangAnDao.FindCriteriasByFid(fid);
-        for(Criteria criteria:criterias)
-        {
-            if (!startPublishedDay.isEmpty() && !endPublishedDay.isEmpty())
-            {
-                SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
-                try {
-                    Date startDate = sdf.parse(startPublishedDay);
-                    Date endDate = sdf.parse(endPublishedDay);
-                    criteria.subCriteria(new Criteria().and("publishedDay").between(startDate, endDate));
-                } catch (ParseException e) {
-                    e.printStackTrace();
-                }
-            }
-            CriteriaQuery queryall = new CriteriaQuery(criteria);
-            long searchHitCountall = this.elasticsearchOperations.count(queryall, Data.class);
-
-            criteria.subCriteria(new Criteria("sensitiveType").in("政治敏感"));
-            CriteriaQuery querySen = new CriteriaQuery(criteria);
-            long searchHitCountquerySen = this.elasticsearchOperations.count(querySen, Data.class);
-            System.out.println(searchHitCountall);
-            System.out.println(searchHitCountquerySen);
-            resultList.set(0,resultList.get(0)+searchHitCountall);
-            resultList.set(1,resultList.get(1)+searchHitCountquerySen);
-        }
-        resultList.set(0,resultList.get(0)-resultList.get(1));
+        System.out.println(startPublishedDay);
+        System.out.println(endPublishedDay);
+        ElasticSearchQuery query=new ElasticSearchQuery(areaRepository,fangAnDao);
+        query.JoinFidQueryBuilders(fid);
+        query.JoinPublishedDayQueryBuilders(startPublishedDay,endPublishedDay);
+        query.SetBoolQuery();
+        query.AggregateBySensitiveType();
+        List<Long> resultList = elasticSearchDao.aggregateBySensitiveType(query);
         return new CflagCountResponse(resultList.get(0), resultList.get(1));
+//
+//        List<Long> resultList = new ArrayList<>();
+//        for (int cflag = 0; cflag <= 1 ; cflag++) {
+//            resultList.add((long)0);
+//        }
+//        List<Criteria> criterias=fangAnDao.FindCriteriasByFid(fid);
+//        for(Criteria criteria:criterias)
+//        {
+//            if (!startPublishedDay.isEmpty() && !endPublishedDay.isEmpty())
+//            {
+//                SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+//                try {
+//                    Date startDate = sdf.parse(startPublishedDay);
+//                    Date endDate = sdf.parse(endPublishedDay);
+//                    criteria.subCriteria(new Criteria().and("publishedDay").between(startDate, endDate));
+//                } catch (ParseException e) {
+//                    e.printStackTrace();
+//                }
+//            }
+//            CriteriaQuery queryall = new CriteriaQuery(criteria);
+//            long searchHitCountall = this.elasticsearchOperations.count(queryall, Data.class);
+//
+//            criteria.subCriteria(new Criteria("sensitiveType").in("政治敏感"));
+//            CriteriaQuery querySen = new CriteriaQuery(criteria);
+//            long searchHitCountquerySen = this.elasticsearchOperations.count(querySen, Data.class);
+//            System.out.println(searchHitCountall);
+//            System.out.println(searchHitCountquerySen);
+//            resultList.set(0,resultList.get(0)+searchHitCountall);
+//            resultList.set(1,resultList.get(1)+searchHitCountquerySen);
+//        }
+//        resultList.set(0,resultList.get(0)-resultList.get(1));
+//        return new CflagCountResponse(resultList.get(0), resultList.get(1));
     }
 
     @Override
@@ -753,6 +463,100 @@ public class SearchServiceImpl implements SearchService {
         }
         ret.put("timeRange",timeRange);
         ret.put("totalAmountTrend",xAxisForTotalAmountTrend);
+        ret.put("xAxisForSourceAmountTrend",xAxisForSourceAmountTrend);
+        return ret;
+    }
+
+    @Override
+    public JSONObject totalAmountTrendCount(String keyword,String startPublishedDay,String endPublishedDay)
+    {
+        JSONObject ret=new JSONObject();
+        List<Long> xAxisForTotalAmountTrend=new ArrayList<>();
+
+        int pointNum = 6;
+        SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+        List<Date> dateList = new ArrayList<>();
+        try {
+            Date startDate = sdf.parse(startPublishedDay);
+            Date endDate = sdf.parse(endPublishedDay);
+            dateList.add(startDate);
+            for (int i = 1; i <= pointNum; i++){
+                Date dt = new Date((long)(startDate.getTime()+(endDate.getTime()-startDate.getTime())*i/(double)pointNum));
+                dateList.add(dt);
+            }
+        } catch (ParseException e) {
+            e.printStackTrace();
+        }
+        List<String> timeRange = new ArrayList<>();
+        for (int j = 0; j < pointNum; j++) {
+            timeRange.add(sdf.format(dateList.get(j)) + " to " + sdf.format(dateList.get(j + 1)));
+        }
+
+        for (int j = 0; j < pointNum; j++) {
+            xAxisForTotalAmountTrend.add((long) 0);
+        }
+        for (int j = 0; j < pointNum; j++) {
+            ElasticSearchQuery query=new ElasticSearchQuery(areaRepository,fangAnDao);
+            query.JoinPublishedDayQueryBuilders(sdf.format(dateList.get(j)),sdf.format(dateList.get(j+1)));
+            query.SetBoolQuery();
+            long hit=elasticSearchDao.countByQuery(query);
+            xAxisForTotalAmountTrend.set(j, xAxisForTotalAmountTrend.get(j) + hit);
+        }
+
+        ret.put("timeRange",timeRange);
+        ret.put("totalAmountTrend",xAxisForTotalAmountTrend);
+        return ret;
+    }
+
+    @Override
+    public JSONObject sourceAmountTrendCount(String keyword,String startPublishedDay,String endPublishedDay)
+    {
+        JSONObject ret=new JSONObject();
+        JSONArray xAxisForSourceAmountTrend=new JSONArray();
+        int pointNum = 6;
+        SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+        List<Date> dateList = new ArrayList<>();
+        try {
+            Date startDate = sdf.parse(startPublishedDay);
+            Date endDate = sdf.parse(endPublishedDay);
+            dateList.add(startDate);
+            for (int i = 1; i <= pointNum; i++){
+                Date dt = new Date((long)(startDate.getTime()+(endDate.getTime()-startDate.getTime())*i/(double)pointNum));
+                dateList.add(dt);
+            }
+        } catch (ParseException e) {
+            e.printStackTrace();
+        }
+        List<String> timeRange = new ArrayList<>();
+        for (int j = 0; j < pointNum; j++) {
+            timeRange.add(sdf.format(dateList.get(j)) + " to " + sdf.format(dateList.get(j + 1)));
+        }
+
+        ElasticSearchQuery query =new ElasticSearchQuery(areaRepository,fangAnDao);
+        query.AggregateByResource();
+        Terms terms=elasticSearchDao.getAggregateByResource(query);
+        for (Terms.Bucket bucket : terms.getBuckets()) {
+            JSONObject jsonObject=new JSONObject();
+
+            List<Long> resultList = new ArrayList<>();
+            for (int j = 0; j < pointNum; j++) {
+                resultList.add((long)0);
+            }
+            for (int j = 0; j < pointNum; j++) {
+                ElasticSearchQuery querySearch =new ElasticSearchQuery(areaRepository,fangAnDao);
+                querySearch.JoinPublishedDayQueryBuilders(sdf.format(dateList.get(j)),sdf.format(dateList.get(j+1)));
+                querySearch.JoinResourceQueryBuilders(bucket.getKeyAsString());
+                querySearch.SetBoolQuery();
+                long searchHitCount = elasticSearchDao.countByQuery(querySearch);
+                resultList.set(j, resultList.get(j) + searchHitCount);
+            }
+
+            jsonObject.put("name",bucket.getKey());
+            jsonObject.put("label",bucket.getKey());
+            jsonObject.put("value",resultList);
+            xAxisForSourceAmountTrend.appendElement(jsonObject);
+        }
+        ret.put("timeRange",timeRange);
         ret.put("xAxisForSourceAmountTrend",xAxisForSourceAmountTrend);
         return ret;
     }
@@ -881,26 +685,8 @@ public class SearchServiceImpl implements SearchService {
         List<Long> resultList = new ArrayList<>();
         List<Integer> codeids = Arrays.asList(11,12,13,14,15,21,22,23,31,32,33,34,35,36,37,41,42,43,44,45,46,50,51,52,53,54,61,62,63,64,65,71,81,91);
         for(int i =0;i<codeids.size();i++){
-            Criteria criteria = new Criteria();
-            if (!keyword.isEmpty())
-            {
-                String[] searchSplitArray = keyword.trim().split("\\s+");;
-                for (String searchString : searchSplitArray) {
-                    criteria.subCriteria(new Criteria().and("content").contains(searchString).
-                            or("title").contains(searchString));
-                }
-            }
-            if (!startPublishedDay.isEmpty() && !endPublishedDay.isEmpty())
-            {
-                SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
-                try {
-                    Date startDate = sdf.parse(startPublishedDay);
-                    Date endDate = sdf.parse(endPublishedDay);
-                    criteria.subCriteria(new Criteria().and("publishedDay").between(startDate, endDate));
-                } catch (ParseException e) {
-                    e.printStackTrace();
-                }
-            }
+            ElasticSearchQuery query=new ElasticSearchQuery(areaRepository,fangAnDao);
+            query.JoinPublishedDayQueryBuilders(startPublishedDay,endPublishedDay);
             List<String> citys;
             citys = areaRepository.findCityNameByCodeid(codeids.get(i));
             for(int j=0;j<citys.size();j++){
@@ -910,12 +696,10 @@ public class SearchServiceImpl implements SearchService {
                 }
             }
             citys = (List) citys.stream().distinct().collect(Collectors.toList());//去重
-            //System.out.println(Arrays.toString(citys.toArray()));
-            criteria.subCriteria(new Criteria("content").in(citys).or("title").in(citys));
-            CriteriaQuery query = new CriteriaQuery(criteria);
-            long searchHitCount = this.elasticsearchOperations.count(query, Data.class);
+            query.JoinTitleAndContentQueryBuildersByAreas(citys);
+            query.SetBoolQuery();
+            long searchHitCount = elasticSearchDao.countByQuery(query);
             resultList.add(searchHitCount);
-
         }
         return new AreaAnalysisResponse(resultList.get(0),resultList.get(1),resultList.get(2),resultList.get(3),resultList.get(4),
                 resultList.get(5),resultList.get(6),resultList.get(7),resultList.get(8),resultList.get(9),resultList.get(10),resultList.get(11),
@@ -929,39 +713,22 @@ public class SearchServiceImpl implements SearchService {
         List<Long> resultList = new ArrayList<>();
         List<Integer> codeids = Arrays.asList(11,12,13,14,15,21,22,23,31,32,33,34,35,36,37,41,42,43,44,45,46,50,51,52,53,54,61,62,63,64,65,71,81,91);
         for(int i =0;i<codeids.size();i++){
-            resultList.add((long)0);
-        }
-        for(int i =0;i<codeids.size();i++){
-            //Criteria criteria = fangAnDao.criteriaByFid(fid);
-            List<Criteria> criterias=fangAnDao.FindCriteriasByFid(fid);
-            for (Criteria criteria:criterias)
-            {
-                if (!startPublishedDay.isEmpty() && !endPublishedDay.isEmpty())
-                {
-                    SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
-                    try {
-                        Date startDate = sdf.parse(startPublishedDay);
-                        Date endDate = sdf.parse(endPublishedDay);
-                        criteria.subCriteria(new Criteria().and("publishedDay").between(startDate, endDate));
-                    } catch (ParseException e) {
-                        e.printStackTrace();
-                    }
+            ElasticSearchQuery query=new ElasticSearchQuery(areaRepository,fangAnDao);
+            query.JoinFidQueryBuilders(fid);
+            query.JoinPublishedDayQueryBuilders(startPublishedDay,endPublishedDay);
+            List<String> citys;
+            citys = areaRepository.findCityNameByCodeid(codeids.get(i));
+            for(int j=0;j<citys.size();j++){
+                citys.set(j,citys.get(j).replaceAll("\\s*", ""));
+                if(citys.get(j).contains("市辖")||citys.get(j).contains("县辖")){
+                    citys.remove(j);
                 }
-                List<String> citys;
-                citys = areaRepository.findCityNameByCodeid(codeids.get(i));
-                for(int j=0;j<citys.size();j++){
-                    citys.set(j,citys.get(j).replaceAll("\\s*", ""));
-                    if(citys.get(j).contains("市辖")||citys.get(j).contains("县辖")){
-                        citys.remove(j);
-                    }
-                }
-                citys = (List) citys.stream().distinct().collect(Collectors.toList());//去重
-                //System.out.println(Arrays.toString(citys.toArray()));
-                criteria.subCriteria(new Criteria("content").in(citys).or("title").in(citys));
-                CriteriaQuery query = new CriteriaQuery(criteria);
-                long searchHitCount = this.elasticsearchOperations.count(query, Data.class);
-                resultList.set(i, resultList.get(i)+searchHitCount);
             }
+            citys = (List) citys.stream().distinct().collect(Collectors.toList());//去重
+            query.JoinTitleAndContentQueryBuildersByAreas(citys);
+            query.SetBoolQuery();
+            long searchHitCount = elasticSearchDao.countByQuery(query);
+            resultList.add(searchHitCount);
         }
         return new AreaAnalysisResponse(resultList.get(0),resultList.get(1),resultList.get(2),resultList.get(3),resultList.get(4),
                 resultList.get(5),resultList.get(6),resultList.get(7),resultList.get(8),resultList.get(9),resultList.get(10),resultList.get(11),
@@ -1103,139 +870,29 @@ public class SearchServiceImpl implements SearchService {
 
 
     @Override
-    public DataResponse fangAnSearch2(long fid,String keyword,String sensitiveType,String emotion, String startPublishedDay, String endPublishedDay,
-                                     String fromType, int page, int pageSize, int timeOrder){
-        List<Criteria> criterias=fangAnDao.FindCriteriasByFid(fid);
-        List<Data> pageDataContent = new ArrayList<>();
-        for(Criteria criteria:criterias)
-        {
-            if (!keyword.isEmpty()){
-                String[] searchSplitArray1 = keyword.trim().split("\\s+");
-                List<String>searchSplitArray = Arrays.asList(searchSplitArray1);
-                System.out.println("herereeeeeeeeee");
-                System.out.println(searchSplitArray1);
-                System.out.println(searchSplitArray);
-                criteria.subCriteria(new Criteria("content").in(searchSplitArray).or("title").in(searchSplitArray));
-            }
-            if (!sensitiveType.isEmpty())
-            {
-                criteria.subCriteria(new Criteria("sensitiveType").in(SensitiveTypeStr(sensitiveType)));
-            }
-            if (!emotion.isEmpty())
-            {
-                criteria.subCriteria(new Criteria("emotion").contains(EmotionStr(emotion)));
-            }
-            if (!startPublishedDay.isEmpty() && !endPublishedDay.isEmpty())
-            {
-                SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
-                try {
-                    Date startDate = sdf.parse(startPublishedDay);
-                    Date endDate = sdf.parse(endPublishedDay);
-                    criteria.subCriteria(new Criteria().and("publishedDay").between(startDate, endDate));
-                } catch (ParseException e) {
-                    e.printStackTrace();
-                }
-            }
-            if (!fromType.isEmpty())
-            {
-                String[] searchSplitArray1 = fromType.trim().split("\\s+");
-                List<String>searchSplitArray = Arrays.asList(searchSplitArray1);
+    public YuQingResponse fangAnSearch2(long fid,String keyword,String sensitiveType,String emotion, String startPublishedDay, String endPublishedDay,
+                                     String resource, int page, int pageSize, int timeOrder){
+        ElasticSearchQuery query=new ElasticSearchQuery(areaRepository,fangAnDao);
+        query.SetPageParameter(page,pageSize,timeOrder);
+        query.JoinFidQueryBuilders(fid);
+        if (!keyword.isEmpty())
+            query.JoinTitleAndContentQueryBuilders(keyword);
+        if (!Objects.equals(startPublishedDay, "null") && !Objects.equals(endPublishedDay, "null") &&
+                !startPublishedDay.isEmpty() && !endPublishedDay.isEmpty() )
+            query.JoinPublishedDayQueryBuilders(startPublishedDay,endPublishedDay);
+        if (!sensitiveType.isEmpty())
+            query.JoinSensitiveTypeQueryBuilders(sensitiveType);
+        if (!resource.isEmpty())
+            query.JoinResourceQueryBuilders(resource);
+        if (!emotion.isEmpty())
+            query.JoinEmotionQueryBuilders(emotion);
+        query.SortBySensitiveType();
+        query.SortBytimeOrder();
+        query.SetPageableAndBoolQuery();
 
-                if(searchSplitArray.size()>1){
-                    criteria.subCriteria(new Criteria().and("fromType").in(searchSplitArray));
-                }else {
-                    criteria.subCriteria(new Criteria().and("fromType").is(searchSplitArray.get(0)));
-                }
-            }
-            System.out.println(criteria);
-            CriteriaQuery query = new CriteriaQuery(criteria);
-            SearchHits<Data> searchHits = this.elasticsearchOperations.search(query, Data.class);
-            for (SearchHit<Data> hit : searchHits.getSearchHits())
-            {
-                pageDataContent.add(hit.getContent());
-            }
-        }
-        if (timeOrder == 0) {
-            Collections.sort(pageDataContent , (Data b1, Data b2) -> b2.getPublishedDay().compareTo(b1.getPublishedDay()));
-        }
-        else {
-            Collections.sort(pageDataContent , (Data b1, Data b2) -> b1.getPublishedDay().compareTo(b2.getPublishedDay()));
-        }
-
-        /*Collections.sort(pageDataContent,(Data b1, Data b2) -> (EmotionToInt(b1.getEmotion())>EmotionToInt(b2.getEmotion()))?-1:
-                ((EmotionToInt(b1.getEmotion())==EmotionToInt(b2.getEmotion()))?0:1));*/
-
-        Collections.sort(pageDataContent,(Data b1, Data b2) -> (SensitiveTypeToInt(b1.getSensitiveType())>SensitiveTypeToInt(b2.getSensitiveType()))?-1:
-                ((SensitiveTypeToInt(b1.getSensitiveType())==SensitiveTypeToInt(b2.getSensitiveType()))?0:1));
-
-        int hitNumber=pageDataContent.size();
-
-        List<Data> resultDataContent = new ArrayList<>();
-        if ((page+1)*pageSize>hitNumber)
-        {
-            resultDataContent=pageDataContent.subList(page*pageSize,hitNumber);
-        }else{
-            resultDataContent=pageDataContent.subList(page*pageSize,(page+1)*pageSize);
-        }
-
-        DataResponse result = new DataResponse();
-        result.setHitNumber(hitNumber);
-        result.setDataContent(resultDataContent);
-
-       /* Criteria criteria = fangAnDao.criteriaByFid(fid);
-        if (!keyword.isEmpty()){
-            criteria.subCriteria(new Criteria().and("content").contains(keyword).
-                    or("title").contains(keyword));
-        }
-        if (!cflag.isEmpty())
-        {
-            criteria.subCriteria(new Criteria().and("cflag").is(cflag));
-        }
-        if (!startPublishedDay.isEmpty() && !endPublishedDay.isEmpty())
-        {
-            SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
-            try {
-                Date startDate = sdf.parse(startPublishedDay);
-                Date endDate = sdf.parse(endPublishedDay);
-                criteria.subCriteria(new Criteria().and("publishedDay").between(startDate, endDate));
-            } catch (ParseException e) {
-                e.printStackTrace();
-            }
-        }
-        if (!fromType.isEmpty())
-        {
-            String[] searchSplitArray1 = fromType.trim().split("\\s+");
-            List<String>searchSplitArray = Arrays.asList(searchSplitArray1);
-
-            if(searchSplitArray.size()>1){
-                criteria.subCriteria(new Criteria().and("fromType").in(searchSplitArray));
-            }else {
-                criteria.subCriteria(new Criteria().and("fromType").is(searchSplitArray.get(0)));
-            }
-
-        }
-        CriteriaQuery query = new CriteriaQuery(criteria);
-        if (timeOrder == 0) {
-            query.setPageable(PageRequest.of(page, pageSize, Sort.by(Sort.Direction.DESC, "publishedDay")));
-        }
-        else {
-            query.setPageable(PageRequest.of(page, pageSize, Sort.by(Sort.Direction.ASC, "publishedDay")));
-        }
-        SearchHits<Data> searchHits = this.elasticsearchOperations.search(query, Data.class);
-        SearchPage<Data> searchPage = SearchHitSupport.searchPageFor(searchHits, query.getPageable());
-        long hitNumber = this.elasticsearchOperations.count(query, Data.class);
-
-        List<Data> pageDataContent = new ArrayList<>();
-        for (SearchHit<Data> hit : searchPage.getSearchHits())
-        {
-            pageDataContent.add(hit.getContent());
-        }
-
-        DataResponse result = new DataResponse();
-        result.setHitNumber(hitNumber);
-        result.setDataContent(pageDataContent);*/
-
-        return result;
+        YuQingResponse response = elasticSearchDao.findByQuery(query);
+        System.out.println(response);
+        return response;
     }
 
     @Override

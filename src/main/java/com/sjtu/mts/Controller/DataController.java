@@ -88,10 +88,9 @@ public class DataController {
     @ResponseBody
     public YuQingResponse findByKeywordAndCflagAndPublishedDayAndFromType(
             @RequestParam("keyword") String keyword,
-            @RequestParam("cflag") String cflag,
+            @RequestParam("sensitiveFlag") String sensitiveFlag,
             @RequestParam("startPublishedDay") String startPublishedDay,
             @RequestParam("endPublishedDay") String endPublishedDay,
-            @RequestParam("fromType") String fromType,
             @RequestParam("page") int page,
             @RequestParam("pageSize") int pageSize,
             @RequestParam("timeOrder") int timeOrder
@@ -102,7 +101,7 @@ public class DataController {
         }catch (Exception e){
             System.out.println(e);
         }
-        return searchService.Search(decodeKeyword, cflag, startPublishedDay, endPublishedDay, fromType,
+        return searchService.Search(decodeKeyword, startPublishedDay, endPublishedDay, sensitiveFlag,
                 page, pageSize, timeOrder);
     }
 
@@ -114,7 +113,7 @@ public class DataController {
             @RequestParam("emotion") String emotion,
             @RequestParam("startPublishedDay") String startPublishedDay,
             @RequestParam("endPublishedDay") String endPublishedDay,
-            @RequestParam("fromType") String fromType,
+            @RequestParam("resource") String resource,
             @RequestParam("page") int page,
             @RequestParam("pageSize") int pageSize,
             @RequestParam("timeOrder") int timeOrder,
@@ -122,15 +121,25 @@ public class DataController {
     ) {
         String decodeKeyword = "";
         String decodeKeywords = "";
-        String start="";
+        String decodeSensitiveType="";
+        String decodeResource="";
         try{
             decodeKeyword = java.net.URLDecoder.decode(keyword, "utf-8");
             decodeKeywords = java.net.URLDecoder.decode(keywords, "utf-8");
-            start= java.net.URLDecoder.decode(startPublishedDay, "utf-8");
+            decodeSensitiveType= java.net.URLDecoder.decode(sensitiveType, "utf-8");
+            decodeResource= java.net.URLDecoder.decode(resource, "utf-8");
         }catch (Exception e){
             System.out.println(e);
         }
-        return searchService.SearchWithObject(decodeKeyword, sensitiveType, emotion, startPublishedDay, endPublishedDay, fromType,page, pageSize, timeOrder,decodeKeywords);
+        return searchService.SearchWithObject(decodeKeyword, decodeSensitiveType, emotion, startPublishedDay, endPublishedDay, decodeResource,page, pageSize, timeOrder,decodeKeywords);
+    }
+
+
+    @GetMapping("/getResources")
+    @ResponseBody
+    public JSONArray getResources(
+    ) {
+        return searchService.getResources();
     }
 
     @GetMapping("/globalSearch/resourceCount")
@@ -182,6 +191,27 @@ public class DataController {
     ) {
         return searchService.globalSearchTrendCount(keyword, startPublishedDay, endPublishedDay);
     }
+
+    @GetMapping("/globalSearch/totalAmountTrendCount")
+    @ResponseBody
+    public JSONObject totalAmountTrendCount(
+            @RequestParam("keyword") String keyword,
+            @RequestParam("startPublishedDay") String startPublishedDay,
+            @RequestParam("endPublishedDay") String endPublishedDay
+    ) {
+        return searchService.totalAmountTrendCount(keyword, startPublishedDay, endPublishedDay);
+    }
+
+    @GetMapping("/globalSearch/sourceAmountTrendCount")
+    @ResponseBody
+    public JSONObject sourceAmountTrendCount(
+            @RequestParam("keyword") String keyword,
+            @RequestParam("startPublishedDay") String startPublishedDay,
+            @RequestParam("endPublishedDay") String endPublishedDay
+    ) {
+        return searchService.sourceAmountTrendCount(keyword, startPublishedDay, endPublishedDay);
+    }
+
     @GetMapping("/globalSearch/amountTrendCount2")
     @ResponseBody
     public JSONObject countAmountTrendByKeywordAndPublishedDay2(
@@ -250,26 +280,29 @@ public class DataController {
     * @author FYR*/
     @GetMapping("/singleSearch/findByFangAn2")
     @ResponseBody
-    public DataResponse fangAnSearch2(
+    public YuQingResponse fangAnSearch2(
             @RequestParam("fid") long fid,
             @RequestParam("keyword")String keyword,
             @RequestParam("sensitiveType") String sensitiveType,
             @RequestParam("emotion") String emotion,
             @RequestParam("startPublishedDay") String startPublishedDay,
             @RequestParam("endPublishedDay") String endPublishedDay,
-            @RequestParam("fromType") String fromType,
+            @RequestParam("resource") String resource,
             @RequestParam("page") int page,
             @RequestParam("pageSize") int pageSize,
             @RequestParam("timeOrder") int timeOrder
     ){
         String decodeKeyword = "";
+        String decodeSensitiveType="";
+        String decodeResource="";
         try{
-             decodeKeyword = java.net.URLDecoder.decode(keyword, "utf-8");
+            decodeKeyword = java.net.URLDecoder.decode(keyword, "utf-8");
+            decodeSensitiveType= java.net.URLDecoder.decode(sensitiveType, "utf-8");
+            decodeResource= java.net.URLDecoder.decode(resource, "utf-8");
         }catch (Exception e){
             System.out.println(e);
         }
-
-        return searchService.fangAnSearch2(fid,decodeKeyword,sensitiveType,emotion,startPublishedDay,endPublishedDay,fromType,page,pageSize,timeOrder);
+        return searchService.fangAnSearch2(fid,decodeKeyword,decodeSensitiveType,emotion,startPublishedDay,endPublishedDay,decodeResource,page,pageSize,timeOrder);
     }
 
     /*溯源微博，生成并返回微博转发关系树
