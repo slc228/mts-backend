@@ -1010,4 +1010,10 @@ public class DataController {
     ) {
         return searchService.getSensitiveWordsByFid(fid);
     }
+
+    @GetMapping("/generate")
+    @ResponseBody
+    public JSONObject gengrate () throws com.lowagie.text.DocumentException, IOException {
+        return searchService.generate();
+    }
 }

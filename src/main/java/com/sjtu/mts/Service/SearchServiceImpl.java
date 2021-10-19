@@ -2099,6 +2099,89 @@ public class SearchServiceImpl implements SearchService {
     }
 
     @Override
+    public JSONObject generate() throws IOException, com.lowagie.text.DocumentException {
+        JSONObject ret= new JSONObject();
+        String rnd = DigestUtils.sha1Hex(new Date().toString());
+        String wordOutFilePath = String.format("%s%s-%s.doc", "/home/pubsys/jar_dir/fileTemp/" , "word", rnd);
+        String pdfOutFilePath = String.format("%s%s-%s.pdf", "/home/pubsys/jar_dir/fileTemp/" , "pdf", rnd);
+        String excelOutFilePath = String.format("%s%s-%s.xls", "/home/pubsys/jar_dir/fileTemp/" , "excel", rnd);
+
+        Configuration configuration = new Configuration();
+        /* 设置编码 */
+        configuration.setDefaultEncoding("utf-8");
+        String fileDirectory = "/home/pubsys/jar_dir/fileTemplate/";
+        Template template = null;
+        try {
+            /* 加载文件 */
+            configuration.setDirectoryForTemplateLoading(new File(fileDirectory));
+            /* 加载模板 */
+            template = configuration.getTemplate("1.ftl");
+        } catch (IOException ex) {
+            System.out.println("找不到模板文件，路径为:") ;
+            System.out.println(fileDirectory);
+        }
+
+        /* 组装数据 */
+        Map<String,Object> dataMap = new HashMap<>();
+        dataMap.put("NO","129");
+        dataMap.put("department","舆情部门");
+        dataMap.put("reporter","孙良辰");
+        dataMap.put("phone","18769007910");
+        dataMap.put("sender","舆情部门");
+        dataMap.put("type","文件");
+        dataMap.put("year","2021");
+        dataMap.put("month","10");
+        dataMap.put("day","18");
+        dataMap.put("writer","孙良辰");
+        dataMap.put("writerPos","学生");
+        dataMap.put("approver","黄思诚");
+        dataMap.put("approverPos","学生");
+        dataMap.put("sum","啥都没有");
+
+        /* 按照模板生成doc和html数据 */
+        File docFile = new File(wordOutFilePath);
+        FileOutputStream fos;
+        Writer outDoc = null;
+        Writer outPdf = new StringWriter();
+        String content = null;
+        try {
+            fos = new FileOutputStream(docFile);
+            outDoc = new BufferedWriter(new OutputStreamWriter(fos, "utf-8"),10240);
+            template.process(dataMap,outDoc);
+
+            template.process(dataMap, outPdf); //将合并后的数据和模板写入到流中，这里使用的字符流
+            outPdf.flush();
+            content=outPdf.toString();
+        } catch (FileNotFoundException ex) {
+            System.out.println("找不到输出文件路径，路径为：{}");
+        } catch (TemplateException | IOException ex) {
+            System.out.println("找不到输出文件路径，路径为：{}");
+        } finally {
+            if(outPdf != null){
+                try {
+                    outPdf.close();
+                } catch (IOException ex) {
+                    System.out.println("找不到输出文件路径，路径为：{}");
+                }
+            }
+        }
+
+        /* 解析html数据生成pdf */
+        String FONT = "/home/pubsys/jar_dir/font/SimHei.ttf";
+
+        ITextRenderer render = new ITextRenderer();
+        ITextFontResolver fontResolver = render.getFontResolver();
+        fontResolver.addFont(FONT, BaseFont.IDENTITY_H, BaseFont.NOT_EMBEDDED);
+        // 解析html生成pdf
+        render.setDocumentFromString(content);
+        //解决图片相对路径的问题
+        render.layout();
+        render.createPDF(new FileOutputStream(pdfOutFilePath));
+
+        return ret;
+    }
+
+    @Override
     public JSONObject generateFile(int fileID,long fid,int templateId,String decodeTitle,String decodeInstitution,String decodeYuQingIds,String echartsData) throws TemplateException, IOException, ParseException, DocumentException, com.lowagie.text.DocumentException {
         System.out.println(echartsData);
         JSONObject ret=new JSONObject();

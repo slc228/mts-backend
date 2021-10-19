@@ -150,4 +150,6 @@ public interface SearchService {
     public JSONObject addSensitiveWordForAll(String type,String word);
 
     public JSONArray getSensitiveWordsByFid(long fid);
+
+    public JSONObject generate() throws IOException, com.lowagie.text.DocumentException;
 }
