@@ -233,6 +233,26 @@ public class DataController {
         return searchService.globalSearchTrendCount3(fid,startPublishedDay,endPublishedDay);
     }
 
+    @GetMapping("/getProgrammeSourceTrend")
+    @ResponseBody
+    public JSONObject getProgrammeSourceTrend(
+            @RequestParam("fid") long fid,
+            @RequestParam("startPublishedDay") String startPublishedDay,
+            @RequestParam("endPublishedDay") String endPublishedDay
+    ) {
+        return searchService.getProgrammeSourceTrend(fid,startPublishedDay,endPublishedDay);
+    }
+
+    @GetMapping("/getProgrammeTotalAmountTrend")
+    @ResponseBody
+    public JSONObject getProgrammeTotalAmountTrend(
+            @RequestParam("fid") long fid,
+            @RequestParam("startPublishedDay") String startPublishedDay,
+            @RequestParam("endPublishedDay") String endPublishedDay
+    ) {
+        return searchService.getProgrammeTotalAmountTrend(fid,startPublishedDay,endPublishedDay);
+    }
+
     /*某事件各地区发文
     @author FYR
      */

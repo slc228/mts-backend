@@ -562,6 +562,104 @@ public class SearchServiceImpl implements SearchService {
     }
 
     @Override
+    public JSONObject getProgrammeSourceTrend(long fid,String startPublishedDay,String endPublishedDay)
+    {
+        JSONObject ret=new JSONObject();
+        JSONArray xAxisForSourceAmountTrend=new JSONArray();
+        int pointNum = 6;
+        SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+        List<Date> dateList = new ArrayList<>();
+        try {
+            Date startDate = sdf.parse(startPublishedDay);
+            Date endDate = sdf.parse(endPublishedDay);
+            dateList.add(startDate);
+            for (int i = 1; i <= pointNum; i++){
+                Date dt = new Date((long)(startDate.getTime()+(endDate.getTime()-startDate.getTime())*i/(double)pointNum));
+                dateList.add(dt);
+            }
+        } catch (ParseException e) {
+            e.printStackTrace();
+        }
+        List<String> timeRange = new ArrayList<>();
+        for (int j = 0; j < pointNum; j++) {
+            timeRange.add(sdf.format(dateList.get(j)) + " to " + sdf.format(dateList.get(j + 1)));
+        }
+
+        ElasticSearchQuery query =new ElasticSearchQuery(areaRepository,fangAnDao);
+        query.JoinFidQueryBuilders(fid);
+        query.SetBoolQuery();
+        query.AggregateByResource();
+        Terms terms=elasticSearchDao.getAggregateByResource(query);
+        for (Terms.Bucket bucket : terms.getBuckets()) {
+            JSONObject jsonObject=new JSONObject();
+
+            List<Long> resultList = new ArrayList<>();
+            for (int j = 0; j < pointNum; j++) {
+                resultList.add((long)0);
+            }
+            for (int j = 0; j < pointNum; j++) {
+                ElasticSearchQuery querySearch =new ElasticSearchQuery(areaRepository,fangAnDao);
+                querySearch.JoinFidQueryBuilders(fid);
+                querySearch.JoinPublishedDayQueryBuilders(sdf.format(dateList.get(j)),sdf.format(dateList.get(j+1)));
+                querySearch.JoinResourceQueryBuilders(bucket.getKeyAsString());
+                querySearch.SetBoolQuery();
+                long searchHitCount = elasticSearchDao.countByQuery(querySearch);
+                resultList.set(j, resultList.get(j) + searchHitCount);
+            }
+
+            jsonObject.put("name",bucket.getKey());
+            jsonObject.put("label",bucket.getKey());
+            jsonObject.put("value",resultList);
+            xAxisForSourceAmountTrend.appendElement(jsonObject);
+        }
+        ret.put("timeRange",timeRange);
+        ret.put("xAxisForSourceAmountTrend",xAxisForSourceAmountTrend);
+        return ret;
+    }
+
+    @Override
+    public JSONObject getProgrammeTotalAmountTrend(long fid,String startPublishedDay,String endPublishedDay)
+    {
+        JSONObject ret=new JSONObject();
+        List<Long> xAxisForTotalAmountTrend=new ArrayList<>();
+
+        int pointNum = 6;
+        SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+        List<Date> dateList = new ArrayList<>();
+        try {
+            Date startDate = sdf.parse(startPublishedDay);
+            Date endDate = sdf.parse(endPublishedDay);
+            dateList.add(startDate);
+            for (int i = 1; i <= pointNum; i++){
+                Date dt = new Date((long)(startDate.getTime()+(endDate.getTime()-startDate.getTime())*i/(double)pointNum));
+                dateList.add(dt);
+            }
+        } catch (ParseException e) {
+            e.printStackTrace();
+        }
+        List<String> timeRange = new ArrayList<>();
+        for (int j = 0; j < pointNum; j++) {
+            timeRange.add(sdf.format(dateList.get(j)) + " to " + sdf.format(dateList.get(j + 1)));
+        }
+
+        for (int j = 0; j < pointNum; j++) {
+            xAxisForTotalAmountTrend.add((long) 0);
+        }
+        for (int j = 0; j < pointNum; j++) {
+            ElasticSearchQuery query=new ElasticSearchQuery(areaRepository,fangAnDao);
+            query.JoinFidQueryBuilders(fid);
+            query.JoinPublishedDayQueryBuilders(sdf.format(dateList.get(j)),sdf.format(dateList.get(j+1)));
+            query.SetBoolQuery();
+            long hit=elasticSearchDao.countByQuery(query);
+            xAxisForTotalAmountTrend.set(j, xAxisForTotalAmountTrend.get(j) + hit);
+        }
+
+        ret.put("timeRange",timeRange);
+        ret.put("totalAmountTrend",xAxisForTotalAmountTrend);
+        return ret;
+    }
+
+    @Override
     public AmountTrendResponse globalSearchTrendCount3(long fid,String startPublishedDay, String endPublishedDay){
         int pointNum = 48;
         SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
@@ -1027,39 +1125,20 @@ public class SearchServiceImpl implements SearchService {
     @Override
     public List<KeywordResponse> extractKeyword(long fid, String startPublishedDay, String endPublishedDay
             , int keywordNumber, String extractMethod){
-        List<String> fileContents = new ArrayList<>();
-        //Criteria criteria = fangAnDao.criteriaByFid(fid);
-        List<Criteria> criterias=fangAnDao.FindCriteriasByFid(fid);
-        for (Criteria criteria:criterias){
-            if (!startPublishedDay.isEmpty() && !endPublishedDay.isEmpty())
-            {
-                SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
-                try {
-                    Date startDate = sdf.parse(startPublishedDay);
-                    Date endDate = sdf.parse(endPublishedDay);
-                    criteria.subCriteria(new Criteria().and("publishedDay").between(startDate, endDate));
-                } catch (ParseException e) {
-                    e.printStackTrace();
-                }
-            }
-
-            CriteriaQuery query = new CriteriaQuery(criteria);
-            SearchHits<Data> searchHits = this.elasticsearchOperations.search(query, Data.class);
-
-            for(SearchHit<Data> hit : searchHits){
-                Data data = hit.getContent();
-                fileContents.add(data.getContent());
-            }
+        List<List<String>> sum=new ArrayList<>();
+        ElasticSearchQuery query=new ElasticSearchQuery(areaRepository,fangAnDao);
+        query.JoinFidQueryBuilders(fid);
+        query.JoinPublishedDayQueryBuilders(startPublishedDay,endPublishedDay);
+        query.SetBoolQuery();
+        YuQingResponse response=elasticSearchDao.findByQuery(query);
+        List<YuQing> yuQings=response.getYuQingContent();
+        for (YuQing yuQing:yuQings)
+        {
+            String[] keywordExtractionArray = yuQing.getKeywordExtraction().trim().split("\\,");
+            List<String> keywordExtractionsArray = Arrays.asList(keywordExtractionArray);
+            sum.add(keywordExtractionsArray);
         }
 
-        //开始使用多线程提取关键词
-        int threadCounts = 8;//采用的线程数
-
-        long start=  System.currentTimeMillis();
-        MultipleThreadExtraction countListIntegerSum=new MultipleThreadExtraction(fileContents,threadCounts, extractMethod);
-
-        List<List<String>> sum=countListIntegerSum.getIntegerSum();
-        System.out.println("关键词提取耗时hhhh：" + (System.currentTimeMillis()-start) + "ms");
         Map<String, Integer> wordScore = new HashMap<>();
         for (List<String> singleDocList : sum)
         {
@@ -1087,8 +1166,6 @@ public class SearchServiceImpl implements SearchService {
             Integer value = keywordList.get(i).getValue();
             keywords.add(new KeywordResponse(name, value));
         }
-        long end = System.currentTimeMillis();
-        System.out.println("关键词提取耗时：" + (end-start) + "ms");
         return keywords;
     }
 
@@ -1097,7 +1174,6 @@ public class SearchServiceImpl implements SearchService {
     {
         List<String> keywordList = new TextRankKeyword().getKeyword(title,content);
         String str = String.join(",",keywordList);
-        System.out.println(str);
         JSONObject jsonObject=new JSONObject();
         jsonObject.put("words",str);
         return jsonObject;
@@ -1105,10 +1181,7 @@ public class SearchServiceImpl implements SearchService {
 
     @Override
     public  JSONObject autoaddEkeyword(long fid,String text){
-        System.out.println(text);
-        System.out.println(fid);
         List<String> Ekeyword = new TextRankKeyword().getKeyword("", text);
-        System.out.println(Ekeyword);
 
         JSONObject result = new JSONObject();
         result.put("autoaddEkeyword", 0);

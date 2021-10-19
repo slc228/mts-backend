@@ -8,6 +8,7 @@ import com.sjtu.mts.Response.*;
 import freemarker.template.TemplateException;
 import net.minidev.json.JSONArray;
 import net.minidev.json.JSONObject;
+import org.openqa.selenium.json.Json;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -42,6 +43,9 @@ public interface SearchService {
 
     public JSONObject totalAmountTrendCount(String keyword,String startPublishedDay,String endPublishedDay);
     public JSONObject sourceAmountTrendCount(String keyword,String startPublishedDay,String endPublishedDay);
+
+    public JSONObject getProgrammeSourceTrend(long fid,String startPublishedDay,String endPublishedDay);
+    public JSONObject getProgrammeTotalAmountTrend(long fid,String startPublishedDay,String endPublishedDay);
 
     public JSONObject globalSearchTrendCount2(long fid,String startPublishedDay, String endPublishedDay);
     public AmountTrendResponse globalSearchTrendCount3(long fid,String startPublishedDay, String endPublishedDay);
