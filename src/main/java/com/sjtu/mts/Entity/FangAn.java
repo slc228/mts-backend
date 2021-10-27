@@ -9,6 +9,7 @@ import java.io.Serializable;
 public class FangAn implements Serializable {
     private static final long serialVersionUID = 1L;
     @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "fid")
 
     private long fid;

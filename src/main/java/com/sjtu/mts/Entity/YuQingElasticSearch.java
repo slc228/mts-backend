@@ -49,4 +49,12 @@ public class YuQingElasticSearch {
 
     @Field(type = FieldType.Keyword)
     private String sensitiveType;
+
+
+    public void setFid(Integer fid) {
+        this.fid = fid;
+    }
+    public void setId(String id) {
+        this.id = id;
+    }
 }

@@ -72,6 +72,20 @@ public class ElasticSearchDaoImpl implements ElasticSearchDao {
     }
 
     @Override
+    public List<YuQingElasticSearch> findESByQuery(ElasticSearchQuery query) {
+        List<YuQingElasticSearch> ret = new ArrayList<>();
+        SearchHits<YuQingElasticSearch> searchHits = this.elasticsearchOperations.search(
+                query.GetQuery(),
+                YuQingElasticSearch.class
+        );
+        for (SearchHit<YuQingElasticSearch> hit : searchHits.getSearchHits())
+        {
+            ret.add(hit.getContent());
+        }
+        return ret;
+    }
+
+    @Override
     public Long countByQuery(ElasticSearchQuery query) {
         Long ret = this.elasticsearchOperations.count(
                 query.GetQuery(),

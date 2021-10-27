@@ -4,6 +4,9 @@ import com.sjtu.mts.Dao.ElasticSearchDao;
 import com.sjtu.mts.Dao.FangAnDao;
 import com.sjtu.mts.Entity.FangAn;
 import com.sjtu.mts.Entity.YuQing;
+import com.sjtu.mts.Entity.YuQingElasticSearch;
+import com.sjtu.mts.Keyword.ESSaveThread;
+import com.sjtu.mts.Keyword.thread;
 import com.sjtu.mts.Query.ElasticSearchQuery;
 import com.sjtu.mts.Repository.AreaRepository;
 import com.sjtu.mts.Repository.SwordFidRepository;
@@ -17,6 +20,7 @@ import org.springframework.stereotype.Service;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.UUID;
 
 @Service
 public class FangAnServiceImpl implements FangAnService {
@@ -141,47 +145,90 @@ public class FangAnServiceImpl implements FangAnService {
                 &&newRoleKeywordList.containsAll(oldRoleKeywordList)
                 &&newEventKeywordList.containsAll(oldEventKeywordList))
         {
-            ElasticSearchQuery elasticSearchQuery=new ElasticSearchQuery(areaRepository,fangAnDao);
-            elasticSearchQuery.JoinFidQueryBuildersWithOutFid(fid);
-            elasticSearchQuery.SetBoolQuery();
-            YuQingResponse yuQingResponse=elasticSearchDao.findByQuery(elasticSearchQuery);
-            List<YuQing> yuQings=yuQingResponse.getYuQingContent();
-            List<YuQing> newYuqings=new ArrayList<>();
-            for (YuQing yuQing:yuQings)
-            {
-                yuQing.setFid(String.valueOf(fid));
-                yuQing.setId("");
-                newYuqings.add(yuQing);
+            try {
+                if(!oldFangAn.getUsername().equals(username)){
+                    result.put("该方案不是你的",1);
+                    result.put("changeFangAn", 0);
+                    return result;
+                }
+                oldFangAn.setUsername(username);
+                oldFangAn.setProgrammeName(programmeName);
+                oldFangAn.setRegionKeyword(regionKeyword);
+                oldFangAn.setRegionKeywordMatch(regionKeywordMatch);
+                oldFangAn.setRoleKeyword(roleKeyword);
+                oldFangAn.setRoleKeywordMatch(roleKeywordMatch);
+                oldFangAn.setEventKeyword(eventKeyword);
+                oldFangAn.setEventKeywordMatch(eventKeywordMatch);
+                oldFangAn.setEnableAlert(enableAlert);
+                oldFangAn.setSensitiveword(sensitiveWord);
+                oldFangAn.setPriority(priority);
+                //fangAnDao.deleteByFid(fid);
+                fangAnDao.save(oldFangAn);
+                result.put("changeFangAn", 1);
+            }catch (Exception e){
+                result.put("changeFangAn", 0);
             }
-            this.elasticsearchOperations.save(newYuqings);
+
+            ElasticSearchQuery elasticSearchQuery=new ElasticSearchQuery(areaRepository,fangAnDao);
+            Thread t1=new ESSaveThread(elasticSearchQuery,fid,this.elasticsearchOperations,elasticSearchDao);
+            t1.start();
+
+//            ElasticSearchQuery elasticSearchQuery=new ElasticSearchQuery(areaRepository,fangAnDao);
+//            elasticSearchQuery.JoinFidQueryBuildersWithOutFid(fid);
+//            elasticSearchQuery.SetBoolQuery();
+//            List<YuQingElasticSearch> yuQings=elasticSearchDao.findESByQuery(elasticSearchQuery);
+//            System.out.println(yuQings.size());
+//            List<YuQingElasticSearch> newYuqings=new ArrayList<>();
+//            for (YuQingElasticSearch yuQing:yuQings)
+//            {
+//                yuQing.setFid((int) fid);
+//                yuQing.setId(UUID.randomUUID().toString());
+//                newYuqings.add(yuQing);
+//            }
+//            this.elasticsearchOperations.save(newYuqings,this.elasticsearchOperations.getIndexCoordinatesFor(YuQingElasticSearch.class));
             System.out.println("aka");
         }else
         {
-            System.out.println("bkb");
-        }
-        try {
-            if(!oldFangAn.getUsername().equals(username)){
-                result.put("该方案不是你的",1);
+            long newfid = 0;
+            try {
+                FangAn fangAn=new FangAn();
+                fangAn.setUsername(username);
+                fangAn.setProgrammeName(programmeName);
+                fangAn.setRegionKeyword(regionKeyword);
+                fangAn.setRegionKeywordMatch(regionKeywordMatch);
+                fangAn.setRoleKeyword(roleKeyword);
+                fangAn.setRoleKeywordMatch(roleKeywordMatch);
+                fangAn.setEventKeyword(eventKeyword);
+                fangAn.setEventKeywordMatch(eventKeywordMatch);
+                fangAn.setEnableAlert(enableAlert);
+                fangAn.setSensitiveword(sensitiveWord);
+                fangAn.setPriority(priority);
+                FangAn fangAn1=fangAnDao.save(fangAn);
+                fangAnDao.deleteByFid(fid);
+                newfid=fangAn1.getFid();
+                System.out.println(fangAn1.getFid());
+                result.put("changeFangAn", 1);
+            }catch (Exception e){
                 result.put("changeFangAn", 0);
-                return result;
             }
-            oldFangAn.setUsername(username);
-            oldFangAn.setProgrammeName(programmeName);
-            oldFangAn.setRegionKeyword(regionKeyword);
-            oldFangAn.setRegionKeywordMatch(regionKeywordMatch);
-            oldFangAn.setRoleKeyword(roleKeyword);
-            oldFangAn.setRoleKeywordMatch(roleKeywordMatch);
-            oldFangAn.setEventKeyword(eventKeyword);
-            oldFangAn.setEventKeywordMatch(eventKeywordMatch);
-            oldFangAn.setEnableAlert(enableAlert);
-            oldFangAn.setSensitiveword(sensitiveWord);
-            oldFangAn.setPriority(priority);
-            //fangAnDao.deleteByFid(fid);
-            fangAnDao.save(oldFangAn);
-            result.put("changeFangAn", 1);
-            return result;
-        }catch (Exception e){
-            result.put("changeFangAn", 0);
+
+            ElasticSearchQuery elasticSearchQuery=new ElasticSearchQuery(areaRepository,fangAnDao);
+            Thread t1=new ESSaveThread(elasticSearchQuery,newfid,this.elasticsearchOperations,elasticSearchDao);
+            t1.start();
+//            elasticSearchQuery.JoinFidQueryBuildersWithOutFid(newfid);
+//            elasticSearchQuery.SetBoolQuery();
+//            List<YuQingElasticSearch> yuQings=elasticSearchDao.findESByQuery(elasticSearchQuery);
+//            System.out.println(yuQings.size());
+//            List<YuQingElasticSearch> newYuqings=new ArrayList<>();
+//            for (YuQingElasticSearch yuQing:yuQings)
+//            {
+//                yuQing.setFid((int) newfid);
+//                yuQing.setId(UUID.randomUUID().toString());
+//                newYuqings.add(yuQing);
+//            }
+//            this.elasticsearchOperations.save(newYuqings,this.elasticsearchOperations.getIndexCoordinatesFor(YuQingElasticSearch.class));
+
+            System.out.println("bkb");
         }
         return result;
     }

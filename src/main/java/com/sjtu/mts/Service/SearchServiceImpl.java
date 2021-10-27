@@ -361,8 +361,6 @@ public class SearchServiceImpl implements SearchService {
     }
     @Override
     public CflagCountResponse globalSearchCflagCountByFid(long fid, String startPublishedDay, String endPublishedDay){
-        System.out.println(startPublishedDay);
-        System.out.println(endPublishedDay);
         ElasticSearchQuery query=new ElasticSearchQuery(areaRepository,fangAnDao);
         query.JoinFidQueryBuilders(fid);
         query.JoinPublishedDayQueryBuilders(startPublishedDay,endPublishedDay);
@@ -989,7 +987,6 @@ public class SearchServiceImpl implements SearchService {
         query.SetPageableAndBoolQuery();
 
         YuQingResponse response = elasticSearchDao.findByQuery(query);
-        System.out.println(response);
         return response;
     }
 
@@ -1515,8 +1512,6 @@ public class SearchServiceImpl implements SearchService {
 
     @Override
     public JSONArray getWeiboListByid(long fid,String weibouserid) throws ParseException {
-        System.out.println(fid);
-        System.out.println(weibouserid);
         Criteria criteriaForWeiboUser = new Criteria();
         criteriaForWeiboUser.subCriteria(new Criteria("userid").contains(weibouserid));
         CriteriaQuery queryForWeiboUser = new CriteriaQuery(criteriaForWeiboUser);
@@ -1529,7 +1524,6 @@ public class SearchServiceImpl implements SearchService {
         String user_avatar="";
         for (SearchHit<WeiboUser> hit : searchHitsForWeiboUser.getSearchHits())
         {
-            System.out.println(hit.getContent().getNickname());
             id=hit.getContent().getUserid();
             nickname=hit.getContent().getNickname();
             user_avatar=hit.getContent().getUser_avatar();
@@ -1564,7 +1558,6 @@ public class SearchServiceImpl implements SearchService {
             else
             {
                 original_pictures=original_pictures+',';
-                System.out.println(original_pictures);
                 while(original_pictures.length()>0)
                 {
                     int tag=original_pictures.indexOf(',');
@@ -1605,9 +1598,6 @@ public class SearchServiceImpl implements SearchService {
 
     @Override
     public JSONArray getOverallDatOnNetwork(String keyword,Integer pageId) throws MalformedURLException, InterruptedException {
-        System.out.println("sjdygfk");
-        System.out.println(keyword);
-        System.out.println(pageId);
         JSONArray jsonArray=new JSONArray();
         ChromeOptions options = new ChromeOptions();
         options.addArguments("--no-sandbox");
@@ -1728,9 +1718,6 @@ public class SearchServiceImpl implements SearchService {
     @Override
     public JSONArray getOverallDataBing(String keyword,Integer pageId) throws MalformedURLException, InterruptedException
     {
-        System.out.println("Bingherer");
-        System.out.println(keyword);
-        System.out.println(pageId);
         ChromeOptions options = new ChromeOptions();
         options.addArguments("--no-sandbox");
         options.addArguments("--headless");
@@ -1865,9 +1852,7 @@ public class SearchServiceImpl implements SearchService {
         {
             FangAnMaterial fangAnMaterial=fangAnMaterialDAO.findByFidAndMateriallib(fid,materiallib);
             String ids=fangAnMaterial.getIds();
-            System.out.println(ids);
             String[] idarray = ids.trim().split("\\,");
-            System.out.println(idarray.length);
             List<String>searchSplitArray = Arrays.asList(idarray);
             Criteria criteria = new Criteria();
             criteria.subCriteria(new Criteria("_id").in(searchSplitArray));
@@ -1894,7 +1879,6 @@ public class SearchServiceImpl implements SearchService {
     @Override
     public JSONObject addNewMaterialLib(long fid,String decodemateriallib)
     {
-        System.out.println("addNewMaterialLib");
         JSONObject ret=new JSONObject();
         if (fangAnMaterialDAO.existsByFidAndMateriallib(fid,decodemateriallib))
         {
@@ -1917,14 +1901,12 @@ public class SearchServiceImpl implements SearchService {
                 e.printStackTrace();
             }
         }
-        System.out.println(ret.get("addNewMaterialLib"));
         return ret;
     }
 
     @Override
     public JSONObject renameMaterial(long fid,String decodeoldname,String decodenewname)
     {
-        System.out.println("renameMaterial");
         JSONObject ret=new JSONObject();
 
         try {
@@ -1940,15 +1922,12 @@ public class SearchServiceImpl implements SearchService {
             }
             e.printStackTrace();
         }
-
-        System.out.println(ret.get("renameMaterial"));
         return ret;
     }
 
     @Override
     public JSONObject deleteMaterial(long fid,String decodemateriallib)
     {
-        System.out.println("deleteMaterial");
         JSONObject ret=new JSONObject();
 
         try {
@@ -1962,26 +1941,21 @@ public class SearchServiceImpl implements SearchService {
             }
             e.printStackTrace();
         }
-
-        System.out.println(ret.get("deleteMaterial"));
         return ret;
     }
 
     @Override
     public JSONObject deleteMaterialIDs(long fid,String decodemateriallib,String decodeIds)
     {
-        System.out.println("deleteMaterialIDs");
         JSONObject ret=new JSONObject();
 
         try {
             FangAnMaterial fangAnMaterial= fangAnMaterialDAO.findByFidAndMateriallib(fid,decodemateriallib);
             String nowids=fangAnMaterial.getIds();
             String[] nowidarray = nowids.trim().split("\\,");
-            System.out.println(nowids);
             List<String> nowIdarray = new ArrayList<>(Arrays.asList(nowidarray));
 
             String[] deleteIds = decodeIds.trim().split("\\,");
-            System.out.println(deleteIds);
             List<String> DeleteIds = new ArrayList<>(Arrays.asList(deleteIds));
             for (String deleteid:DeleteIds)
             {
@@ -2004,9 +1978,6 @@ public class SearchServiceImpl implements SearchService {
             {
                 ids=ids.substring(0,ids.length()-1);
             }
-
-
-            System.out.println(ids);
             fangAnMaterial.setIds(ids);
             fangAnMaterialDAO.save(fangAnMaterial);
 
@@ -2016,7 +1987,6 @@ public class SearchServiceImpl implements SearchService {
             e.printStackTrace();
         }
 
-        System.out.println(ret.get("deleteMaterialIDs"));
         return ret;
     }
 
@@ -2033,11 +2003,9 @@ public class SearchServiceImpl implements SearchService {
 
                 String nowids=fangAnMaterial.getIds();
                 String[] nowidarray = nowids.trim().split("\\,");
-                System.out.println(nowids);
                 List<String> nowIdarray = new ArrayList<>(Arrays.asList(nowidarray));
 
                 String[] newIds = decodeIds.trim().split("\\,");
-                System.out.println(newIds);
                 List<String> NewIds = new ArrayList<>(Arrays.asList(newIds));
                 for (String newid:NewIds)
                 {
@@ -2062,7 +2030,6 @@ public class SearchServiceImpl implements SearchService {
                     ids=ids.substring(0,ids.length()-1);
                 }
 
-                System.out.println(ids);
                 fangAnMaterial.setIds(ids);
                 fangAnMaterialDAO.save(fangAnMaterial);
                 result.put("modeifyMaterial", 1);
@@ -2183,7 +2150,6 @@ public class SearchServiceImpl implements SearchService {
 
     @Override
     public JSONObject generateFile(int fileID,long fid,int templateId,String decodeTitle,String decodeInstitution,String decodeYuQingIds,String echartsData) throws TemplateException, IOException, ParseException, DocumentException, com.lowagie.text.DocumentException {
-        System.out.println(echartsData);
         JSONObject ret=new JSONObject();
         ret.put("generateFile",1);
         String rnd = DigestUtils.sha1Hex(new Date().toString());
@@ -2461,7 +2427,6 @@ public class SearchServiceImpl implements SearchService {
             e.printStackTrace();
         }
 
-        System.out.println(ret.get("deleteBriefingFiles"));
         return ret;
 
     }
@@ -2472,13 +2437,9 @@ public class SearchServiceImpl implements SearchService {
         byte[] retFile = new byte[0];
         String storeName = null;
         SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm");
-        System.out.println(id);
-        System.out.println(type);
         if (type.equals("pdf"))
         {
-            System.out.println("here");
             retFile=briefingFile.getPdf();
-            System.out.println(briefingFile);
             storeName=briefingFile.getName()+"_"+sdf.format(briefingFile.getGeneratetime())+"_pdf.pdf";
         }
         if (type.equals("word"))
@@ -2492,8 +2453,6 @@ public class SearchServiceImpl implements SearchService {
             storeName=briefingFile.getName()+"_"+sdf.format(briefingFile.getGeneratetime())+"_excel.xls";
         }
         long length=retFile.length;
-        System.out.println(storeName);
-        System.out.println(length);
 
         ByteArrayInputStream ret=new ByteArrayInputStream(retFile);
 
@@ -2528,7 +2487,6 @@ public class SearchServiceImpl implements SearchService {
          }
          LinkedHashSet set=new LinkedHashSet(strings);
          List<String> stringsWithOutDuplicates =new ArrayList<>(set);
-         System.out.println(stringsWithOutDuplicates.size());
          JSONArray jsonArray=new JSONArray();
          for (String s:stringsWithOutDuplicates)
          {
@@ -2548,9 +2506,7 @@ public class SearchServiceImpl implements SearchService {
     @Override
     public JSONObject deleteSensitiveWords(String type,String words)
     {
-        System.out.println("deleteSensitiveWords");
         JSONObject ret=new JSONObject();
-        System.out.println(words);
 
         String[] deleteWords = words.trim().split("\\,");
         List<String> DeleteWords = new ArrayList<>(Arrays.asList(deleteWords));
@@ -2571,7 +2527,6 @@ public class SearchServiceImpl implements SearchService {
     @Override
     public JSONObject addSensitiveWordForAll(String type,String word)
     {
-        System.out.println("addSensitiveWordForAll");
         JSONObject ret=new JSONObject();
         if (sensitiveWordsDao.existsByTypeAndWord(type,word))
         {

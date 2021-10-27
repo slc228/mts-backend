@@ -1,6 +1,7 @@
 package com.sjtu.mts.Dao;
 
 import com.sjtu.mts.Entity.YuQing;
+import com.sjtu.mts.Entity.YuQingElasticSearch;
 import com.sjtu.mts.Expression.ElasticSearchExpression;
 import com.sjtu.mts.Query.ElasticSearchQuery;
 import com.sjtu.mts.Response.YuQingResponse;
@@ -17,4 +18,5 @@ public interface ElasticSearchDao {
     public JSONArray aggregateByResource(ElasticSearchQuery query);
     public List<Long> aggregateBySensitiveType(ElasticSearchQuery query);
     public Terms getAggregateByResource(ElasticSearchQuery query);
+    public List<YuQingElasticSearch> findESByQuery(ElasticSearchQuery query);
 }

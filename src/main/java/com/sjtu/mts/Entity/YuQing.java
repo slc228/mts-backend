@@ -64,11 +64,4 @@ public class YuQing {
         this.emotion = yuqing.getAsString("emotion");
         this.sensitiveType = yuqing.getAsString("sensitiveType");
     }
-
-    public void setFid(String fid) {
-        this.fid = fid;
-    }
-    public void setId(String id) {
-        this.id = id;
-    }
 }
