@@ -55,6 +55,11 @@ public class MultipleThreadExtraction {
                 exec.execute(new SubKeywordExtractionTask(list.subList(i * len, len * (i + 1) > list.size() ? list.size() : len * (i + 1))));
             }
         }
+        System.out.println("hhhhere");
+        for(int i=0;i<10;i++){
+            for(long k=0;k<100000000;k++);
+            System.out.println(":"+i);
+        }
         try {
             barrier.await();//关键，使该线程在障栅处等待，直到所有的线程都到达障栅处
         } catch (InterruptedException e) {
@@ -116,40 +121,42 @@ public class MultipleThreadExtraction {
         int keywordNumber = 25;
         long start = System.currentTimeMillis();
         List<List<String>> sum=countListIntegerSum.getIntegerSum();
-        Map<String, Integer> wordScore = new HashMap<>();
-        for (List<String> singleDocList : sum)
-        {
-            System.out.println(singleDocList);
-            for (int i=0; i<singleDocList.size(); i++){
-                if (!wordScore.containsKey(singleDocList.get(i))){
-                    wordScore.put(singleDocList.get(i), 0);
-                }
-                wordScore.put(singleDocList.get(i),wordScore.get(singleDocList.get(i))+(singleDocList.size()-i));
-            }
-        }
-        List<Map.Entry<String, Integer>> keywordList = new ArrayList<Map.Entry<String, Integer>>(wordScore.entrySet());
-        Collections.sort(keywordList, new Comparator<Map.Entry<String, Integer>>()
-        {
-            @Override
-            public int compare(Map.Entry<String, Integer> o1, Map.Entry<String, Integer> o2)
-            {
-                return Integer.compare(0, o1.getValue() - o2.getValue());
-            }
-        });
-
-        List<KeywordResponse> keywords = new ArrayList<>();
-        for(int i=0; i<min(keywordNumber, keywordList.size()); i++)
-        {
-            String name = keywordList.get(i).getKey().replace(" ", "");
-            Integer value = keywordList.get(i).getValue();
-            keywords.add(new KeywordResponse(name, value));
-        }
-        for (KeywordResponse kr : keywords){
-            System.out.println(kr.name);
-            System.out.println(kr.value);
-        }
-        long end = System.currentTimeMillis();
-        System.out.println("关键词提取耗时：" + (end-start) + "ms");
+        System.out.println("return");
+        return;
+//        Map<String, Integer> wordScore = new HashMap<>();
+//        for (List<String> singleDocList : sum)
+//        {
+//            System.out.println(singleDocList);
+//            for (int i=0; i<singleDocList.size(); i++){
+//                if (!wordScore.containsKey(singleDocList.get(i))){
+//                    wordScore.put(singleDocList.get(i), 0);
+//                }
+//                wordScore.put(singleDocList.get(i),wordScore.get(singleDocList.get(i))+(singleDocList.size()-i));
+//            }
+//        }
+//        List<Map.Entry<String, Integer>> keywordList = new ArrayList<Map.Entry<String, Integer>>(wordScore.entrySet());
+//        Collections.sort(keywordList, new Comparator<Map.Entry<String, Integer>>()
+//        {
+//            @Override
+//            public int compare(Map.Entry<String, Integer> o1, Map.Entry<String, Integer> o2)
+//            {
+//                return Integer.compare(0, o1.getValue() - o2.getValue());
+//            }
+//        });
+//
+//        List<KeywordResponse> keywords = new ArrayList<>();
+//        for(int i=0; i<min(keywordNumber, keywordList.size()); i++)
+//        {
+//            String name = keywordList.get(i).getKey().replace(" ", "");
+//            Integer value = keywordList.get(i).getValue();
+//            keywords.add(new KeywordResponse(name, value));
+//        }
+//        for (KeywordResponse kr : keywords){
+//            System.out.println(kr.name);
+//            System.out.println(kr.value);
+//        }
+//        long end = System.currentTimeMillis();
+//        System.out.println("关键词提取耗时：" + (end-start) + "ms");
 
     }
 }

@@ -1,9 +1,11 @@
 package com.sjtu.mts.Service;
 
 import com.alibaba.fastjson.JSONObject;
+import com.sjtu.mts.Dao.ElasticSearchDao;
 import com.sjtu.mts.Dao.FangAnDao;
 import com.sjtu.mts.Entity.Data;
-import com.sjtu.mts.Response.AmountTrendResponse;
+import com.sjtu.mts.Query.ElasticSearchQuery;
+import com.sjtu.mts.Repository.AreaRepository;
 import com.sjtu.mts.Response.SentimentCountResponse;
 import com.sjtu.mts.Response.SentimentTrendResponse;
 import com.sjtu.mts.rpc.SentimentRpc;
@@ -23,16 +25,22 @@ import java.util.List;
 
 @Service
 public class SentimentServiceImpl implements SentimentService {
+    private final AreaRepository areaRepository;
+
     @Autowired
     private SentimentRpc sentimentRpc;
 
     @Autowired
     private FangAnDao fangAnDao;
 
+    @Autowired
+    private ElasticSearchDao elasticSearchDao;
+
     private final ElasticsearchOperations elasticsearchOperations;
 
-    public SentimentServiceImpl(ElasticsearchOperations elasticsearchOperations)
+    public SentimentServiceImpl(AreaRepository areaRepository, ElasticsearchOperations elasticsearchOperations)
     {
+        this.areaRepository = areaRepository;
         this.elasticsearchOperations = elasticsearchOperations;
     }
 
@@ -46,64 +54,48 @@ public class SentimentServiceImpl implements SentimentService {
 
     @Override
     public SentimentCountResponse countSentiment(long fid, String startPublishedDay, String endPublishedDay) {
-//        List<String> fileContents = new ArrayList<>();
-        //Criteria criteria = fangAnDao.criteriaByFid(fid);
-        List<Data> hitDatas = new ArrayList<>();
-        List<Criteria> criterias=fangAnDao.FindCriteriasByFid(fid);
-        for (Criteria criteria:criterias){
-            if (!startPublishedDay.isEmpty() && !endPublishedDay.isEmpty())
-            {
-                SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
-                try {
-                    Date startDate = sdf.parse(startPublishedDay);
-                    Date endDate = sdf.parse(endPublishedDay);
-                    criteria.subCriteria(new Criteria().and("publishedDay").between(startDate, endDate));
-                } catch (ParseException e) {
-                    e.printStackTrace();
-                }
-            }
+        ElasticSearchQuery queryHappy=new ElasticSearchQuery(areaRepository,fangAnDao);
+        queryHappy.JoinFidQueryBuilders(fid);
+        queryHappy.JoinEmotionQueryBuilders("happy");
+        queryHappy.JoinPublishedDayQueryBuilders(startPublishedDay,endPublishedDay);
+        queryHappy.SetBoolQuery();
+        long happyCount=elasticSearchDao.countByQuery(queryHappy);
 
-            CriteriaQuery query = new CriteriaQuery(criteria);
-            SearchHits<Data> searchHits = this.elasticsearchOperations.search(query, Data.class);
+        ElasticSearchQuery querySurprise=new ElasticSearchQuery(areaRepository,fangAnDao);
+        querySurprise.JoinFidQueryBuilders(fid);
+        querySurprise.JoinEmotionQueryBuilders("surprise");
+        querySurprise.JoinPublishedDayQueryBuilders(startPublishedDay,endPublishedDay);
+        querySurprise.SetBoolQuery();
+        long surpriseCount=elasticSearchDao.countByQuery(querySurprise);
 
-            for(SearchHit<Data> hit : searchHits){
-                Data data = hit.getContent();
-//                fileContents.add(data.getContent());
-                hitDatas.add(data);
-            }
-        }
+        ElasticSearchQuery querySad=new ElasticSearchQuery(areaRepository,fangAnDao);
+        querySad.JoinFidQueryBuilders(fid);
+        querySad.JoinEmotionQueryBuilders("sad");
+        querySad.JoinPublishedDayQueryBuilders(startPublishedDay,endPublishedDay);
+        querySad.SetBoolQuery();
+        long sadCount=elasticSearchDao.countByQuery(querySad);
 
+        ElasticSearchQuery queryFear=new ElasticSearchQuery(areaRepository,fangAnDao);
+        queryFear.JoinFidQueryBuilders(fid);
+        queryFear.JoinEmotionQueryBuilders("fear");
+        queryFear.JoinPublishedDayQueryBuilders(startPublishedDay,endPublishedDay);
+        queryFear.SetBoolQuery();
+        long fearCount=elasticSearchDao.countByQuery(queryFear);
 
-//        String rpc = sentimentRpc.sentimentAnalysis(fileContents);
-//        JSONObject jsonObject = JSONObject.parseObject(rpc);
+        ElasticSearchQuery queryAngry=new ElasticSearchQuery(areaRepository,fangAnDao);
+        queryAngry.JoinFidQueryBuilders(fid);
+        queryAngry.JoinEmotionQueryBuilders("angry");
+        queryAngry.JoinPublishedDayQueryBuilders(startPublishedDay,endPublishedDay);
+        queryAngry.SetBoolQuery();
+        long angryCount=elasticSearchDao.countByQuery(queryAngry);
 
-        long happyCount = 0;
-        long surpriseCount = 0;
-        long sadCount = 0;
-        long fearCount = 0;
-        long angryCount = 0;
-        long neutralCount = 0;
+        ElasticSearchQuery queryNeutral=new ElasticSearchQuery(areaRepository,fangAnDao);
+        queryNeutral.JoinFidQueryBuilders(fid);
+        queryNeutral.JoinEmotionQueryBuilders("neutral");
+        queryNeutral.JoinPublishedDayQueryBuilders(startPublishedDay,endPublishedDay);
+        queryNeutral.SetBoolQuery();
+        long neutralCount=elasticSearchDao.countByQuery(queryNeutral);
 
-        for (Data data : hitDatas) {
-            if (data.getEmotion().equals("happy")){
-                happyCount++;
-            }
-            else if (data.getEmotion().equals("sad")){
-                sadCount++;
-            }
-            else if (data.getEmotion().equals("fear")){
-                fearCount++;
-            }
-            else if (data.getEmotion().equals("angry")){
-                angryCount++;
-            }
-            else if (data.getEmotion().equals("surprise")){
-                surpriseCount++;
-            }
-            else if (data.getEmotion().equals("neutral")){
-                neutralCount++;
-            }
-        }
         SentimentCountResponse sentimentCountResponse = new SentimentCountResponse(happyCount,
                 surpriseCount, sadCount, angryCount, fearCount, neutralCount);
         return sentimentCountResponse;
@@ -132,55 +124,49 @@ public class SentimentServiceImpl implements SentimentService {
                 new ArrayList<>(), new ArrayList<>(), new ArrayList<>());
         for (int j = 0; j < pointNum; j++) {
             timeRange.add(sdf.format(dateList.get(j)) + " to " + sdf.format(dateList.get(j + 1)));
-            //Criteria criteria = fangAnDao.criteriaByFid(fid);
-//            List<String> fileContents = new ArrayList<>();
-            List<Data> hitDatas = new ArrayList<>();
 
-            List<Criteria> criterias=fangAnDao.FindCriteriasByFid(fid);
-            for (Criteria criteria:criterias)
-            {
-                criteria.subCriteria(new Criteria().and("publishedDay").between(dateList.get(j), dateList.get(j + 1)));
-                CriteriaQuery query = new CriteriaQuery(criteria);
+            ElasticSearchQuery queryHappy=new ElasticSearchQuery(areaRepository,fangAnDao);
+            queryHappy.JoinFidQueryBuilders(fid);
+            queryHappy.JoinEmotionQueryBuilders("happy");
+            queryHappy.JoinPublishedDayQueryBuilders(sdf.format(dateList.get(j)),sdf.format(dateList.get(j+1)));
+            queryHappy.SetBoolQuery();
+            long happyCount=elasticSearchDao.countByQuery(queryHappy);
 
-                SearchHits<Data> searchHits = this.elasticsearchOperations.search(query, Data.class);
+            ElasticSearchQuery querySurprise=new ElasticSearchQuery(areaRepository,fangAnDao);
+            querySurprise.JoinFidQueryBuilders(fid);
+            querySurprise.JoinEmotionQueryBuilders("surprise");
+            querySurprise.JoinPublishedDayQueryBuilders(sdf.format(dateList.get(j)),sdf.format(dateList.get(j+1)));
+            querySurprise.SetBoolQuery();
+            long surpriseCount=elasticSearchDao.countByQuery(querySurprise);
 
-                for (SearchHit<Data> hit : searchHits) {
-                    Data data = hit.getContent();
-//                    fileContents.add(data.getContent());
-                    hitDatas.add(data);
-                }
-            }
+            ElasticSearchQuery querySad=new ElasticSearchQuery(areaRepository,fangAnDao);
+            querySad.JoinFidQueryBuilders(fid);
+            querySad.JoinEmotionQueryBuilders("sad");
+            querySad.JoinPublishedDayQueryBuilders(sdf.format(dateList.get(j)),sdf.format(dateList.get(j+1)));
+            querySad.SetBoolQuery();
+            long sadCount=elasticSearchDao.countByQuery(querySad);
 
+            ElasticSearchQuery queryFear=new ElasticSearchQuery(areaRepository,fangAnDao);
+            queryFear.JoinFidQueryBuilders(fid);
+            queryFear.JoinEmotionQueryBuilders("fear");
+            queryFear.JoinPublishedDayQueryBuilders(sdf.format(dateList.get(j)),sdf.format(dateList.get(j+1)));
+            queryFear.SetBoolQuery();
+            long fearCount=elasticSearchDao.countByQuery(queryFear);
 
-//            String rpc = sentimentRpc.sentimentAnalysis(fileContents);
-//            JSONObject jsonObject = JSONObject.parseObject(rpc);
+            ElasticSearchQuery queryAngry=new ElasticSearchQuery(areaRepository,fangAnDao);
+            queryAngry.JoinFidQueryBuilders(fid);
+            queryAngry.JoinEmotionQueryBuilders("angry");
+            queryAngry.JoinPublishedDayQueryBuilders(sdf.format(dateList.get(j)),sdf.format(dateList.get(j+1)));
+            queryAngry.SetBoolQuery();
+            long angryCount=elasticSearchDao.countByQuery(queryAngry);
 
-            long happyCount = 0;
-            long surpriseCount = 0;
-            long sadCount = 0;
-            long fearCount = 0;
-            long angryCount = 0;
-            long neutralCount = 0;
-            for (Data data : hitDatas) {
-                if (data.getEmotion().equals("happy")){
-                    happyCount++;
-                }
-                else if (data.getEmotion().equals("sad")){
-                    sadCount++;
-                }
-                else if (data.getEmotion().equals("fear")){
-                    fearCount++;
-                }
-                else if (data.getEmotion().equals("angry")){
-                    angryCount++;
-                }
-                else if (data.getEmotion().equals("surprise")){
-                    surpriseCount++;
-                }
-                else if (data.getEmotion().equals("neutral")){
-                    neutralCount++;
-                }
-            }
+            ElasticSearchQuery queryNeutral=new ElasticSearchQuery(areaRepository,fangAnDao);
+            queryNeutral.JoinFidQueryBuilders(fid);
+            queryNeutral.JoinEmotionQueryBuilders("neutral");
+            queryNeutral.JoinPublishedDayQueryBuilders(sdf.format(dateList.get(j)),sdf.format(dateList.get(j+1)));
+            queryNeutral.SetBoolQuery();
+            long neutralCount=elasticSearchDao.countByQuery(queryNeutral);
+
             response.getHappyTrend().add(happyCount);
             response.getSurpriseTrend().add(surpriseCount);
             response.getSadTrend().add(sadCount);

@@ -8,6 +8,7 @@ import com.sjtu.mts.Response.*;
 import freemarker.template.TemplateException;
 import net.minidev.json.JSONArray;
 import net.minidev.json.JSONObject;
+import org.openqa.selenium.json.Json;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -21,11 +22,13 @@ import java.util.Map;
 
 public interface SearchService {
 
-    public YuQingResponse Search(String keyword, String cflag, String startPublishedDay, String endPublishedDay,
-                               String fromType, int page, int pageSize, int timeOrder);
+    public YuQingResponse Search(String keyword, String startPublishedDay, String endPublishedDay,
+                               String sensitiveFlag, int page, int pageSize, int timeOrder);
 
     public YuQingResponse SearchWithObject(String keyword, String sensitiveType, String emotion, String startPublishedDay, String endPublishedDay,
-                               String fromType, int page, int pageSize, int timeOrder,String keywords);
+                               String resource, int page, int pageSize, int timeOrder,String keywords);
+
+    public JSONArray getResources();
 
     public JSONArray globalSearchResourceCount(String keyword, String startPublishedDay,
                                                            String endPublishedDay);
@@ -37,6 +40,12 @@ public interface SearchService {
 
 
     public JSONObject globalSearchTrendCount(String keyword, String startPublishedDay, String endPublishedDay);
+
+    public JSONObject totalAmountTrendCount(String keyword,String startPublishedDay,String endPublishedDay);
+    public JSONObject sourceAmountTrendCount(String keyword,String startPublishedDay,String endPublishedDay);
+
+    public JSONObject getProgrammeSourceTrend(long fid,String startPublishedDay,String endPublishedDay);
+    public JSONObject getProgrammeTotalAmountTrend(long fid,String startPublishedDay,String endPublishedDay);
 
     public JSONObject globalSearchTrendCount2(long fid,String startPublishedDay, String endPublishedDay);
     public AmountTrendResponse globalSearchTrendCount3(long fid,String startPublishedDay, String endPublishedDay);
@@ -53,8 +62,8 @@ public interface SearchService {
 
     public DataResponse fangAnSearch(long fid,String cflag, String startPublishedDay, String endPublishedDay,
                                      String fromType, int page, int pageSize, int timeOrder);
-    public DataResponse fangAnSearch2(long fid,String keyword,String sensitiveType,String emotion, String startPublishedDay, String endPublishedDay,
-                                     String fromType, int page, int pageSize, int timeOrder);
+    public YuQingResponse fangAnSearch2(long fid,String keyword,String sensitiveType,String emotion, String startPublishedDay, String endPublishedDay,
+                                     String resource, int page, int pageSize, int timeOrder);
 
     public JSONObject addSensitiveWord(String sensitiveWord);
     public JSONObject delSensitiveWord(String sensitiveWord);
@@ -141,4 +150,6 @@ public interface SearchService {
     public JSONObject addSensitiveWordForAll(String type,String word);
 
     public JSONArray getSensitiveWordsByFid(long fid);
+
+    public JSONObject generate() throws IOException, com.lowagie.text.DocumentException;
 }
