@@ -62,6 +62,7 @@ public class UserController {
     @PostMapping(path = "/register")
     @ResponseBody
     public JSONObject register(@RequestBody Map<String,String> registerinfo ) {
+        System.out.println("hasdjksakldlkasdlasjfhjsdhglhjskgsjdakl");
         return userService.registerUser(registerinfo.get("username"), registerinfo.get("password"), registerinfo.get("phone"), registerinfo.get("email"), registerinfo.get("role"));
     }
 

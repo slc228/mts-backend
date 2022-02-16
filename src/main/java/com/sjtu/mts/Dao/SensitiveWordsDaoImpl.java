@@ -5,6 +5,7 @@ import com.sjtu.mts.Repository.FangAnMaterialRepository;
 import com.sjtu.mts.Repository.SensitiveWordsRepository;
 import org.springframework.stereotype.Repository;
 
+import java.math.BigInteger;
 import java.util.List;
 
 @Repository
@@ -17,26 +18,33 @@ public class SensitiveWordsDaoImpl implements SensitiveWordsDao{
 
     @Override
     public List<SensitiveWords> findAll() {
-        return sensitiveWordsRepository.findAll();
+        return sensitiveWordsRepository.SelectSensitivewords();
     }
 
     @Override
-    public SensitiveWords save(SensitiveWords sensitiveWords) {
-        return sensitiveWordsRepository.save(sensitiveWords);
+    public void InsertSensitivewords(String type, String word)
+    {
+        sensitiveWordsRepository.InsertSensitivewords(type, word);
+    }
+
+    @Override
+    public void UpdateSensitivewords(int id, String type, String word)
+    {
+        sensitiveWordsRepository.UpdateSensitivewords(id, type, word);
     }
 
     @Override
     public List<SensitiveWords> findAllByType(String type) {
-        return sensitiveWordsRepository.findAllByType(type);
+        return sensitiveWordsRepository.SelectSensitivewordsByType(type);
     }
 
     @Override
     public boolean existsByTypeAndWord(String type, String word) {
-        return sensitiveWordsRepository.existsByTypeAndWord(type,word);
+        return sensitiveWordsRepository.ExistsSensitivewordsByTypeAndWord(type,word).equals(BigInteger.ONE);
     }
 
     @Override
     public void deleteByTypeAndWord(String type, String word) {
-        sensitiveWordsRepository.deleteByTypeAndWord(type,word);
+        sensitiveWordsRepository.DeleteSensitivewordsByTypeAndWord(type,word);
     }
 }

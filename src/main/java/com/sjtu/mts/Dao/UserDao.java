@@ -1,65 +1,22 @@
 package com.sjtu.mts.Dao;
 
 import com.sjtu.mts.Entity.User;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 
+import java.util.HashMap;
 import java.util.List;
 
 public interface UserDao {
-
     List<User> getAllUsers();
-    /**
-     * save user
-     *
-     * @param user user
-     * @return user saved
-     */
-    User save(User user);
-
-    /**
-     * whether exists username in database
-     *
-     * @param username username
-     * @return whether exists username
-     */
+    void InsertUser(String username, String password, String phone, String email, int projectNum,
+                    String validDate, String role, int state, String eventLimiter, String sensitiveLimiter);
+    void UpdateUserByUsername(String username, String password, String phone, String email, int projectNum,
+                              String validDate, String role, int state, String eventLimiter, String sensitiveLimiter);
     Boolean existByUsername(String username);
-
-    /**
-     * whether exists phone in database
-     *
-     * @param phone phone
-     * @return whether exists phone
-     */
     Boolean existsByPhone(String phone);
-
-    /**
-     * find user by username
-     *
-     * @param username username
-     * @return user found
-     */
     User findByUsername(String username);
-
-    /**
-     * find user by phone
-     *
-     * @param phone phone
-     * @return user found
-     */
     User findByPhone(String phone);
-
-    /**
-     * delete data from database by username
-     *
-     * @param username username
-     */
     void deleteByUsername(String username);
-    /**
-     * find all user information contains the username
-     * @param username username
-     * @return all user that contains the username
-     */
-    List<User> findAllByUsernameContains(String username);
-
     void changeUserState(String username);
-
 }

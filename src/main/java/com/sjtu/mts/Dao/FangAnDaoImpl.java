@@ -8,6 +8,7 @@ import org.springframework.data.elasticsearch.core.query.Criteria;
 import org.springframework.stereotype.Repository;
 
 import java.io.Console;
+import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.LinkedList;
@@ -24,31 +25,49 @@ public class FangAnDaoImpl implements FangAnDao {
         this.areaRepository = areaRepository;
     }
 
+
     @Override
-    public  FangAn save(FangAn fangAn){return fangAnRepository.save(fangAn);}
+    public int InsertFangan(String username, String programme_name, int match_type,
+                             String rekeyword, int rekeymatch, String rokeyword,
+                             int rokeymatch, String ekeyword, int ekeymatch,
+                             boolean enable_alert, String sensitiveword, int priority)
+    {
+        return fangAnRepository.InsertFangan(username,programme_name,match_type,rekeyword,rekeymatch,
+                                        rokeyword, rokeymatch, ekeyword, ekeymatch,enable_alert, sensitiveword, priority);
+    }
+
+    @Override
+    public void UpdateFangan(long fid, String username, String programme_name, int match_type,
+                      String rekeyword, int rekeymatch, String rokeyword,
+                      int rokeymatch, String ekeyword, int ekeymatch,
+                      boolean enable_alert, String sensitiveword, int priority)
+    {
+        fangAnRepository.UpdateFangan(fid,username,programme_name,match_type,rekeyword,rekeymatch,
+                rokeyword, rokeymatch, ekeyword, ekeymatch,enable_alert, sensitiveword, priority);
+    }
 
     @Override
     public List<FangAn> findAllByUsername(String username){
-        return fangAnRepository.findAllByUsername(username);
+        return fangAnRepository.SelectFanganByUsername(username);
     }
 
     @Override
     public List<FangAn> findAll() {
-        return fangAnRepository.findAll();
+        return fangAnRepository.SelectFangan();
     }
 
     @Override
     public Boolean existsByUsernameAndProgrammeName(String username,String programme){
-        return fangAnRepository.existsByUsernameAndProgrammeName(username,programme);
+        return fangAnRepository.ExistsFanganByUsernameAndProgrammeName(username,programme).equals(BigInteger.ONE);
     }
     @Override
     public FangAn findByFid(long fid){
-        return  fangAnRepository.findByFid(fid);
+        return  fangAnRepository.SelectFanganByFid(fid);
     }
 
     @Override
     public void deleteByFid(long fid){
-        fangAnRepository.deleteByFid(fid);
+        fangAnRepository.DeleteFanganByFid(fid);
     }
 
     /*传入方案id，返回方案查询的舆情结果
