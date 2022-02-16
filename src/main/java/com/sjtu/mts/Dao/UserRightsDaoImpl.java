@@ -15,20 +15,30 @@ public class UserRightsDaoImpl implements UserRightsDao {
     }
 
     @Override
-    public UserRights save(UserRights userRights)
+    public void InsertUserRights(String username, boolean dataScreen, boolean schemeConfiguration,
+                                 boolean globalSearch, boolean analysis, boolean warning,
+                                 boolean briefing, boolean userRole, boolean sensitiveWords)
     {
-        return userRightsRepository.save(userRights);
+        userRightsRepository.InsertUserRights(username, dataScreen, schemeConfiguration, globalSearch, analysis, warning, briefing, userRole, sensitiveWords);
+    }
+
+    @Override
+    public void UpdateUserRights(String username, boolean dataScreen, boolean schemeConfiguration,
+                          boolean globalSearch, boolean analysis, boolean warning,
+                          boolean briefing, boolean userRole, boolean sensitiveWords)
+    {
+        userRightsRepository.UpdateUserRights(username, dataScreen, schemeConfiguration, globalSearch, analysis, warning, briefing, userRole, sensitiveWords);
     }
 
     @Override
     public UserRights findByUsername(String username)
     {
-        return userRightsRepository.findByUsername(username);
+        return userRightsRepository.SelectUserRightsByUsername(username);
     }
 
     @Override
     public void  deleteByUsername(String username)
     {
-        userRightsRepository.deleteByUsername(username);
+        userRightsRepository.DeleteUserRightsByUsername(username);
     }
 }

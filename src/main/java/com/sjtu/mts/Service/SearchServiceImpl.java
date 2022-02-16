@@ -1194,7 +1194,10 @@ public class SearchServiceImpl implements SearchService {
             }
             oldFangAn.setEventKeyword(oldEkeyword);
             //fangAnDao.deleteByFid(fid);
-            fangAnDao.save(oldFangAn);
+            fangAnDao.UpdateFangan(oldFangAn.getFid(),oldFangAn.getUsername(),oldFangAn.getProgrammeName(),oldFangAn.getMatchType(),
+                                    oldFangAn.getRegionKeyword(),oldFangAn.getRegionKeywordMatch(),oldFangAn.getRoleKeyword(),oldFangAn.getEventKeywordMatch(),
+                                    oldFangAn.getEventKeyword(),oldFangAn.getEventKeywordMatch(),oldFangAn.getEnableAlert(),
+                                    oldFangAn.getSensitiveword(),oldFangAn.getPriority());
             result.put("autoaddEkeyword", 1);
             return result;
         }catch (Exception e){
@@ -1770,7 +1773,8 @@ public class SearchServiceImpl implements SearchService {
                 fangAnTemplate.setTime(dateTime);
                 fangAnTemplate.setKeylist(keylist);
                 fangAnTemplate.setText(text);
-                fangAnTemplateDAO.save(fangAnTemplate);
+                fangAnTemplateDAO.UpdateFanganTemplate(id,fid,decodeTitle,decodeVersion,decodeInstitution,dateTime,keylist,text);
+//                fangAnTemplateDAO.save(fangAnTemplate);
                 result.put("savebriefingtemplate", 1);
                 return result;
             }
@@ -1789,7 +1793,8 @@ public class SearchServiceImpl implements SearchService {
                 SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm");
                 Date dateTime = sdf.parse(time);
                 FangAnTemplate fangAnTemplate=new FangAnTemplate(fid,decodeTitle,decodeVersion,decodeInstitution,dateTime,keylist,text);
-                fangAnTemplateDAO.save(fangAnTemplate);
+                fangAnTemplateDAO.InsertFanganTemplate(fid,decodeTitle,decodeVersion,decodeInstitution,dateTime,keylist,text);
+//                fangAnTemplateDAO.save(fangAnTemplate);
                 result.put("savebriefingtemplate", 1);
                 return result;
             }
@@ -1888,7 +1893,8 @@ public class SearchServiceImpl implements SearchService {
         {
             try {
                 FangAnMaterial fangAnMaterial=new FangAnMaterial(fid,decodemateriallib,"");
-                fangAnMaterialDAO.save(fangAnMaterial);
+                fangAnMaterialDAO.InsertFanganMaterial(fid,decodemateriallib,"");
+//                fangAnMaterialDAO.save(fangAnMaterial);
                 ret.put("addNewMaterialLib",1);
             }
             catch (Exception e) {
@@ -1912,7 +1918,8 @@ public class SearchServiceImpl implements SearchService {
         try {
             FangAnMaterial fangAnMaterial = fangAnMaterialDAO.findByFidAndMateriallib(fid, decodeoldname);
             fangAnMaterial.setMateriallib(decodenewname);
-            fangAnMaterialDAO.save(fangAnMaterial);
+            fangAnMaterialDAO.UpdateFanganMaterial(fangAnMaterial.getId(),fangAnMaterial.getFid(),fangAnMaterial.getMateriallib(),fangAnMaterial.getIds());
+//            fangAnMaterialDAO.save(fangAnMaterial);
             ret.put("renameMaterial", 1);
         } catch (Exception e) {
             if (fangAnMaterialDAO.existsByFidAndMateriallib(fid, decodenewname)) {
@@ -1979,7 +1986,8 @@ public class SearchServiceImpl implements SearchService {
                 ids=ids.substring(0,ids.length()-1);
             }
             fangAnMaterial.setIds(ids);
-            fangAnMaterialDAO.save(fangAnMaterial);
+            fangAnMaterialDAO.UpdateFanganMaterial(fangAnMaterial.getId(),fangAnMaterial.getFid(),fangAnMaterial.getMateriallib(),fangAnMaterial.getIds());
+//            fangAnMaterialDAO.save(fangAnMaterial);
 
             ret.put("deleteMaterialIDs", 1);
         } catch (Exception e) {
@@ -2031,7 +2039,8 @@ public class SearchServiceImpl implements SearchService {
                 }
 
                 fangAnMaterial.setIds(ids);
-                fangAnMaterialDAO.save(fangAnMaterial);
+                fangAnMaterialDAO.UpdateFanganMaterial(fangAnMaterial.getId(),fangAnMaterial.getFid(),fangAnMaterial.getMateriallib(),fangAnMaterial.getIds());
+//                fangAnMaterialDAO.save(fangAnMaterial);
                 result.put("modeifyMaterial", 1);
                 return result;
             }
@@ -2048,7 +2057,8 @@ public class SearchServiceImpl implements SearchService {
         else {
             try {
                 FangAnMaterial fangAnMaterial=new FangAnMaterial(fid,materiallib,decodeIds);
-                fangAnMaterialDAO.save(fangAnMaterial);
+                fangAnMaterialDAO.InsertFanganMaterial(fid,materiallib,decodeIds);
+//                fangAnMaterialDAO.save(fangAnMaterial);
                 result.put("modeifyMaterial", 1);
                 return result;
             }
@@ -2189,6 +2199,8 @@ public class SearchServiceImpl implements SearchService {
         String[] keylistStrings = keylistString.trim().split("\\,");
         List<String> keylist = new ArrayList<>(Arrays.asList(keylistStrings));
         List<Dimension> dimensions=dimensionDao.findAllByKeyIn(keylist);
+        System.out.println("hereDimension");
+        System.out.println(dimensions.size());
         dataMap.put("dimensions",dimensions);
 
         // echarts图片数据
@@ -2346,7 +2358,9 @@ public class SearchServiceImpl implements SearchService {
             briefingFile.setPdf(pdfByteArray);
             briefingFile.setExcel(excelByteArray);
             briefingFile.setWord(wordByteArray);
-            briefingFileDao.save(briefingFile);
+            briefingFileDao.UpdateBriefingFile(briefingFile.getId(),briefingFile.getFid(),briefingFile.getName(),
+                    briefingFile.getGeneratetime(),briefingFile.getPdf(),briefingFile.getWord(),briefingFile.getExcel(),
+                    briefingFile.getPercent());
             ret.put("generateFile",1);
         }catch (Exception e){
             ret.put("generateFile",0);
@@ -2383,7 +2397,9 @@ public class SearchServiceImpl implements SearchService {
         JSONObject ret=new JSONObject();
         try {
             BriefingFile briefingFile=new BriefingFile(fid,title,new Date(),null,null,null,10);
-            briefingFileDao.save(briefingFile);
+            System.out.println("hhhhhhhhereFile");
+            briefingFileDao.InsertBriefingFile(fid,title,new Date(),null,null,null,10);
+            System.out.println("hhhhhhhhereFile");
             ret.put("addNewBriefingFileRecord",1);
             ret.put("fileId",briefingFile.getId());
         }
@@ -2401,7 +2417,9 @@ public class SearchServiceImpl implements SearchService {
         BriefingFile briefingFile=briefingFileDao.findById(id);
         briefingFile.setPercent(briefingFile.getPercent()+percent);
         try {
-            briefingFileDao.save(briefingFile);
+            briefingFileDao.UpdateBriefingFile(briefingFile.getId(),briefingFile.getFid(),briefingFile.getName(),
+                    briefingFile.getGeneratetime(),briefingFile.getPdf(),briefingFile.getWord(),briefingFile.getExcel(),
+                    briefingFile.getPercent());
             ret.put("updateBriefingFileProgess",1);
         }
         catch (Exception e) {
@@ -2535,8 +2553,8 @@ public class SearchServiceImpl implements SearchService {
         }else
         {
             try {
-                SensitiveWords sensitiveWords=new SensitiveWords(type,word);
-                sensitiveWordsDao.save(sensitiveWords);
+//                SensitiveWords sensitiveWords=new SensitiveWords(type,word);
+                sensitiveWordsDao.InsertSensitivewords(type, word);
                 ret.put("addSensitiveWordForAll",1);
             }
             catch (Exception e) {
