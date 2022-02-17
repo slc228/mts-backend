@@ -774,7 +774,7 @@ public class DataController {
 
     @GetMapping("/getMaterialDetail")
     @ResponseBody
-    public DataResponse getMaterialDetail (
+    public YuQingResponse getMaterialDetail (
             @RequestParam("fid") long fid,
             @RequestParam("materiallib") String materiallib
     ) {

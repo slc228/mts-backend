@@ -1,8 +1,8 @@
 eureka:
   client:
     serviceUrl:
-      defaultZone: http://localhost:9000/eureka/
-#      defaultZone: http://192.168.0.19:9000/eureka/
+#      defaultZone: http://localhost:9000/eureka/
+       defaultZone: http://192.168.0.19:9000/eureka/
 #      defaultZone: http://202.120.40.69:9000/eureka/
 # application name
 spring:
@@ -10,9 +10,9 @@ spring:
     name: mts-backend
   # Mysql jpa config
   datasource:
-    url: jdbc:Mysql://127.0.0.1:3306/newyuqing_schema?useUnicode=true&characterEncoding=utf-8&serverTimezone=GMT%2B8
+    url: jdbc:Mysql://202.120.40.69:11111/newyuqing_schema?useUnicode=true&characterEncoding=utf-8&serverTimezone=GMT%2B8
     username: root
-    password: 228228
+    password: 35013501
 #    url: jdbc:Mysql://127.0.0.1:3306/mtsdata?useUnicode=true&characterEncoding=utf-8&serverTimezone=GMT%2B8
 #    username: root
 #    password: root

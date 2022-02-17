@@ -7,7 +7,9 @@ import java.util.Date;
 import java.util.List;
 
 public interface BriefingFileDao {
-    void InsertBriefingFile(long fid, String name, Date generatetime, byte[] pdf, byte[] word, byte[] excel, int percent);
+    void save(BriefingFile briefingFile);
+
+    int InsertBriefingFile(long fid, String name, Date generatetime, byte[] pdf, byte[] word, byte[] excel, int percent);
 
     void UpdateBriefingFile(int id, long fid, String name, Date generatetime, byte[] pdf, byte[] word, byte[] excel, int percent);
 
