@@ -161,6 +161,8 @@ public class UserServiceImp implements UserService {
             return result;
         } else {
             User user = userDao.findByUsername(username);
+            System.out.println(user.getUsername());
+            System.out.println(user.getPassword());
             if (!user.getPassword().equals(password)) {
                 return result;
             } else {

@@ -24,7 +24,7 @@ public interface BriefingFileRepository extends JpaRepository<BriefingFile,Integ
     @Transactional(rollbackOn = Exception.class)
     void deleteById(int id);
 
-    @Query(nativeQuery = true,value = "call usp_SelectBriefingFileById()")
+    @Query(nativeQuery = true,value = "call usp_SelectBriefingFileById(:id)")
     BriefingFile SelectBriefingFileById(@Param("id") int id);
 
     @Query(nativeQuery = true,value = "call usp_SelectBriefingFileByFid(:fid)")
@@ -36,8 +36,8 @@ public interface BriefingFileRepository extends JpaRepository<BriefingFile,Integ
     @Query(nativeQuery = true,value = "call usp_ExistsBriefingFileById(:id)")
     BigInteger ExistsBriefingFileById(@Param("id") int id);
 
-    @Procedure(procedureName="usp_InsertBriefingFile")
-    void InsertBriefingFile(long fid, String name, Date generatetime, byte[] pdf, byte[] word, byte[] excel, int percent);
+    @Query(nativeQuery = true,value = "call usp_InsertBriefingFile(:fid,:name,:generatetime,:pdf,:word,:excel,:percent)")
+    int InsertBriefingFile(long fid, String name, Date generatetime, byte[] pdf, byte[] word, byte[] excel, int percent);
 
     @Procedure(procedureName="usp_UpdateBriefingFile")
     void UpdateBriefingFile(int id, long fid, String name, Date generatetime, byte[] pdf, byte[] word, byte[] excel, int percent);

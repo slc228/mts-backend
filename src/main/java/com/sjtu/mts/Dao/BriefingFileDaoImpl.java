@@ -17,9 +17,15 @@ public class BriefingFileDaoImpl implements BriefingFileDao {
     }
 
     @Override
-    public void InsertBriefingFile(long fid, String name, Date generatetime, byte[] pdf, byte[] word, byte[] excel, int percent)
+    public void save(BriefingFile briefingFile)
     {
-        briefingFileRepository.InsertBriefingFile(fid, name, generatetime, pdf, word, excel, percent);
+        briefingFileRepository.save(briefingFile);
+    }
+
+    @Override
+    public int InsertBriefingFile(long fid, String name, Date generatetime, byte[] pdf, byte[] word, byte[] excel, int percent)
+    {
+        return briefingFileRepository.InsertBriefingFile(fid, name, generatetime, pdf, word, excel, percent);
     }
 
     @Override

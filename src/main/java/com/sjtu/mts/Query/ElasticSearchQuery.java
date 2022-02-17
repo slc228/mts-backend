@@ -99,6 +99,19 @@ public class ElasticSearchQuery {
         return this;
     }
 
+    public ElasticSearchQuery JoinQueryBuildersByUrls(List<String> urls)
+    {
+        BoolQueryBuilder urlsBoolQueryBuilder=new BoolQueryBuilder();
+        for (String url : urls)
+        {
+            BoolQueryBuilder urlBoolQueryBuilder=new BoolQueryBuilder();
+            urlBoolQueryBuilder.should(QueryBuilders.termQuery("yuqing_url", url));
+            urlsBoolQueryBuilder.should(urlBoolQueryBuilder);
+        }
+        boolQueryBuilder.must(urlsBoolQueryBuilder);
+        return this;
+    }
+
     public ElasticSearchQuery JoinPublishedDayQueryBuilders(String startDay, String endDay)
     {
         RangeQueryBuilder rangeQueryBuilder=new RangeQueryBuilder("publishedDay");
