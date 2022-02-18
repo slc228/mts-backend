@@ -11,6 +11,7 @@ import com.sjtu.mts.WeiboTrack.WeiboRepostTree;
 import freemarker.template.TemplateException;
 import net.minidev.json.JSONArray;
 import net.minidev.json.JSONObject;
+import org.openqa.selenium.json.Json;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
@@ -54,6 +55,9 @@ public class DataController {
 
     @Autowired
     private FangAnService fangAnService;
+
+    @Autowired
+    private FangAnWarningService fangAnWarningService;
 
     @GetMapping("/testApi")
     @ResponseBody
@@ -1016,4 +1020,49 @@ public class DataController {
     public JSONObject gengrate () throws com.lowagie.text.DocumentException, IOException {
         return searchService.generate();
     }
+
+    @GetMapping("/getFangAnWarning")
+    @ResponseBody
+    public FangAnWarning getFangAnWarning (
+            @RequestParam("fid") long fid
+    )  {
+        return fangAnWarningService.getFangAnWarning(fid);
+    }
+
+
+    @GetMapping("/modifyFangAnWarning")
+    @ResponseBody
+    public JSONObject modifyFangAnWarning (
+            @RequestParam("fid") long fid,
+            @RequestParam("warningSwitch") int warningSwitch,
+            @RequestParam("words") String words,
+            @RequestParam("sensitiveAttribute") int sensitiveAttribute,
+            @RequestParam("similarArticle") int similarArticle,
+            @RequestParam("area") String area,
+            @RequestParam("sourceSite") int sourceSite,
+            @RequestParam("result") int result,
+            @RequestParam("involve") int involve,
+            @RequestParam("matchingWay") int matchingWay,
+            @RequestParam("weiboType") int weiboType,
+            @RequestParam("deWeight") int deWeight,
+            @RequestParam("filtrate") int filtrate,
+            @RequestParam("informationType") String informationType,
+            @RequestParam("warningType") int warningType
+    )  {
+        String decodeWords="";
+        String decodeArea="";
+        String decodeInformationType="";
+        try{
+            decodeWords = java.net.URLDecoder.decode(words, "utf-8");
+            decodeArea = java.net.URLDecoder.decode(area, "utf-8");
+            decodeInformationType = java.net.URLDecoder.decode(informationType, "utf-8");
+        }catch (Exception e){
+            System.out.println(e);
+        }
+        return fangAnWarningService.modifyFangAnWarning(fid, warningSwitch, decodeWords, sensitiveAttribute,
+        similarArticle, decodeArea, sourceSite, result, involve,
+        matchingWay,weiboType, deWeight, filtrate,
+        decodeInformationType,warningType);
+    }
+
 }
