@@ -62,6 +62,10 @@ public class WarningReceiver {
         this.phone = phone;
     }
 
+    public String getPhone() {
+        return phone;
+    }
+
     public void setEmail(String email) {
         this.email = email;
     }
