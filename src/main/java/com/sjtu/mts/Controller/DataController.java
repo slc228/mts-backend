@@ -59,6 +59,9 @@ public class DataController {
     @Autowired
     private FangAnWarningService fangAnWarningService;
 
+    @Autowired
+    private WarningReceiverService warningReceiverService;
+
     @GetMapping("/testApi")
     @ResponseBody
     public String heartBeating() {
@@ -1063,6 +1066,46 @@ public class DataController {
         similarArticle, decodeArea, sourceSite, result, involve,
         matchingWay,weiboType, deWeight, filtrate,
         decodeInformationType,warningType);
+    }
+
+    @GetMapping("/getAllWarningReceiver")
+    @ResponseBody
+    public WarningReceiverResponse getAllWarningReceiver (
+            @RequestParam("fid") long fid
+    )  {
+        return warningReceiverService.getAllWarningReceiver(fid);
+    }
+
+    @GetMapping("/addWarningReceiver")
+    @ResponseBody
+    public JSONObject getAllWarningReceiver (
+            @RequestParam("fid") long fid,
+            @RequestParam("name") String name,
+            @RequestParam("phone") String phone,
+            @RequestParam("email") String email,
+            @RequestParam("wechat") String wechat
+    )  {
+        String decodeName="";
+        String decodePhone="";
+        String decodeEmail="";
+        String decodeWechat="";
+        try{
+            decodeName = java.net.URLDecoder.decode(name, "utf-8");
+            decodePhone = java.net.URLDecoder.decode(phone, "utf-8");
+            decodeEmail = java.net.URLDecoder.decode(email, "utf-8");
+            decodeWechat = java.net.URLDecoder.decode(wechat, "utf-8");
+        }catch (Exception e){
+            System.out.println(e);
+        }
+        return warningReceiverService.addWarningReceiver(fid,decodeName,decodePhone,decodeEmail,decodeWechat);
+    }
+
+    @GetMapping("/deleteWarningReceiver")
+    @ResponseBody
+    public JSONObject getAllWarningReceiver (
+            @RequestParam("id") int id
+    )  {
+        return warningReceiverService.deleteWarningReceiver(id);
     }
 
 }
