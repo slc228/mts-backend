@@ -62,6 +62,9 @@ public class DataController {
     @Autowired
     private WarningReceiverService warningReceiverService;
 
+    @Autowired
+    private WarningRecordService warningRecordService;
+
     @GetMapping("/testApi")
     @ResponseBody
     public String heartBeating() {
@@ -1106,6 +1109,25 @@ public class DataController {
             @RequestParam("id") int id
     )  {
         return warningReceiverService.deleteWarningReceiver(id);
+    }
+
+    @GetMapping("/getWarningRecord")
+    @ResponseBody
+    public WarningRecordResponse getWarningRecord (
+            @RequestParam("fid") long fid,
+            @RequestParam("type") int type,
+            @RequestParam("start") String start,
+            @RequestParam("end") String end
+    ) throws ParseException {
+        String decodeStart="";
+        String decodeEnd="";
+        try{
+            decodeStart = java.net.URLDecoder.decode(start, "utf-8");
+            decodeEnd = java.net.URLDecoder.decode(end, "utf-8");
+        }catch (Exception e){
+            System.out.println(e);
+        }
+        return warningRecordService.getWarningRecord(fid,type,decodeStart,decodeEnd);
     }
 
 }
