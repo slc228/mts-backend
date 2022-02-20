@@ -58,3 +58,8 @@ management:
       cors:
         allowed-origins: "*"
         allowed-methods: "*"
+my:
+  elastic-search:
+    host: "localhost"
+    username: "elastic"
+    password: "tang3501"
