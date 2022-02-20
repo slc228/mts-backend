@@ -117,7 +117,7 @@ public interface SearchService {
 
     public JSONArray getMaterial(long fid);
 
-    public DataResponse getMaterialDetail(long fid,String materiallib);
+    public YuQingResponse getMaterialDetail(long fid,String materiallib);
 
     public JSONObject addNewMaterialLib(long fid,String decodemateriallib);
 

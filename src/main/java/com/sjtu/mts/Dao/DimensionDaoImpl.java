@@ -17,6 +17,6 @@ public class DimensionDaoImpl implements DimensionDao {
     @Override
     public List<Dimension> findAllByKeyIn(List<String> keys)
     {
-        return dimensionRepository.findAllByKeyIn(keys);
+        return dimensionRepository.SelectDimensionByKeyIn(String.join(",",keys));
     }
 }

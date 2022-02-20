@@ -4,6 +4,8 @@ import com.sjtu.mts.Entity.BriefingFile;
 import com.sjtu.mts.Repository.BriefingFileRepository;
 import org.springframework.stereotype.Repository;
 
+import java.math.BigInteger;
+import java.util.Date;
 import java.util.List;
 
 @Repository
@@ -21,31 +23,43 @@ public class BriefingFileDaoImpl implements BriefingFileDao {
     }
 
     @Override
+    public int InsertBriefingFile(long fid, String name, Date generatetime, byte[] pdf, byte[] word, byte[] excel, int percent)
+    {
+        return briefingFileRepository.InsertBriefingFile(fid, name, generatetime, pdf, word, excel, percent);
+    }
+
+    @Override
+    public void UpdateBriefingFile(int id, long fid, String name, Date generatetime, byte[] pdf, byte[] word, byte[] excel, int percent)
+    {
+        briefingFileRepository.UpdateBriefingFile(id, fid, name, generatetime, pdf, word, excel, percent);
+    }
+
+    @Override
     public List<BriefingFile> findAllByFidOrderByGeneratetimeDesc(long fid) {
-        return briefingFileRepository.findAllByFidOrderByGeneratetimeDesc(fid);
+        return briefingFileRepository.SelectBriefingFileByFidOrderByGeneratetimeDesc(fid);
     }
 
     @Override
     public List<BriefingFile> findAllByFid(long fid)
     {
-        return briefingFileRepository.findAllByFid(fid);
+        return briefingFileRepository.SelectBriefingFileByFid(fid);
     }
 
     @Override
     public boolean existsById(int id)
     {
-        return briefingFileRepository.existsById(id);
+        return briefingFileRepository.ExistsBriefingFileById(id).equals(BigInteger.ONE);
     }
 
     @Override
     public BriefingFile findById(int id)
     {
-        return briefingFileRepository.findById(id);
+        return briefingFileRepository.SelectBriefingFileById(id);
     }
 
     @Override
     public void deleteById(int id)
     {
-        briefingFileRepository.deleteById(id);
+        briefingFileRepository.DeleteBriefingFileById(id);
     }
 }

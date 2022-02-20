@@ -5,8 +5,12 @@ package com.sjtu.mts.Repository;
 
 import com.sjtu.mts.Entity.User;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.jpa.repository.query.Procedure;
+import org.springframework.data.repository.query.Param;
 
 import javax.transaction.Transactional;
+import java.math.BigInteger;
 import java.util.List;
 
 //public interface UserRepository extends CrudRepository<User, Integer> {
@@ -68,4 +72,36 @@ public interface UserRepository extends JpaRepository<User, String> {
      * @return all user that contains the username
      */
     List<User> findAllByUsernameContains(String username);
+
+    @Query(nativeQuery = true,value = "call usp_SelectUser()")
+    List<User> SelectUser();
+
+    @Query(nativeQuery = true,value = "call usp_SelectUserByUsername(:username)")
+    User SelectUserByUsername(@Param("username") String username);
+
+    @Query(nativeQuery = true,value = "call usp_SelectUserByPhone(:phone)")
+    User SelectUserByPhone(@Param("phone") String phone);
+
+    @Query(nativeQuery = true,value = "call usp_ExistsUserByPhone(:phone)")
+    BigInteger ExistsUserByPhone(@Param("phone") String phone);
+
+    @Query(nativeQuery = true,value = "call usp_ExistsUserByUsername(:username)")
+    BigInteger ExistsUserByUsername(@Param("username") String username);
+
+    @Procedure(procedureName="usp_InsertUser")
+    void InsertUser(String username, String password, String phone, String email, int projectNum,
+                    String validDate, String role, int state, String eventLimiter, String sensitiveLimiter);
+
+    @Query(nativeQuery = true,value = "call usp_UpdateUserEventLimiterByUsername(:username,:eventLimiter)")
+    void UpdateUserEventLimiterByUsername(@Param("username") String username,@Param("eventLimiter") String eventLimiter);
+
+    @Query(nativeQuery = true,value = "call usp_UpdateUserSensitiveLimiterByUsername(:username,:sensitiveLimiter)")
+    void UpdateUserSensitiveLimiterByUsername(@Param("username") String username,@Param("sensitiveLimiter") String sensitiveLimiter);
+
+    @Procedure(procedureName="usp_UpdateUserByUsername")
+    void UpdateUserByUsername(String username, String password, String phone, String email, int projectNum,
+                              String validDate, String role, int state, String eventLimiter, String sensitiveLimiter);
+
+    @Procedure(procedureName="usp_DeleteUserByUsername")
+    void DeleteUserByUsername(String username);
 }

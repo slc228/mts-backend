@@ -19,8 +19,6 @@ public class RestClientConfig extends AbstractElasticsearchConfiguration {
     public RestHighLevelClient elasticsearchClient() {
 
         final ClientConfiguration clientConfiguration = ClientConfiguration.builder()
-//                .connectedTo("192.168.0.19:9200")
-//                .connectedTo("202.120.40.69:9200")
                 .connectedTo(properties.getElasticSearch().getHost())
                 .withBasicAuth(properties.getElasticSearch().getUsername(),properties.getElasticSearch().getPassword())
                 .build();

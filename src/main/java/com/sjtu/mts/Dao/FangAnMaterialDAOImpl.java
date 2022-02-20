@@ -4,6 +4,7 @@ import com.sjtu.mts.Entity.FangAnMaterial;
 import com.sjtu.mts.Repository.FangAnMaterialRepository;
 import org.springframework.stereotype.Repository;
 
+import java.math.BigInteger;
 import java.util.List;
 
 @Repository
@@ -15,36 +16,43 @@ public class FangAnMaterialDAOImpl implements FangAnMaterialDAO {
     }
 
     @Override
-    public FangAnMaterial save(FangAnMaterial fangAnMaterial){
-        return fangAnMaterialRepository.save(fangAnMaterial);
+    public void InsertFanganMaterial(long fid,String materiallib,String ids)
+    {
+        fangAnMaterialRepository.InsertFanganMaterial(fid,materiallib,ids);
+    }
+
+    @Override
+    public void UpdateFanganMaterial(int id, long fid, String materiallib, String ids)
+    {
+        fangAnMaterialRepository.UpdateFanganMaterial(id,fid,materiallib,ids);
     }
 
     @Override
     public List<FangAnMaterial> findAllByFid(Long fid)
     {
-        return fangAnMaterialRepository.findAllByFid(fid);
+        return fangAnMaterialRepository.SelectFanganMaterialByFid(fid);
     }
 
     @Override
     public FangAnMaterial findByFidAndMateriallib(long fid, String materiallib)
     {
-        return fangAnMaterialRepository.findByFidAndMateriallib(fid,materiallib);
+        return fangAnMaterialRepository.SelectFanganMaterialByFidAndMateriallib(fid,materiallib);
     }
 
     @Override
     public boolean existsByFidAndMateriallib(long fid, String materiallib)
     {
-        return fangAnMaterialRepository.existsByFidAndMateriallib(fid,materiallib);
+        return fangAnMaterialRepository.ExistsFanganMaterialByFidAndMateriallib(fid,materiallib).equals(BigInteger.ONE);
     }
 
     @Override
     public boolean existsByFid(long fid){
-        return fangAnMaterialRepository.existsByFid(fid);
+        return fangAnMaterialRepository.ExistsFanganMaterialByFid(fid).equals(BigInteger.ONE);
     }
 
     @Override
     public void deleteByFidAndMateriallib(long fid, String materiallib)
     {
-        fangAnMaterialRepository.deleteByFidAndMateriallib(fid,materiallib);
+        fangAnMaterialRepository.DeleteFanganMaterialByFidAndMateriallib(fid,materiallib);
     }
 }

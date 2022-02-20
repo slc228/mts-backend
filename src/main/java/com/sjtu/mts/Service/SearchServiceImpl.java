@@ -1194,7 +1194,10 @@ public class SearchServiceImpl implements SearchService {
             }
             oldFangAn.setEventKeyword(oldEkeyword);
             //fangAnDao.deleteByFid(fid);
-            fangAnDao.save(oldFangAn);
+            fangAnDao.UpdateFangan(oldFangAn.getFid(),oldFangAn.getUsername(),oldFangAn.getProgrammeName(),oldFangAn.getMatchType(),
+                                    oldFangAn.getRegionKeyword(),oldFangAn.getRegionKeywordMatch(),oldFangAn.getRoleKeyword(),oldFangAn.getEventKeywordMatch(),
+                                    oldFangAn.getEventKeyword(),oldFangAn.getEventKeywordMatch(),oldFangAn.getEnableAlert(),
+                                    oldFangAn.getSensitiveword(),oldFangAn.getPriority());
             result.put("autoaddEkeyword", 1);
             return result;
         }catch (Exception e){
@@ -1770,7 +1773,8 @@ public class SearchServiceImpl implements SearchService {
                 fangAnTemplate.setTime(dateTime);
                 fangAnTemplate.setKeylist(keylist);
                 fangAnTemplate.setText(text);
-                fangAnTemplateDAO.save(fangAnTemplate);
+                fangAnTemplateDAO.UpdateFanganTemplate(id,fid,decodeTitle,decodeVersion,decodeInstitution,dateTime,keylist,text);
+//                fangAnTemplateDAO.save(fangAnTemplate);
                 result.put("savebriefingtemplate", 1);
                 return result;
             }
@@ -1789,7 +1793,8 @@ public class SearchServiceImpl implements SearchService {
                 SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm");
                 Date dateTime = sdf.parse(time);
                 FangAnTemplate fangAnTemplate=new FangAnTemplate(fid,decodeTitle,decodeVersion,decodeInstitution,dateTime,keylist,text);
-                fangAnTemplateDAO.save(fangAnTemplate);
+                fangAnTemplateDAO.InsertFanganTemplate(fid,decodeTitle,decodeVersion,decodeInstitution,dateTime,keylist,text);
+//                fangAnTemplateDAO.save(fangAnTemplate);
                 result.put("savebriefingtemplate", 1);
                 return result;
             }
@@ -1846,7 +1851,7 @@ public class SearchServiceImpl implements SearchService {
     }
 
     @Override
-    public DataResponse getMaterialDetail(long fid,String materiallib)
+    public YuQingResponse getMaterialDetail(long fid,String materiallib)
     {
         if (fangAnMaterialDAO.existsByFidAndMateriallib(fid,materiallib))
         {
@@ -1854,25 +1859,17 @@ public class SearchServiceImpl implements SearchService {
             String ids=fangAnMaterial.getIds();
             String[] idarray = ids.trim().split("\\,");
             List<String>searchSplitArray = Arrays.asList(idarray);
-            Criteria criteria = new Criteria();
-            criteria.subCriteria(new Criteria("_id").in(searchSplitArray));
-            CriteriaQuery query = new CriteriaQuery(criteria);
-            SearchHits<Data> searchHits = this.elasticsearchOperations.search(query, Data.class);
-            long hitNumber = this.elasticsearchOperations.count(query, Data.class);
 
-            List<Data> pageDataContent = new ArrayList<>();
-            for (SearchHit<Data> hit : searchHits.getSearchHits())
-            {
-                pageDataContent.add(hit.getContent());
-            }
+            ElasticSearchQuery query=new ElasticSearchQuery(areaRepository,fangAnDao);
+            query.JoinQueryBuildersByUrls(searchSplitArray);
 
-            DataResponse result = new DataResponse();
-            result.setHitNumber(hitNumber);
-            result.setDataContent(pageDataContent);
+            query.SortBytimeOrder();
+            query.SetPageableAndBoolQuery();
 
-            return result;
+            YuQingResponse response = elasticSearchDao.findByQuery(query);
+            return response;
         }else {
-            return new DataResponse();
+            return new YuQingResponse();
         }
     }
 
@@ -1888,7 +1885,8 @@ public class SearchServiceImpl implements SearchService {
         {
             try {
                 FangAnMaterial fangAnMaterial=new FangAnMaterial(fid,decodemateriallib,"");
-                fangAnMaterialDAO.save(fangAnMaterial);
+                fangAnMaterialDAO.InsertFanganMaterial(fid,decodemateriallib,"");
+//                fangAnMaterialDAO.save(fangAnMaterial);
                 ret.put("addNewMaterialLib",1);
             }
             catch (Exception e) {
@@ -1912,7 +1910,8 @@ public class SearchServiceImpl implements SearchService {
         try {
             FangAnMaterial fangAnMaterial = fangAnMaterialDAO.findByFidAndMateriallib(fid, decodeoldname);
             fangAnMaterial.setMateriallib(decodenewname);
-            fangAnMaterialDAO.save(fangAnMaterial);
+            fangAnMaterialDAO.UpdateFanganMaterial(fangAnMaterial.getId(),fangAnMaterial.getFid(),fangAnMaterial.getMateriallib(),fangAnMaterial.getIds());
+//            fangAnMaterialDAO.save(fangAnMaterial);
             ret.put("renameMaterial", 1);
         } catch (Exception e) {
             if (fangAnMaterialDAO.existsByFidAndMateriallib(fid, decodenewname)) {
@@ -1979,7 +1978,8 @@ public class SearchServiceImpl implements SearchService {
                 ids=ids.substring(0,ids.length()-1);
             }
             fangAnMaterial.setIds(ids);
-            fangAnMaterialDAO.save(fangAnMaterial);
+            fangAnMaterialDAO.UpdateFanganMaterial(fangAnMaterial.getId(),fangAnMaterial.getFid(),fangAnMaterial.getMateriallib(),fangAnMaterial.getIds());
+//            fangAnMaterialDAO.save(fangAnMaterial);
 
             ret.put("deleteMaterialIDs", 1);
         } catch (Exception e) {
@@ -2031,7 +2031,8 @@ public class SearchServiceImpl implements SearchService {
                 }
 
                 fangAnMaterial.setIds(ids);
-                fangAnMaterialDAO.save(fangAnMaterial);
+                fangAnMaterialDAO.UpdateFanganMaterial(fangAnMaterial.getId(),fangAnMaterial.getFid(),fangAnMaterial.getMateriallib(),fangAnMaterial.getIds());
+//                fangAnMaterialDAO.save(fangAnMaterial);
                 result.put("modeifyMaterial", 1);
                 return result;
             }
@@ -2048,7 +2049,8 @@ public class SearchServiceImpl implements SearchService {
         else {
             try {
                 FangAnMaterial fangAnMaterial=new FangAnMaterial(fid,materiallib,decodeIds);
-                fangAnMaterialDAO.save(fangAnMaterial);
+                fangAnMaterialDAO.InsertFanganMaterial(fid,materiallib,decodeIds);
+//                fangAnMaterialDAO.save(fangAnMaterial);
                 result.put("modeifyMaterial", 1);
                 return result;
             }
@@ -2069,14 +2071,14 @@ public class SearchServiceImpl implements SearchService {
     public JSONObject generate() throws IOException, com.lowagie.text.DocumentException {
         JSONObject ret= new JSONObject();
         String rnd = DigestUtils.sha1Hex(new Date().toString());
-        String wordOutFilePath = String.format("%s%s-%s.doc", "/home/pubsys/jar_dir/fileTemp/" , "word", rnd);
-        String pdfOutFilePath = String.format("%s%s-%s.pdf", "/home/pubsys/jar_dir/fileTemp/" , "pdf", rnd);
-        String excelOutFilePath = String.format("%s%s-%s.xls", "/home/pubsys/jar_dir/fileTemp/" , "excel", rnd);
+        String wordOutFilePath = String.format("%s%s-%s.doc", "/www/mts_project/jar_dir/fileTemp/" , "word", rnd);
+        String pdfOutFilePath = String.format("%s%s-%s.pdf", "/www/mts_project/jar_dir/fileTemp/" , "pdf", rnd);
+        String excelOutFilePath = String.format("%s%s-%s.xls", "/www/mts_project/jar_dir/fileTemp/" , "excel", rnd);
 
         Configuration configuration = new Configuration();
         /* 设置编码 */
         configuration.setDefaultEncoding("utf-8");
-        String fileDirectory = "/home/pubsys/jar_dir/fileTemplate/";
+        String fileDirectory = "/www/mts_project/jar_dir/fileTemplate/";
         Template template = null;
         try {
             /* 加载文件 */
@@ -2134,7 +2136,7 @@ public class SearchServiceImpl implements SearchService {
         }
 
         /* 解析html数据生成pdf */
-        String FONT = "/home/pubsys/jar_dir/font/SimHei.ttf";
+        String FONT = "/www/mts_project/jar_dir/font/SimHei.ttf";
 
         ITextRenderer render = new ITextRenderer();
         ITextFontResolver fontResolver = render.getFontResolver();
@@ -2153,14 +2155,14 @@ public class SearchServiceImpl implements SearchService {
         JSONObject ret=new JSONObject();
         ret.put("generateFile",1);
         String rnd = DigestUtils.sha1Hex(new Date().toString());
-        String wordOutFilePath = String.format("%s%s-%s.doc", "/home/pubsys/jar_dir/fileTemp/" , "word", rnd);
-        String pdfOutFilePath = String.format("%s%s-%s.pdf", "/home/pubsys/jar_dir/fileTemp/" , "pdf", rnd);
-        String excelOutFilePath = String.format("%s%s-%s.xls", "/home/pubsys/jar_dir/fileTemp/" , "excel", rnd);
+        String wordOutFilePath = String.format("%s%s-%s.doc", "/www/mts_project/jar_dir/fileTemp/" , "word", rnd);
+        String pdfOutFilePath = String.format("%s%s-%s.pdf", "/www/mts_project/jar_dir/fileTemp/" , "pdf", rnd);
+        String excelOutFilePath = String.format("%s%s-%s.xls", "/www/mts_project/jar_dir/fileTemp/" , "excel", rnd);
 
         Configuration configuration = new Configuration();
         /* 设置编码 */
         configuration.setDefaultEncoding("utf-8");
-        String fileDirectory = "/home/pubsys/jar_dir/fileTemplate/";
+        String fileDirectory = "/www/mts_project/jar_dir/fileTemplate/";
         Template template = null;
         try {
             /* 加载文件 */
@@ -2189,24 +2191,27 @@ public class SearchServiceImpl implements SearchService {
         String[] keylistStrings = keylistString.trim().split("\\,");
         List<String> keylist = new ArrayList<>(Arrays.asList(keylistStrings));
         List<Dimension> dimensions=dimensionDao.findAllByKeyIn(keylist);
+        System.out.println("hereDimension");
+        System.out.println(dimensions.size());
         dataMap.put("dimensions",dimensions);
 
         // echarts图片数据
         com.alibaba.fastjson.JSONArray echarts = com.alibaba.fastjson.JSONArray.parseArray(echartsData);
         dataMap.put("echarts",echarts);
 
+        System.out.println(decodeYuQingIds);
         // 舆情信息数据
         String[] idarray = decodeYuQingIds.trim().split("\\,");
         List<String>searchSplitArray = Arrays.asList(idarray);
-        Criteria criteria = new Criteria();
-        criteria.subCriteria(new Criteria("_id").in(searchSplitArray));
-        CriteriaQuery query = new CriteriaQuery(criteria);
-        SearchHits<Data> searchHits = this.elasticsearchOperations.search(query, Data.class);
-        List<Data> pageDataContent = new ArrayList<>();
-        for (SearchHit<Data> hit : searchHits.getSearchHits())
-        {
-            pageDataContent.add(hit.getContent());
-        }
+
+        ElasticSearchQuery query=new ElasticSearchQuery(areaRepository,fangAnDao);
+        query.JoinQueryBuildersByUrls(searchSplitArray);
+
+        query.SortBytimeOrder();
+        query.SetPageableAndBoolQuery();
+
+        YuQingResponse response = elasticSearchDao.findByQuery(query);
+        List<YuQing> pageDataContent=response.getYuQingContent();
         dataMap.put("data",pageDataContent);
 
 
@@ -2233,7 +2238,7 @@ public class SearchServiceImpl implements SearchService {
                 rowSize = 1;
                 Row rowNew = sheet.createRow(rowSize + x);
                 for (int i = 0; i < header.length; i++) {
-                    Data data = pageDataContent.get(x);
+                    YuQing data = pageDataContent.get(x);
                     for (String fieldName : fieldNames) {
                         if (header[i].equals(fieldName)) {
                             String methodName = "get" + fieldName.substring(0, 1).toUpperCase() + fieldName.substring(1);//获取属性的get方法名
@@ -2313,7 +2318,7 @@ public class SearchServiceImpl implements SearchService {
         }
 
         /* 解析html数据生成pdf */
-        String FONT = "/home/pubsys/jar_dir/font/SimHei.ttf";
+        String FONT = "/www/mts_project/jar_dir/font/SimHei.ttf";
 
         ITextRenderer render = new ITextRenderer();
         ITextFontResolver fontResolver = render.getFontResolver();
@@ -2340,13 +2345,19 @@ public class SearchServiceImpl implements SearchService {
         byte[] excelByteArray = new byte[excelFileInputStream.available()];
         excelFileInputStream.read(excelByteArray);
 
+        System.out.println("processHere");
+
         try {
             BriefingFile briefingFile = briefingFileDao.findById(fileID);
+            System.out.println(fileID);
             briefingFile.setPercent(100);
             briefingFile.setPdf(pdfByteArray);
             briefingFile.setExcel(excelByteArray);
             briefingFile.setWord(wordByteArray);
             briefingFileDao.save(briefingFile);
+//            briefingFileDao.UpdateBriefingFile(briefingFile.getId(),briefingFile.getFid(),briefingFile.getName(),
+//                    briefingFile.getGeneratetime(),pdfByteArray,wordByteArray,excelByteArray,
+//                    100);
             ret.put("generateFile",1);
         }catch (Exception e){
             ret.put("generateFile",0);
@@ -2382,10 +2393,11 @@ public class SearchServiceImpl implements SearchService {
     {
         JSONObject ret=new JSONObject();
         try {
-            BriefingFile briefingFile=new BriefingFile(fid,title,new Date(),null,null,null,10);
-            briefingFileDao.save(briefingFile);
+
+            int fileId = briefingFileDao.InsertBriefingFile(fid,title,new Date(),null,null,null,10);
+
             ret.put("addNewBriefingFileRecord",1);
-            ret.put("fileId",briefingFile.getId());
+            ret.put("fileId",fileId);
         }
         catch (Exception e) {
             ret.put("addNewBriefingFileRecord", 0);
@@ -2399,9 +2411,14 @@ public class SearchServiceImpl implements SearchService {
     {
         JSONObject ret=new JSONObject();
         BriefingFile briefingFile=briefingFileDao.findById(id);
+        System.out.println(id);
+        System.out.println("UpdateFile");
+        System.out.println(briefingFile.getName());
         briefingFile.setPercent(briefingFile.getPercent()+percent);
         try {
-            briefingFileDao.save(briefingFile);
+            briefingFileDao.UpdateBriefingFile(briefingFile.getId(),briefingFile.getFid(),briefingFile.getName(),
+                    briefingFile.getGeneratetime(),briefingFile.getPdf(),briefingFile.getWord(),briefingFile.getExcel(),
+                    briefingFile.getPercent());
             ret.put("updateBriefingFileProgess",1);
         }
         catch (Exception e) {
@@ -2535,8 +2552,8 @@ public class SearchServiceImpl implements SearchService {
         }else
         {
             try {
-                SensitiveWords sensitiveWords=new SensitiveWords(type,word);
-                sensitiveWordsDao.save(sensitiveWords);
+//                SensitiveWords sensitiveWords=new SensitiveWords(type,word);
+                sensitiveWordsDao.InsertSensitivewords(type, word);
                 ret.put("addSensitiveWordForAll",1);
             }
             catch (Exception e) {

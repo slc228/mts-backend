@@ -76,23 +76,25 @@ public class UserController {
     public JSONObject login(HttpServletRequest request, @RequestBody Map<String,String> userinfo) {
         System.out.println("test login");
         JSONObject result = userService.login(userinfo.get("username"), userinfo.get("password"));
-        if ("1".equals(result.getAsString("login"))) {
-            HttpSession session = request.getSession();
-            //System.out.println("此时的sessionid为：");
-            System.out.println(session.getId());
-            //System.out.println("此时的session attributions为：");
-            //System.out.println(session.getAttributeNames());
-            //System.out.println(session.isNew());
-            String name = (String) session.getAttribute("username");
-            if (StringUtils.isEmpty(name)) {
-                session.setAttribute("username", userinfo.get("username"));
-                session.setAttribute("role", userinfo.get("role"));
-            } else if (!(name.equals(userinfo.get("username")))) {
-                JSONObject err = new JSONObject();
-                err.put("login", -1);
-                return err;
-            }
-        }
+//        if ("1".equals(result.getAsString("login"))) {
+//            HttpSession session = request.getSession();
+//            //System.out.println("此时的sessionid为：");
+//            System.out.println(session.getId());
+//            //System.out.println("此时的session attributions为：");
+//            //System.out.println(session.getAttributeNames());
+//            //System.out.println(session.isNew());
+//            String name = (String) session.getAttribute("username");
+//            System.out.println(name);
+//            if (StringUtils.isEmpty(name)) {
+//                session.setAttribute("username", userinfo.get("username"));
+////                session.setAttribute("role", userinfo.get("role"));
+//            } else if (!(name.equals(userinfo.get("username")))) {
+//                JSONObject err = new JSONObject();
+//                err.put("login", -1);
+//                System.out.println("here");
+//                return err;
+//            }
+//        }
         return result;
     }
     @RequestMapping(path = "/changeUserState")

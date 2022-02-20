@@ -101,8 +101,7 @@ public class FangAnServiceImpl implements FangAnService {
             return result;
         }
         try {
-            FangAn fangAn1 = new FangAn(username,programmeName,matchType,regionKeyword,regionKeywordMatch,roleKeyword,roleKeywordMatch,eventKeyword,eventKeywordMatch,enableAlert,sensitiveWord,priority);
-            fangAnDao.save(fangAn1);
+            fangAnDao.InsertFangan(username,programmeName,matchType,regionKeyword,regionKeywordMatch,roleKeyword,roleKeywordMatch,eventKeyword,eventKeywordMatch,enableAlert,sensitiveWord,priority);
             result.put("saveFangAn", 1);
             return result;
         }catch (Exception e){
@@ -163,7 +162,8 @@ public class FangAnServiceImpl implements FangAnService {
                 oldFangAn.setSensitiveword(sensitiveWord);
                 oldFangAn.setPriority(priority);
                 //fangAnDao.deleteByFid(fid);
-                fangAnDao.save(oldFangAn);
+                fangAnDao.UpdateFangan(fid,username,programmeName,matchType,regionKeyword,regionKeywordMatch,roleKeyword,roleKeywordMatch,
+                                        eventKeyword,eventKeywordMatch,enableAlert,sensitiveWord,priority);
                 result.put("changeFangAn", 1);
             }catch (Exception e){
                 result.put("changeFangAn", 0);
@@ -203,10 +203,8 @@ public class FangAnServiceImpl implements FangAnService {
                 fangAn.setEnableAlert(enableAlert);
                 fangAn.setSensitiveword(sensitiveWord);
                 fangAn.setPriority(priority);
-                FangAn fangAn1=fangAnDao.save(fangAn);
+                newfid=fangAnDao.InsertFangan(username,programmeName,matchType,regionKeyword,regionKeywordMatch,roleKeyword,roleKeywordMatch,eventKeyword,eventKeywordMatch,enableAlert,sensitiveWord,priority);
                 fangAnDao.deleteByFid(fid);
-                newfid=fangAn1.getFid();
-                System.out.println(fangAn1.getFid());
                 result.put("changeFangAn", 1);
             }catch (Exception e){
                 result.put("changeFangAn", 0);

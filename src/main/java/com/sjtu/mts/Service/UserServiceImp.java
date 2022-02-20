@@ -8,12 +8,9 @@ import com.sjtu.mts.Entity.User;
 import com.sjtu.mts.Entity.UserRights;
 import net.minidev.json.JSONArray;
 import net.minidev.json.JSONObject;
-import org.openqa.selenium.json.Json;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 
 @Service
@@ -32,6 +29,8 @@ public class UserServiceImp implements UserService {
     public JSONArray getAllUsers() {
         JSONArray jsonArray = new JSONArray();
         List<User> userList = userDao.getAllUsers();
+        System.out.println("hereUser");
+        System.out.println(userList.size());
         for(User user : userList){
             if (!user.getRole().equals("systemAdmin"))
             {
@@ -113,15 +112,19 @@ public class UserServiceImp implements UserService {
         JSONObject result = new JSONObject();
         result.put("register", 0);
         String available = "available";
+        System.out.println("registerTest");
         if ((int) usernameAvailable(username).get(available) != 1) {
             return result;
         }
         try {
-            User user = new User(username, password, phone, email, 0, "2099",role,1,"","");
             UserRights userRights=new UserRights(username,role);
-            userDao.save(user);
-            userRightsDao.save(userRights);
+            System.out.println("registerTest");
+            userDao.InsertUser(username, password, phone, email, 0, "2099",role,1,"","");
+            userRightsDao.InsertUserRights(userRights.getUsername(),userRights.getDataScreen(),userRights.getSchemeConfiguration(),
+                    userRights.getGlobalSearch(),userRights.getAnalysis(),userRights.getWarning(),userRights.getBriefing(),
+                    userRights.getUserRole(),userRights.getSensitiveWords());
             result.put("register", 1);
+            System.out.println("registerTest");
             return result;
         } catch (Exception e) {
             result.put("register", 0);
@@ -141,7 +144,7 @@ public class UserServiceImp implements UserService {
             Manager manager = new Manager(username, password, phone, email, 0, "2099",0,1);
             managerDao.save(manager);
             User user = new User(username, password, phone, email, 0, "2099","systemAdmin",1,"","");
-            userDao.save(user);
+            userDao.InsertUser(username, password, phone, email, 0, "2099","systemAdmin",1,"","");
             result.put("register", 1);
             return result;
         } catch (Exception e) {
@@ -158,6 +161,8 @@ public class UserServiceImp implements UserService {
             return result;
         } else {
             User user = userDao.findByUsername(username);
+            System.out.println(user.getUsername());
+            System.out.println(user.getPassword());
             if (!user.getPassword().equals(password)) {
                 return result;
             } else {
@@ -233,7 +238,9 @@ public class UserServiceImp implements UserService {
         if (type.equals("briefing")){
             userRights.setBriefing(checked);
         }
-        userRightsDao.save(userRights);
+        userRightsDao.UpdateUserRights(userRights.getUsername(),userRights.getDataScreen(),userRights.getSchemeConfiguration(),
+                userRights.getGlobalSearch(),userRights.getAnalysis(),userRights.getWarning(),userRights.getBriefing(),
+                userRights.getUserRole(),userRights.getSensitiveWords());
         return ret;
     }
 
@@ -244,7 +251,8 @@ public class UserServiceImp implements UserService {
         ret.put("changeUserEventLimiter",1);
         User user = userDao.findByUsername(username);
         user.setEventLimiter(eventLimiter);
-        userDao.save(user);
+        userDao.UpdateUserByUsername(user.getUsername(),user.getPassword(),user.getPhone(),user.getEmail(),user.getProjectNum(),
+                user.getValidDate(),user.getRole(),user.getState(),user.getEventLimiter(),user.getSensitiveLimiter());
         return ret;
     }
 
@@ -255,7 +263,8 @@ public class UserServiceImp implements UserService {
         ret.put("changeUserSensitiveLimiter",1);
         User user = userDao.findByUsername(username);
         user.setSensitiveLimiter(sensitiveLimiter);
-        userDao.save(user);
+        userDao.UpdateUserByUsername(user.getUsername(),user.getPassword(),user.getPhone(),user.getEmail(),user.getProjectNum(),
+                user.getValidDate(),user.getRole(),user.getState(),user.getEventLimiter(),user.getSensitiveLimiter());
         return ret;
     }
 }
