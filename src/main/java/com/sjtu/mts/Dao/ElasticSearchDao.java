@@ -17,6 +17,7 @@ public interface ElasticSearchDao {
     public Long countByQuery(ElasticSearchQuery query);
     public JSONArray aggregateByResource(ElasticSearchQuery query);
     public List<Long> aggregateBySensitiveType(ElasticSearchQuery query);
+    public List<Long> aggregateSixTypeBySensitiveType(ElasticSearchQuery query);
     public Terms getAggregateByResource(ElasticSearchQuery query);
     public List<YuQingElasticSearch> findESByQuery(ElasticSearchQuery query);
 }

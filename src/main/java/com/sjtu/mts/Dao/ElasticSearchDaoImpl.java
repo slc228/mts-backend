@@ -143,6 +143,44 @@ public class ElasticSearchDaoImpl implements ElasticSearchDao {
     }
 
     @Override
+    public List<Long> aggregateSixTypeBySensitiveType(ElasticSearchQuery query) {
+        List<Long> resultList = new ArrayList<>();
+        for (int i = 0; i <= 4 ; i++) {
+            resultList.add((long)0);
+        }
+
+        NativeSearchQuery nativeSearchQuery=query.GetQuery();
+        nativeSearchQuery.setMaxResults(0);
+        Aggregations aggregations=this.elasticsearchOperations.search(nativeSearchQuery,YuQingElasticSearch.class).getAggregations();
+        Terms aggregation = aggregations.get("sensitiveType_count");
+
+        for (Terms.Bucket bucket : aggregation.getBuckets()) {
+            if (bucket.getKeyAsString().startsWith("正常信息"))
+            {
+                resultList.set(0,bucket.getDocCount());
+            }
+            if (bucket.getKeyAsString().startsWith("政治敏感"))
+            {
+                resultList.set(1,bucket.getDocCount());
+            }
+            if (bucket.getKeyAsString().startsWith("低俗信息"))
+            {
+                resultList.set(2,bucket.getDocCount());
+            }
+            if (bucket.getKeyAsString().startsWith("广告营销"))
+            {
+                resultList.set(3,bucket.getDocCount());
+            }
+            if (bucket.getKeyAsString().startsWith("人身攻击"))
+            {
+                resultList.set(4,bucket.getDocCount());
+            }
+        }
+
+        return resultList;
+    }
+
+    @Override
     public Terms getAggregateByResource(ElasticSearchQuery query)
     {
         NativeSearchQuery nativeSearchQuery=query.GetQuery();
