@@ -1319,7 +1319,7 @@ public class SearchServiceImpl implements SearchService {
     {
 //        这条代码触发从https://s.weibo.com/user?q= 网页实时爬取相关用户
 //        List<BriefWeiboUser> currentSearch = weiboSpiderRpc.searchBriefWeiboUser(WeiboUserForSearch);
-        weiboSpiderRpc.searchBriefWeiboUser(WeiboUserForSearch);
+//        weiboSpiderRpc.searchBriefWeiboUser(WeiboUserForSearch);
 
         Criteria criteria = new Criteria();
         criteria.subCriteria(new Criteria("nickname").in(WeiboUserForSearch).or("uri").in(WeiboUserForSearch));
@@ -1573,28 +1573,28 @@ public class SearchServiceImpl implements SearchService {
             Res.appendElement(jsonObject);
         }
 
-        FangAnWeiboUser fangAnWeiboUser=fangAnWeiboUserDAO.findByFidAndWeibouserid(fid,weibouserid);
-        Criteria criteria1 = new Criteria();
-        criteria1.subCriteria(new Criteria("userid").contains(fangAnWeiboUser.getWeibouserid()));
-        CriteriaQuery query1 = new CriteriaQuery(criteria1);
-        query1.setPageable(PageRequest.of(0, 10, Sort.by(Sort.Direction.DESC, "publish_time")));
-        SearchHits<Weibo> searchHits1 = this.elasticsearchOperations.search(query1, Weibo.class);
-        SearchPage<Weibo> searchPage = SearchHitSupport.searchPageFor(searchHits1, query1.getPageable());
-        List<Weibo> pageContent = new ArrayList<>();
-        for (SearchHit<Weibo> hit : searchPage.getSearchHits()) {
-            pageContent.add(hit.getContent());
-        }
-        SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
-        if (pageContent.size()==0) {
-
-        }
-        else {
-            String PublishDayStr=pageContent.get(0).getPublish_time();
-            PublishDayStr=PublishDayStr+":00";
-            Date PublishDay = sdf.parse(PublishDayStr);
-            fangAnWeiboUser.setNewweibotime(PublishDay);
-            fangAnWeiboUserDAO.save(fangAnWeiboUser);
-        }
+//        FangAnWeiboUser fangAnWeiboUser=fangAnWeiboUserDAO.findByFidAndWeibouserid(fid,weibouserid);
+//        Criteria criteria1 = new Criteria();
+//        criteria1.subCriteria(new Criteria("userid").contains(fangAnWeiboUser.getWeibouserid()));
+//        CriteriaQuery query1 = new CriteriaQuery(criteria1);
+//        query1.setPageable(PageRequest.of(0, 10, Sort.by(Sort.Direction.DESC, "publish_time")));
+//        SearchHits<Weibo> searchHits1 = this.elasticsearchOperations.search(query1, Weibo.class);
+//        SearchPage<Weibo> searchPage = SearchHitSupport.searchPageFor(searchHits1, query1.getPageable());
+//        List<Weibo> pageContent = new ArrayList<>();
+//        for (SearchHit<Weibo> hit : searchPage.getSearchHits()) {
+//            pageContent.add(hit.getContent());
+//        }
+//        SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+//        if (pageContent.size()==0) {
+//
+//        }
+//        else {
+//            String PublishDayStr=pageContent.get(0).getPublish_time();
+//            PublishDayStr=PublishDayStr+":00";
+//            Date PublishDay = sdf.parse(PublishDayStr);
+//            fangAnWeiboUser.setNewweibotime(PublishDay);
+//            fangAnWeiboUserDAO.save(fangAnWeiboUser);
+//        }
 
         return Res;
     };
@@ -2071,14 +2071,14 @@ public class SearchServiceImpl implements SearchService {
     public JSONObject generate() throws IOException, com.lowagie.text.DocumentException {
         JSONObject ret= new JSONObject();
         String rnd = DigestUtils.sha1Hex(new Date().toString());
-        String wordOutFilePath = String.format("%s%s-%s.doc", "/www/mts_project/jar_dir/fileTemp/" , "word", rnd);
-        String pdfOutFilePath = String.format("%s%s-%s.pdf", "/www/mts_project/jar_dir/fileTemp/" , "pdf", rnd);
-        String excelOutFilePath = String.format("%s%s-%s.xls", "/www/mts_project/jar_dir/fileTemp/" , "excel", rnd);
+        String wordOutFilePath = String.format("%s%s-%s.doc", "/root/codes/backend/fileTemp/" , "word", rnd);
+        String pdfOutFilePath = String.format("%s%s-%s.pdf", "/root/codes/backend/fileTemp/" , "pdf", rnd);
+        String excelOutFilePath = String.format("%s%s-%s.xls", "/root/codes/backend/fileTemp/" , "excel", rnd);
 
         Configuration configuration = new Configuration();
         /* 设置编码 */
         configuration.setDefaultEncoding("utf-8");
-        String fileDirectory = "/www/mts_project/jar_dir/fileTemplate/";
+        String fileDirectory = "/root/codes/backend/fileTemplate/";
         Template template = null;
         try {
             /* 加载文件 */
@@ -2136,7 +2136,7 @@ public class SearchServiceImpl implements SearchService {
         }
 
         /* 解析html数据生成pdf */
-        String FONT = "/www/mts_project/jar_dir/font/SimHei.ttf";
+        String FONT = "/root/codes/backend/font/SimHei.ttf";
 
         ITextRenderer render = new ITextRenderer();
         ITextFontResolver fontResolver = render.getFontResolver();
@@ -2155,14 +2155,14 @@ public class SearchServiceImpl implements SearchService {
         JSONObject ret=new JSONObject();
         ret.put("generateFile",1);
         String rnd = DigestUtils.sha1Hex(new Date().toString());
-        String wordOutFilePath = String.format("%s%s-%s.doc", "/www/mts_project/jar_dir/fileTemp/" , "word", rnd);
-        String pdfOutFilePath = String.format("%s%s-%s.pdf", "/www/mts_project/jar_dir/fileTemp/" , "pdf", rnd);
-        String excelOutFilePath = String.format("%s%s-%s.xls", "/www/mts_project/jar_dir/fileTemp/" , "excel", rnd);
+        String wordOutFilePath = String.format("%s%s-%s.doc", "/root/codes/backend/fileTemp/" , "word", rnd);
+        String pdfOutFilePath = String.format("%s%s-%s.pdf", "/root/codes/backend/fileTemp/" , "pdf", rnd);
+        String excelOutFilePath = String.format("%s%s-%s.xls", "/root/codes/backend/fileTemp/" , "excel", rnd);
 
         Configuration configuration = new Configuration();
         /* 设置编码 */
         configuration.setDefaultEncoding("utf-8");
-        String fileDirectory = "/www/mts_project/jar_dir/fileTemplate/";
+        String fileDirectory = "/root/codes/backend/fileTemplate/";
         Template template = null;
         try {
             /* 加载文件 */
@@ -2318,7 +2318,7 @@ public class SearchServiceImpl implements SearchService {
         }
 
         /* 解析html数据生成pdf */
-        String FONT = "/www/mts_project/jar_dir/font/SimHei.ttf";
+        String FONT = "/root/codes/backend/font/SimHei.ttf";
 
         ITextRenderer render = new ITextRenderer();
         ITextFontResolver fontResolver = render.getFontResolver();

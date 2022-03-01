@@ -8,6 +8,8 @@ import org.elasticsearch.index.query.BoolQueryBuilder;
 import org.elasticsearch.index.query.QueryBuilders;
 import org.elasticsearch.index.query.RangeQueryBuilder;
 import org.elasticsearch.script.Script;
+import org.elasticsearch.search.aggregations.AbstractAggregationBuilder;
+import org.elasticsearch.search.aggregations.AggregationBuilder;
 import org.elasticsearch.search.aggregations.AggregationBuilders;
 import org.elasticsearch.search.aggregations.bucket.terms.TermsAggregationBuilder;
 import org.elasticsearch.search.sort.*;
@@ -513,6 +515,10 @@ public class ElasticSearchQuery {
 
     public NativeSearchQuery GetQuery()
     {
+//        AggregationBuilder aggregationBuilder = AggregationBuilders
+//            .terms("url_aggs").field("yuqing_url").size(10000)
+//            .subAggregation(AggregationBuilders.topHits("url_top"));
+//        nativeSearchQueryBuilder.addAggregation((AbstractAggregationBuilder<?>) aggregationBuilder);
         NativeSearchQuery nativeSearchQuery=nativeSearchQueryBuilder.build();
         return nativeSearchQuery;
     }
