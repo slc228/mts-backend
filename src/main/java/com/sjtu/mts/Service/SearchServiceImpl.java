@@ -20,6 +20,7 @@ import com.sjtu.mts.Response.*;
 import com.sjtu.mts.rpc.WeiboSpiderRpc;
 import net.minidev.json.JSONArray;
 import net.minidev.json.JSONObject;
+import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.poi.hssf.usermodel.HSSFWorkbook;
 import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.ss.usermodel.Sheet;
@@ -2163,16 +2164,29 @@ public class SearchServiceImpl implements SearchService {
         /* 设置编码 */
         configuration.setDefaultEncoding("utf-8");
         String fileDirectory = "/root/codes/backend/fileTemplate/";
-        Template template = null;
+        Template pdfTemplate = null;
         try {
             /* 加载文件 */
             configuration.setDirectoryForTemplateLoading(new File(fileDirectory));
             /* 加载模板 */
-            template = configuration.getTemplate("pdf.ftl");
+            pdfTemplate = configuration.getTemplate("pdf.ftl");
         } catch (IOException ex) {
             System.out.println("找不到模板文件，路径为:") ;
             System.out.println(fileDirectory);
         }
+
+        Template wordTemplate = null;
+        try {
+            /* 加载文件 */
+            configuration.setDirectoryForTemplateLoading(new File(fileDirectory));
+            /* 加载模板 */
+            wordTemplate = configuration.getTemplate("word.ftl");
+        } catch (IOException ex) {
+            System.out.println("找不到模板文件，路径为:") ;
+            System.out.println(fileDirectory);
+        }
+
+
 
         /* 组装数据 */
         Map<String,Object> dataMap = new HashMap<>();
@@ -2195,7 +2209,19 @@ public class SearchServiceImpl implements SearchService {
         System.out.println(dimensions.size());
         dataMap.put("dimensions",dimensions);
 
-        // echarts图片数据
+        String text=fangAnTemplate.getText();
+        com.alibaba.fastjson.JSONObject textObject = com.alibaba.fastjson.JSONObject.parseObject(text);
+        List<textEntity> textArray=new ArrayList<>();
+        for(Map.Entry<String, Object> entry : textObject.entrySet()) {
+            System.out.println(entry.getKey() + entry.getValue());
+            textEntity textE=new textEntity(entry.getKey(), (String) entry.getValue());
+            System.out.println(textE.getName());
+            textArray.add(textE);
+        }
+        System.out.println(textArray.size());
+        dataMap.put("texts",textArray);
+
+            // echarts图片数据
         com.alibaba.fastjson.JSONArray echarts = com.alibaba.fastjson.JSONArray.parseArray(echartsData);
         dataMap.put("echarts",echarts);
 
@@ -2298,9 +2324,9 @@ public class SearchServiceImpl implements SearchService {
         try {
             fos = new FileOutputStream(docFile);
             outDoc = new BufferedWriter(new OutputStreamWriter(fos, "utf-8"),10240);
-            template.process(dataMap,outDoc);
+            wordTemplate.process(dataMap,outDoc);
             
-            template.process(dataMap, outPdf); //将合并后的数据和模板写入到流中，这里使用的字符流
+            pdfTemplate.process(dataMap, outPdf); //将合并后的数据和模板写入到流中，这里使用的字符流
             outPdf.flush();
             content=outPdf.toString();
         } catch (FileNotFoundException ex) {
@@ -2585,5 +2611,97 @@ public class SearchServiceImpl implements SearchService {
         }
 
         return ret;
+    }
+
+    @Override
+    public VideoResponse getVideoData(long fid, String keyword, String startPublishedDay, String endPublishedDay, String resource, int page, int pageSize, int timeOrder) {
+        System.out.println(fid);
+        System.out.println(keyword);
+        System.out.println(startPublishedDay);
+        System.out.println(endPublishedDay);
+        System.out.println(resource);
+        System.out.println(page);
+        System.out.println(pageSize);
+        System.out.println(timeOrder);
+
+        FangAn fangAn=fangAnDao.findByFid(fid);
+        String eventKeyword = fangAn.getEventKeyword();
+        List<String> searchArray=new ArrayList<>();
+        while(eventKeyword.length()>0)
+        {
+            int tag=eventKeyword.indexOf('+');
+            String singleEventKeyword=eventKeyword.substring(0,tag);
+            String[] searchSplitArray1 = singleEventKeyword.trim().split("\\s+");
+            List<String>searchSplitArray = Arrays.asList(searchSplitArray1);
+            for (String str:searchSplitArray)
+            {
+                if (!str.equals(""))
+                {
+                    searchArray.add(str);
+                }
+            }
+            eventKeyword=eventKeyword.substring(tag+1);
+        }
+
+        Criteria criteria=new Criteria();
+        criteria.subCriteria(new Criteria("title").in(searchArray));
+
+        List<String> searchArray2=new ArrayList<>();
+        if (!keyword.isEmpty()&&!Objects.equals(keyword, "null")&&!Objects.equals(keyword, "")){
+            String[] searchKeywordArray = keyword.trim().split("\\s+");
+            List<String> searchKeywordSplitArray = Arrays.asList(searchKeywordArray);
+            for (String str:searchKeywordSplitArray)
+            {
+                if (!str.equals(""))
+                {
+                    searchArray2.add(str);
+                }
+            }
+            criteria.subCriteria(new Criteria("title").in(searchArray2));
+        }
+
+
+
+        System.out.println(searchArray.size());
+
+        if (!Objects.equals(startPublishedDay, "null") && !Objects.equals(endPublishedDay, "null") &&
+                !startPublishedDay.isEmpty() && !endPublishedDay.isEmpty() )
+        {
+            SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+            try {
+                Date startDate = sdf.parse(startPublishedDay);
+                Date endDate = sdf.parse(endPublishedDay);
+                criteria.subCriteria(new Criteria().and("publishedDate").between(startDate, endDate));
+            } catch (ParseException e) {
+                e.printStackTrace();
+            }
+        }
+
+        if (!resource.isEmpty()&&!Objects.equals(resource, "null")&&!Objects.equals(resource, ""))
+            criteria.subCriteria(new Criteria().and("resource").is(resource));
+
+        CriteriaQuery query = new CriteriaQuery(criteria);
+        if (timeOrder == 0) {
+            query.setPageable(PageRequest.of(page, pageSize, Sort.by(Sort.Direction.DESC, "publishedDate")));
+        }
+        else {
+            query.setPageable(PageRequest.of(page, pageSize, Sort.by(Sort.Direction.ASC, "publishedDate")));
+        }
+
+        SearchHits<Video> searchHits = this.elasticsearchOperations.search(query, Video.class);
+        SearchPage<Video> searchPage = SearchHitSupport.searchPageFor(searchHits, query.getPageable());
+        long hitNumber = this.elasticsearchOperations.count(query, Video.class);
+
+        List<Video> pageDataContent = new ArrayList<>();
+        for (SearchHit<Video> hit : searchPage.getSearchHits())
+        {
+            pageDataContent.add(hit.getContent());
+        }
+
+        VideoResponse result = new VideoResponse();
+        result.setHitNumber(hitNumber);
+        result.setDataContent(pageDataContent);
+
+        return result;
     }
 }

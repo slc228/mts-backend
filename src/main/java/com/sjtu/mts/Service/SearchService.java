@@ -152,4 +152,6 @@ public interface SearchService {
     public JSONArray getSensitiveWordsByFid(long fid);
 
     public JSONObject generate() throws IOException, com.lowagie.text.DocumentException;
+
+    public VideoResponse getVideoData(long fid,String keyword,String startPublishedDay,String endPublishedDay,String resource,int page,int pageSize,int timeOrder);
 }

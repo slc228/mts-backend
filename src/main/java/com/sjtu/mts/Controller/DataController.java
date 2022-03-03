@@ -1130,4 +1130,31 @@ public class DataController {
         return warningRecordService.getWarningRecord(fid,type,decodeStart,decodeEnd);
     }
 
+    @GetMapping("/getVideoData")
+    @ResponseBody
+    public VideoResponse getVideoData(
+            @RequestParam("fid") long fid,
+            @RequestParam("videoKeyword")String keyword,
+            @RequestParam("videoStartPublishedDay") String startPublishedDay,
+            @RequestParam("videoEndPublishedDay") String endPublishedDay,
+            @RequestParam("videoSource") String resource,
+            @RequestParam("videoPageId") int page,
+            @RequestParam("videoPageSize") int pageSize,
+            @RequestParam("videoTimeOrder") int timeOrder
+    ){
+        String decodeKeyword = "";
+        String decodeResource="";
+        String decodeStart = "";
+        String decodeEnd="";
+        try{
+            decodeKeyword = java.net.URLDecoder.decode(keyword, "utf-8");
+            decodeResource= java.net.URLDecoder.decode(resource, "utf-8");
+            decodeStart = java.net.URLDecoder.decode(startPublishedDay, "utf-8");
+            decodeEnd= java.net.URLDecoder.decode(endPublishedDay, "utf-8");
+        }catch (Exception e){
+            System.out.println(e);
+        }
+        return searchService.getVideoData(fid,decodeKeyword,decodeStart,decodeEnd,decodeResource,page,pageSize,timeOrder);
+    }
+
 }
