@@ -47,6 +47,16 @@ public class FangAnDaoImpl implements FangAnDao {
     }
 
     @Override
+    public List<FangAn> getAllFangan(int offset, int size) {
+        return fangAnRepository.SelectAllFanganByOffsetAndSize(offset, size);
+    }
+
+    @Override
+    public List<FangAn> getAllFanganByUsername(int offset, int size, String username) {
+        return fangAnRepository.SelectAllFanganByOffsetAndSizeAndUsername(offset,size,username);
+    }
+
+    @Override
     public List<FangAn> findAllByUsername(String username){
         return fangAnRepository.SelectFanganByUsername(username);
     }

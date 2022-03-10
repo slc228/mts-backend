@@ -191,14 +191,6 @@
         <scope>test</scope>
     </dependency>
 
-    <!-- https://mvnrepository.com/artifact/org.mybatis/mybatis -->
-    <dependency>
-        <groupId>org.mybatis</groupId>
-        <artifactId>mybatis</artifactId>
-        <version>3.5.6</version>
-    </dependency>
-
-
 </dependencies>
 
 <build>
@@ -223,6 +215,11 @@
                 <exclude>**/*.properties</exclude>
                 <exclude>**/*.yml</exclude>
             </excludes>
+<!--            <includes>-->
+<!--                <include>**/*.yml</include>-->
+<!--                <include>**/*.properties</include>-->
+<!--                <include>**/*.xml</include>-->
+<!--            </includes>-->
         </resource>
     </resources>
 </build>

@@ -2,9 +2,6 @@ package com.sjtu.mts.Dao;
 
 import com.sjtu.mts.Entity.User;
 import com.sjtu.mts.Repository.UserRepository;
-import org.apache.ibatis.annotations.Options;
-import org.apache.ibatis.annotations.Select;
-import org.apache.ibatis.mapping.StatementType;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 

@@ -2,6 +2,7 @@ package com.sjtu.mts.Entity;
 
 import javax.persistence.*;
 import java.io.Serializable;
+import java.sql.Timestamp;
 
 @Entity
 @Table(name = "fangan")
@@ -52,6 +53,34 @@ public class FangAn implements Serializable {
     @Column(name = "priority")
     private Integer priority;
 
+    @Column(name = "category")
+    private String category;
+
+    @Column(name = "start_date")
+    private Timestamp startDate;
+
+    @Column(name = "end_date")
+    private Timestamp endDate;
+
+    @Column(name = "notified_when_completed")
+    private boolean notifiedWhenCompleted;
+
+    @Column(name = "exceptkeyword")
+    private String exceptKeyword;
+
+    @Column(name = "created_date")
+    private Timestamp createdDate;
+
+    @Column(name = "updated_date")
+    private Timestamp updatedDate;
+
+    @Column(name = "deleted_date")
+    private Timestamp deletedDate;
+
+    @Column(name = "flag")
+    private boolean flag;
+
+
     public FangAn(){}
 
     public FangAn(
@@ -66,7 +95,16 @@ public class FangAn implements Serializable {
             int eventKeywordMatch,
             boolean enableAlert,
             String sensitiveword,
-            Integer priority
+            Integer priority,
+            String category,
+            Timestamp startDate,
+            Timestamp endDate,
+            boolean notifiedWhenCompleted,
+            String exceptKeyword,
+            Timestamp createdDate,
+            Timestamp updatedDate,
+            Timestamp deletedDate,
+            boolean flag
             ){
         this.username = username;
         this.programmeName = programmeName;
@@ -80,6 +118,15 @@ public class FangAn implements Serializable {
         this.enableAlert = enableAlert;
         this.sensitiveword=sensitiveword;
         this.priority=priority;
+        this.category=category;
+        this.startDate=startDate;
+        this.endDate=endDate;
+        this.notifiedWhenCompleted=notifiedWhenCompleted;
+        this.exceptKeyword=exceptKeyword;
+        this.createdDate=createdDate;
+        this.updatedDate=updatedDate;
+        this.deletedDate=deletedDate;
+        this.flag=flag;
     }
 
     public void setUsername(String username) {
@@ -180,5 +227,77 @@ public class FangAn implements Serializable {
 
     public void setPriority(Integer priority) {
         this.priority = priority;
+    }
+
+    public String getCategory() {
+        return category;
+    }
+
+    public void setCategory(String category) {
+        this.category = category;
+    }
+
+    public Timestamp getStartDate() {
+        return startDate;
+    }
+
+    public void setStartDate(Timestamp startDate) {
+        this.startDate = startDate;
+    }
+
+    public Timestamp getEndDate() {
+        return endDate;
+    }
+
+    public void setEndDate(Timestamp endDate) {
+        this.endDate = endDate;
+    }
+
+    public boolean getNotifiedWhenCompleted() {
+        return notifiedWhenCompleted;
+    }
+
+    public void setNotifiedWhenCompleted(boolean notifiedWhenCompleted) {
+        this.notifiedWhenCompleted = notifiedWhenCompleted;
+    }
+
+    public String getExceptKeyword() {
+        return exceptKeyword;
+    }
+
+    public void setExceptKeyword(String exceptKeyword) {
+        this.exceptKeyword = exceptKeyword;
+    }
+
+    public Timestamp getCreatedDate() {
+        return createdDate;
+    }
+
+    public void setCreatedDate(Timestamp createdDate) {
+        this.createdDate = createdDate;
+    }
+
+    public Timestamp getUpdatedDate() {
+        return updatedDate;
+    }
+
+    public void setUpdatedDate(Timestamp updatedDate) {
+        this.updatedDate = updatedDate;
+    }
+
+    public Timestamp getDeletedDate() {
+        return deletedDate;
+    }
+
+    public void setDeletedDate(Timestamp deletedDate) {
+        this.deletedDate = deletedDate;
+    }
+
+    public boolean getFlag() {
+        return flag;
+    }
+
+    public void setFlag(boolean flag) {
+        this.flag = flag;
     }
 }

@@ -30,4 +30,8 @@ public interface FangAnDao {
                       int rokeymatch, String ekeyword, int ekeymatch,
                       boolean enable_alert, String sensitiveword, int priority);
 
+    List<FangAn> getAllFangan(int offset, int size);
+
+    List<FangAn> getAllFanganByUsername(int offset, int size, String username);
+
 }

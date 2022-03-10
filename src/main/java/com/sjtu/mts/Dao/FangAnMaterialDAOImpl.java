@@ -36,7 +36,7 @@ public class FangAnMaterialDAOImpl implements FangAnMaterialDAO {
     @Override
     public FangAnMaterial findByFidAndMateriallib(long fid, String materiallib)
     {
-        return fangAnMaterialRepository.SelectFanganMaterialByFidAndMateriallib(fid,materiallib);
+        return fangAnMaterialRepository.findByFidAndMateriallib(fid,materiallib);
     }
 
     @Override

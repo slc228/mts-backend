@@ -1,6 +1,10 @@
 package com.sjtu.mts.Service;
 
+import com.sjtu.mts.Entity.FangAn;
+import com.sjtu.mts.Response.FangAnResponse;
 import net.minidev.json.JSONObject;
+
+import java.util.List;
 
 public interface FangAnService {
     JSONObject findAllByUsername(String username);
@@ -36,5 +40,7 @@ public interface FangAnService {
     JSONObject findFangAnByFid(String username,long fid);
 
     JSONObject getAllFid();
+
+    FangAnResponse getAllFangan(int pageID, int pageSize, String username);
 
 }

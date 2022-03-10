@@ -50,4 +50,11 @@ public interface FangAnRepository extends JpaRepository<FangAn, Long> {
 
     @Procedure(procedureName="usp_DeleteFanganByFid")
     void DeleteFanganByFid(long fid);
+
+    @Query(nativeQuery = true,value = "call usp_SelectAllFanganByOffsetAndSize(:pageOffset,:pageSize)")
+    List<FangAn> SelectAllFanganByOffsetAndSize(@Param("pageOffset") int pageOffset, @Param("pageSize") int pageSize);
+
+    @Query(nativeQuery = true,value = "call usp_SelectAllFanganByOffsetAndSizeAndUsername(:pageOffset,:pageSize,:username)")
+    List<FangAn> SelectAllFanganByOffsetAndSizeAndUsername(@Param("pageOffset") int pageOffset, @Param("pageSize") int pageSize, @Param("username") String username);
+
 }

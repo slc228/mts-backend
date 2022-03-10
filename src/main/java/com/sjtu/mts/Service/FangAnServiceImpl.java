@@ -3,24 +3,19 @@ package com.sjtu.mts.Service;
 import com.sjtu.mts.Dao.ElasticSearchDao;
 import com.sjtu.mts.Dao.FangAnDao;
 import com.sjtu.mts.Entity.FangAn;
-import com.sjtu.mts.Entity.YuQing;
-import com.sjtu.mts.Entity.YuQingElasticSearch;
 import com.sjtu.mts.Keyword.ESSaveThread;
-import com.sjtu.mts.Keyword.thread;
 import com.sjtu.mts.Query.ElasticSearchQuery;
 import com.sjtu.mts.Repository.AreaRepository;
 import com.sjtu.mts.Repository.SwordFidRepository;
-import com.sjtu.mts.Response.YuQingResponse;
+import com.sjtu.mts.Response.FangAnResponse;
 import net.minidev.json.JSONArray;
 import net.minidev.json.JSONObject;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.elasticsearch.core.ElasticsearchOperations;
 import org.springframework.stereotype.Service;
 
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-import java.util.UUID;
 
 @Service
 public class FangAnServiceImpl implements FangAnService {
@@ -300,6 +295,25 @@ public class FangAnServiceImpl implements FangAnService {
         JSONObject object = new JSONObject();
         object.put("data",jsonArray);
         return  object;
+    }
+
+    @Override
+    public FangAnResponse getAllFangan(int pageID, int pageSize, String username) {
+        int offset=(pageID-1)*pageSize;
+        FangAnResponse fangAnResponse=new FangAnResponse();
+        if (!username.isEmpty()&&!username.equals(""))
+        {
+            List<FangAn> ret=fangAnDao.getAllFanganByUsername(offset,pageSize,username);
+            int hitNumber=fangAnDao.findAllByUsername(username).size();
+            fangAnResponse.setFangAnContent(ret);
+            fangAnResponse.setHitNumber(hitNumber);
+        }else {
+            List<FangAn> ret=fangAnDao.getAllFangan(offset,pageSize);
+            int hitNumber=fangAnDao.findAll().size();
+            fangAnResponse.setFangAnContent(ret);
+            fangAnResponse.setHitNumber(hitNumber);
+        }
+        return fangAnResponse;
     }
 
 }
