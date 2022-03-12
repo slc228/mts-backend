@@ -3,6 +3,7 @@ package com.sjtu.mts.Service;
 import com.sjtu.mts.Dao.ManagerDao;
 import com.sjtu.mts.Dao.UserDao;
 import com.sjtu.mts.Dao.UserRightsDao;
+import com.sjtu.mts.Dao.UserUuidQueueDao;
 import com.sjtu.mts.Entity.Manager;
 import com.sjtu.mts.Entity.User;
 import com.sjtu.mts.Entity.UserRights;
@@ -11,6 +12,7 @@ import net.minidev.json.JSONObject;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.sql.Timestamp;
 import java.util.List;
 
 @Service
@@ -24,6 +26,9 @@ public class UserServiceImp implements UserService {
 
     @Autowired
     private ManagerDao managerDao;
+
+    @Autowired
+    private UserUuidQueueDao userUuidQueueDao;
 
     @Override
     public JSONArray getAllUsers() {
@@ -166,6 +171,10 @@ public class UserServiceImp implements UserService {
             if (!user.getPassword().equals(password)) {
                 return result;
             } else {
+                long currentTime = System.currentTimeMillis() ;
+                Timestamp timestamp = new Timestamp(currentTime);
+                userUuidQueueDao.InsertUserUuid(user.getUserUuid(),timestamp);
+                result.put("uuid",user.getUserUuid());
                 result.put("role", user.getRole());
                 result.put("username", user.getUsername());
                 result.put("phone", user.getPhone());

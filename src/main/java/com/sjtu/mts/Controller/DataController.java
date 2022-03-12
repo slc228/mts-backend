@@ -1157,13 +1157,14 @@ public class DataController {
         return searchService.getVideoData(fid,decodeKeyword,decodeStart,decodeEnd,decodeResource,page,pageSize,timeOrder);
     }
 
-    @GetMapping("/getAllFangan")
+    @PostMapping("/getAllFangan")
     @ResponseBody
     public FangAnResponse getAllFangan(
-            @RequestParam("pageID") int pageID,
-            @RequestParam("pageSize")int pageSize,
-            @RequestParam("username")String username
+            @RequestBody Map<String,String> fangAnInfo
     ){
+        int pageID=Integer.parseInt(fangAnInfo.get("pageID"));
+        int pageSize=Integer.parseInt(fangAnInfo.get("pageSize"));
+        String username=fangAnInfo.get("username");
         String decodeUsername="";
         try{
             decodeUsername= java.net.URLDecoder.decode(username, "utf-8");
@@ -1172,5 +1173,4 @@ public class DataController {
         }
         return fangAnService.getAllFangan(pageID,pageSize,decodeUsername);
     }
-
 }

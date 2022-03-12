@@ -5,6 +5,7 @@ import javax.persistence.Entity;
 import javax.persistence.Id;
 import javax.persistence.Table;
 import java.io.Serializable;
+import java.util.UUID;
 
 @Entity
 @Table(name = "user")
@@ -41,6 +42,9 @@ public class User implements Serializable{
     @Column(name = "sensitive_limiter")
     private String sensitiveLimiter;
 
+    @Column(name = "user_uuid")
+    private String userUuid;
+
     public User(){
 
     }
@@ -55,6 +59,20 @@ public class User implements Serializable{
         this.state = state;
         this.eventLimiter=eventLimiter;
         this.sensitiveLimiter=sensitiveLimiter;
+        this.userUuid=UUID.randomUUID().toString();
+    }
+    public User(String username, String password, String phone, String email, Integer projectNum, String validDate, String role, Integer state,String eventLimiter,String sensitiveLimiter,String userUuid){
+        this.username = username;
+        this.password = password;
+        this.phone = phone;
+        this.email = email;
+        this.projectNum = projectNum;
+        this.validDate = validDate;
+        this.role = role;
+        this.state = state;
+        this.eventLimiter=eventLimiter;
+        this.sensitiveLimiter=sensitiveLimiter;
+        this.userUuid=userUuid;
     }
 
     public void setUsername(String username) {
@@ -128,6 +146,14 @@ public class User implements Serializable{
     public String getSensitiveLimiter(){return sensitiveLimiter;}
 
     public void setSensitiveLimiter(String sensitiveLimiter){this.sensitiveLimiter=sensitiveLimiter;}
+
+    public String getUserUuid() {
+        return userUuid;
+    }
+
+    public void setUserUuid(String userUuid) {
+        this.userUuid = userUuid;
+    }
 
     @Override
     public boolean equals(Object obj) {

@@ -3,13 +3,16 @@ package com.sjtu.mts.Controller;
 import com.sjtu.mts.Service.FangAnService;
 import com.sjtu.mts.Service.MonitorUrlService;
 import com.sjtu.mts.Service.UserService;
+import com.sjtu.mts.Service.UserUuidQueueService;
 import net.minidev.json.JSONArray;
 import net.minidev.json.JSONObject;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.util.StringUtils;
 import org.springframework.web.bind.annotation.*;
 
+import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
 import java.util.Map;
 
@@ -24,6 +27,8 @@ public class UserController {
     private FangAnService fangAnService;
     @Autowired
     private MonitorUrlService monitorUrlService;
+    @Autowired
+    private UserUuidQueueService userUuidQueueService;
 
 
     @GetMapping(path="/allUsers")
@@ -73,9 +78,42 @@ public class UserController {
 
     @RequestMapping(path = "/login")
     @ResponseBody
-    public JSONObject login(HttpServletRequest request, @RequestBody Map<String,String> userinfo) {
+    public JSONObject login(HttpServletRequest request, HttpServletResponse response, @RequestBody Map<String,String> userinfo) {
         System.out.println("test login");
-        JSONObject result = userService.login(userinfo.get("username"), userinfo.get("password"));
+        JSONObject result=new JSONObject();
+
+        Cookie[] cookies = request.getCookies();
+        if (cookies != null) {
+            for (Cookie cookie : cookies) {
+                if (cookie.getName().equals("user_uuid"))
+                {
+                    boolean flag= userUuidQueueService.isUuidValid(cookie.getValue());
+                    JSONObject jsonObject=new JSONObject();
+                    if (flag)
+                    {
+                        jsonObject.appendField("status","correct");
+                    }else{
+                        cookie.setValue(null);
+                        cookie.setMaxAge(0);
+                        cookie.setPath("/");
+                        response.addCookie(cookie);
+                        jsonObject.appendField("status","error");
+                    }
+                    return jsonObject;
+                }
+            }
+        }
+
+        result = userService.login(userinfo.get("username"), userinfo.get("password"));
+
+        Cookie cookie = new Cookie("user_uuid", (String) result.get("uuid"));
+        result.remove("uuid");
+        cookie.setPath("/");
+        cookie.setMaxAge(24 * 60 * 60);
+        response.addCookie(cookie);
+
+
+
 //        if ("1".equals(result.getAsString("login"))) {
 //            HttpSession session = request.getSession();
 //            //System.out.println("此时的sessionid为：");
