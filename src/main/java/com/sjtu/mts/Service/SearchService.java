@@ -154,4 +154,6 @@ public interface SearchService {
     public JSONObject generate() throws IOException, com.lowagie.text.DocumentException;
 
     public VideoResponse getVideoData(long fid,String keyword,String startPublishedDay,String endPublishedDay,String resource,int page,int pageSize,int timeOrder);
+
+    public void getExcel(long fid);
 }

@@ -2708,4 +2708,107 @@ public class SearchServiceImpl implements SearchService {
 
         return result;
     }
+
+    @Override
+    public void getExcel(long fid)
+    {
+        String rnd = DigestUtils.sha1Hex(new Date().toString());
+        String excelOutFilePath = String.format("%s%s-%s.xls", "/root/codes/backend/fileTemp/" , "excel", rnd);
+
+
+        ElasticSearchQuery query=new ElasticSearchQuery(areaRepository,fangAnDao);
+
+        SimpleDateFormat format = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+        Calendar c = Calendar.getInstance();
+
+        //过去七天
+        c.setTime(new Date());
+        Date end=c.getTime();
+        String endDay=format.format(end);
+
+        c.add(Calendar.DATE, - 7);
+        Date start = c.getTime();
+        String startDay = format.format(start);
+
+        query.JoinFidQueryBuilders(fid);
+        query.JoinPublishedDayQueryBuilders(startDay,endDay);
+        query.SortBytimeOrder();
+
+        YuQingResponse response = elasticSearchDao.findByQuery(query);
+        List<YuQing> pageDataContent=response.getYuQingContent();
+
+        /* 生成excel */
+        Field[] declaredFields = Data.class.getDeclaredFields();
+        String[] fieldNames = new String[declaredFields.length];
+        for (int i = 0; i < declaredFields.length; i++) {
+            fieldNames[i] = declaredFields[i].getName(); //通过反射获取属性名
+        }
+
+        String[] headerCode={"标题","内容","网址","来源","敏感类型","分类","情感","发布日期"};
+        String[] header = {"title","content", "webpageUrl","resource", "sensitiveType", "tag", "emotion", "publishedDay" };
+
+        Workbook wb = new HSSFWorkbook();
+        int rowSize = 0;
+        Sheet sheet = wb.createSheet();
+        Row row = sheet.createRow(rowSize);
+        for (int i = 0; i < headerCode.length; i++) {
+            row.createCell(i).setCellValue(headerCode[i]);
+        }
+
+        try {
+            for (int x = 0; x < pageDataContent.size(); x++) {
+                rowSize = 1;
+                Row rowNew = sheet.createRow(rowSize + x);
+                for (int i = 0; i < header.length; i++) {
+                    YuQing data = pageDataContent.get(x);
+                    for (String fieldName : fieldNames) {
+                        if (header[i].equals(fieldName)) {
+                            String methodName = "get" + fieldName.substring(0, 1).toUpperCase() + fieldName.substring(1);//获取属性的get方法名
+                            Method method = data.getClass().getMethod(methodName);
+                            Object invoke = method.invoke(data);//获取属性值
+                            if (invoke==null)
+                            {
+                                rowNew.createCell(i).setCellValue("");
+                            }
+                            else {
+                                if (fieldName.equals("emotion"))
+                                {
+                                    rowNew.createCell(i).setCellValue(EmotionToChinese(invoke.toString()));
+                                }
+                                else {
+                                    rowNew.createCell(i).setCellValue(invoke.toString());
+                                }
+                            }
+                            break;
+                        }
+                    }
+                }
+            }
+        } catch (Exception e) {
+
+        }
+        OutputStream outputStream = null;
+        try {
+            outputStream = new FileOutputStream(excelOutFilePath);
+            wb.write(outputStream);
+        } catch (Exception e) {
+
+        } finally {
+            try {
+                if (outputStream != null) {
+                    outputStream.flush();
+                    outputStream.close();
+                }
+            } catch (Exception e) {
+
+            }
+            try {
+                if (wb != null) {
+                    wb.close();
+                }
+            } catch (Exception e) {
+
+            }
+        }
+    }
 }

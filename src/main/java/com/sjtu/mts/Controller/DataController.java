@@ -1173,4 +1173,13 @@ public class DataController {
         }
         return fangAnService.getAllFangan(pageID,pageSize,decodeUsername);
     }
+
+
+    @GetMapping("/getExcel")
+    @ResponseBody
+    public void getExcel(
+            @RequestParam("fid") long fid
+    ){
+        searchService.getExcel(fid);
+    }
 }

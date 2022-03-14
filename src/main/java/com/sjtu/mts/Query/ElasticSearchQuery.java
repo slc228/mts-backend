@@ -43,7 +43,7 @@ public class ElasticSearchQuery {
         boolQueryBuilder= new BoolQueryBuilder();
         this.page = 0;
         this.pageSize = 20;
-        this.timeOrder = -2;
+        this.timeOrder = 0;
         this.areaRepository = areaRepository;
         this.fangAnDao=fangAnDao;
     }

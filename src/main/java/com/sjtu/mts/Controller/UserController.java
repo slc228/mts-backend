@@ -106,11 +106,15 @@ public class UserController {
 
         result = userService.login(userinfo.get("username"), userinfo.get("password"));
 
-        Cookie cookie = new Cookie("user_uuid", (String) result.get("uuid"));
-        result.remove("uuid");
-        cookie.setPath("/");
-        cookie.setMaxAge(24 * 60 * 60);
-        response.addCookie(cookie);
+        if(result.get("login").equals(1))
+        {
+            Cookie cookie = new Cookie("user_uuid", (String) result.get("uuid"));
+            result.remove("uuid");
+            cookie.setPath("/");
+            cookie.setMaxAge(24 * 60 * 60);
+            response.addCookie(cookie);
+        }
+
 
 
 
