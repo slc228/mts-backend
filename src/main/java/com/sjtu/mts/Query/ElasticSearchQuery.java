@@ -301,7 +301,7 @@ public class ElasticSearchQuery {
             eventKeyword=eventKeyword.substring(tag+1);
         }
 
-        boolQueryBuilder.mustNot(QueryBuilders.termQuery("fid", fid));
+//        boolQueryBuilder.mustNot(QueryBuilders.termQuery("fid", fid));
 
         if (!roleKeyword.isEmpty())
         {

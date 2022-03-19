@@ -313,7 +313,7 @@ public class SearchServiceImpl implements SearchService {
     @Override
     public JSONArray getResources()
     {
-        TermsAggregationBuilder termsAggregationBuilder= AggregationBuilders.terms("resource_count").field("resource").size(20);
+        TermsAggregationBuilder termsAggregationBuilder= AggregationBuilders.terms("resource_count").field("resource").size(1000);
         NativeSearchQueryBuilder nativeSearchQueryBuilder=new NativeSearchQueryBuilder();
         nativeSearchQueryBuilder.addAggregation(termsAggregationBuilder);
         NativeSearchQuery nativeSearchQuery=nativeSearchQueryBuilder.build();
@@ -2715,38 +2715,13 @@ public class SearchServiceImpl implements SearchService {
         String rnd = DigestUtils.sha1Hex(new Date().toString());
         String excelOutFilePath = String.format("%s%s-%s.xls", "/root/codes/backend/fileTemp/" , "excel", rnd);
 
-
-        ElasticSearchQuery query=new ElasticSearchQuery(areaRepository,fangAnDao);
-
-        SimpleDateFormat format = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
-        Calendar c = Calendar.getInstance();
-
-        //过去七天
-        c.setTime(new Date());
-        Date end=c.getTime();
-        String endDay=format.format(end);
-
-        c.add(Calendar.DATE, - 7);
-        Date start = c.getTime();
-        String startDay = format.format(start);
-
-        query.JoinFidQueryBuilders(fid);
-        query.JoinPublishedDayQueryBuilders(startDay,endDay);
-        query.SortBytimeOrder();
-
-        YuQingResponse response = elasticSearchDao.findByQuery(query);
-        List<YuQing> pageDataContent=response.getYuQingContent();
-
-        /* 生成excel */
         Field[] declaredFields = Data.class.getDeclaredFields();
         String[] fieldNames = new String[declaredFields.length];
         for (int i = 0; i < declaredFields.length; i++) {
             fieldNames[i] = declaredFields[i].getName(); //通过反射获取属性名
         }
-
         String[] headerCode={"标题","内容","网址","来源","敏感类型","分类","情感","发布日期"};
         String[] header = {"title","content", "webpageUrl","resource", "sensitiveType", "tag", "emotion", "publishedDay" };
-
         Workbook wb = new HSSFWorkbook();
         int rowSize = 0;
         Sheet sheet = wb.createSheet();
@@ -2754,6 +2729,37 @@ public class SearchServiceImpl implements SearchService {
         for (int i = 0; i < headerCode.length; i++) {
             row.createCell(i).setCellValue(headerCode[i]);
         }
+
+        ElasticSearchQuery query = new ElasticSearchQuery(areaRepository, fangAnDao);
+        query.SetPageParameter(0, 10000, 0);
+        query.JoinFidQueryBuilders(fid);
+        query.SortBytimeOrder();
+        query.SetPageableAndBoolQuery();
+        NativeSearchQuery query1= query.GetQuery();
+        query1.setTrackTotalHits(true);
+        SearchHits<YuQingElasticSearch> searchHits = this.elasticsearchOperations.search(
+                query1,
+                YuQingElasticSearch.class
+        );
+        long hitNumber=searchHits.getTotalHits();
+
+        int num= (int) (hitNumber/10000);
+        System.out.println(hitNumber);
+        System.out.println(num);
+        List<YuQing> pageDataContent=new ArrayList<>();
+//        for (int pageNum=0;pageNum<=num;pageNum++)
+//        {
+//            System.out.println(pageNum);
+            ElasticSearchQuery pageQuery = new ElasticSearchQuery(areaRepository, fangAnDao);
+            pageQuery.SetPageParameter(0, 20000, 0);
+            pageQuery.JoinFidQueryBuilders(fid);
+            pageQuery.SortBytimeOrder();
+            pageQuery.SetPageableAndBoolQuery();
+            YuQingResponse response = elasticSearchDao.findByQuery(query);
+            pageDataContent=response.getYuQingContent();
+//            pageDataContent.addAll(response.getYuQingContent()) ;
+//        }
+        System.out.println(pageDataContent.size());
 
         try {
             for (int x = 0; x < pageDataContent.size(); x++) {
@@ -2787,6 +2793,7 @@ public class SearchServiceImpl implements SearchService {
         } catch (Exception e) {
 
         }
+
         OutputStream outputStream = null;
         try {
             outputStream = new FileOutputStream(excelOutFilePath);

@@ -65,6 +65,9 @@ public class DataController {
     @Autowired
     private WarningRecordService warningRecordService;
 
+    @Autowired
+    private CloudService cloudService;
+
     @GetMapping("/testApi")
     @ResponseBody
     public String heartBeating() {
@@ -1181,5 +1184,14 @@ public class DataController {
             @RequestParam("fid") long fid
     ){
         searchService.getExcel(fid);
+    }
+
+    @PostMapping(path = "/getWordCloudByFid")
+    @ResponseBody
+    public com.alibaba.fastjson.JSONObject getWordCloudByFid (
+            @RequestBody Map<String,String> cloudInfo
+    ) {
+        long fid= Long.parseLong(cloudInfo.get("fid"));
+        return cloudService.getWordCloudByFid(fid);
     }
 }

@@ -54,11 +54,17 @@ public class ElasticSearchDaoImpl implements ElasticSearchDao {
     public YuQingResponse findByQuery(ElasticSearchQuery query) {
         YuQingResponse response = new YuQingResponse();
         List<YuQing> result = new ArrayList<>();
+        NativeSearchQuery query1= query.GetQuery();
+        query1.setTrackTotalHits(true);
+        query1.setMaxResults(20000);
         SearchHits<YuQingElasticSearch> searchHits = this.elasticsearchOperations.search(
-                query.GetQuery(),
+                query1,
                 YuQingElasticSearch.class
         );
         long hitNumber=searchHits.getTotalHits();
+        System.out.println("hitNumber");
+        System.out.println(hitNumber);
+        System.out.println(searchHits.getSearchHits().size());
         response.setHitNumber(hitNumber);
         for (SearchHit<YuQingElasticSearch> hit : searchHits.getSearchHits())
         {
